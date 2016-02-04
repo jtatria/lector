@@ -1,0 +1,137 @@
+<typeSystemDescription xmlns="http://uima.apache.org/resourceSpecifier">
+  <name>InciteTypes</name>
+  <description>Types for Incite's UIMA API</description>
+  <version>1.0</version>
+  <vendor>Incite - Columbia University</vendor>
+  <types>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Document</name>
+      <description>Document metadata annotation</description>
+      <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>
+      <features>
+        <featureDescription>
+          <name>id</name>
+          <description>Document identifier within a collection</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>collection</name>
+          <description>Collection identifier</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>uri</name>
+          <description>URI of this document's data source</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>xpath</name>
+          <description>XPath expression for this document's data node sequence</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>index</name>
+          <description>Index of this document's data in the node sequence</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>proc_isLast</name>
+          <description>Boolean indicating if this is the last document in the sequence</description>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>proc_skip</name>
+          <description>Boolean indicating that this document should be skipped in processing</description>
+          <rangeTypeName>uima.cas.Boolean</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Span</name>
+      <description>Abstract base for all Incite UIMA types</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>attributes</name>
+          <description>Annotation attributes</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.columbia.incite.uima.api.types.Attribute</elementType>
+          <multipleReferencesAllowed>true</multipleReferencesAllowed>
+        </featureDescription>
+        <featureDescription>
+          <name>tuples</name>
+          <description>Tuples that refer to this entity</description>
+          <rangeTypeName>uima.cas.FSArray</rangeTypeName>
+          <elementType>edu.columbia.incite.uima.api.types.Tuple</elementType>
+          <multipleReferencesAllowed>true</multipleReferencesAllowed>
+        </featureDescription>
+        <featureDescription>
+          <name>id</name>
+          <description>Annotation id, unique within CAS and type</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Attribute</name>
+      <description>A key-value pair for arbitrary annotation attributes</description>
+      <supertypeName>uima.cas.AnnotationBase</supertypeName>
+      <features>
+        <featureDescription>
+          <name>k</name>
+          <description>Key</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>v</name>
+          <description>Value</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Tuple</name>
+      <description>Predicate tuples of the form (subject-predicate-object)</description>
+      <supertypeName>uima.cas.AnnotationBase</supertypeName>
+      <features>
+        <featureDescription>
+          <name>subject</name>
+          <description>Subject of this predicate</description>
+          <rangeTypeName>edu.columbia.incite.uima.api.types.Span</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>predicate</name>
+          <description>Predicate identifier</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>object</name>
+          <description>Object of this predicate</description>
+          <rangeTypeName>edu.columbia.incite.uima.api.types.Span</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Entity</name>
+      <description>Base type for arbitrary span annotations</description>
+      <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Segment</name>
+      <description>Base type for segment annotations</description>
+      <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>
+      <features>
+        <featureDescription>
+          <name>level</name>
+          <description>Segmentation level</description>
+          <rangeTypeName>uima.cas.Integer</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Paragraph</name>
+      <description>Paragraph annotations</description>
+      <supertypeName>edu.columbia.incite.uima.api.types.Segment</supertypeName>
+    </typeDescription>
+  </types>
+</typeSystemDescription>
