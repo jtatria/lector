@@ -35,8 +35,8 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.api.casio.TypeProvider;
-import edu.columbia.incite.uima.tools.casio.InciteTypeProvider;
-import edu.columbia.incite.uima.tools.TypeSystems;
+import edu.columbia.incite.uima.res.casio.InciteTypeProvider;
+import edu.columbia.incite.uima.util.TypeSystems;
 import edu.columbia.incite.util.io.FileUtils;
 
 /**

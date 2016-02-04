@@ -19,7 +19,6 @@ package edu.columbia.incite.uima.api.casio;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.resource.Resource;
 
 import edu.columbia.incite.uima.api.ConfigurableResource;
 
