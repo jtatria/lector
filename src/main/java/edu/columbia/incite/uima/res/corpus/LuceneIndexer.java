@@ -40,29 +40,39 @@ import edu.columbia.incite.util.data.Datum;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document> {
-    
+
     public static final String PARAM_FIELD_NAME = "fieldName";
     @ConfigurationParameter( name = PARAM_FIELD_NAME, mandatory = false, defaultValue = "" )
     private String fieldName;
-    
+
     public static final String RES_DOCUMENT_BROKER = "docBroker";
     @ExternalResource( key = RES_DOCUMENT_BROKER, api = FeatureBroker.class, mandatory = false )
     private FeatureBroker<Datum> docBroker;
-    
+
     public static final String RES_COVERS_BROKER = "coverBroker";
     @ExternalResource( key = RES_COVERS_BROKER, api = FeatureBroker.class, mandatory = false )
     private FeatureBroker<Datum> coverBroker;
-    
+
     public static final String RES_WRITER_PROVIDER = "writerProvider";
     @ExternalResource( key = RES_WRITER_PROVIDER, api = WriterProvider.class, mandatory = false )
     private WriterProvider writerProvider;
-    
+
     public static final String RES_TOKEN_STREAM_FACTORY = "tsFactory";
     @ExternalResource( key = RES_TOKEN_STREAM_FACTORY, api = LuceneTSFactory.class, mandatory = false )
     private TokenFactory<TokenStream> tsFactory;
-    
+
     public static final String PARAM_FAIL_OIN_EMPTY_MD = "failOnEmptyMD";
     private Boolean failOnEmptyMD = false;
+
+    public static final FieldType TEXT_FT = new FieldType();
+    static {
+        TEXT_FT.setIndexOptions( IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS );
+        TEXT_FT.setStoreTermVectors( true );
+        TEXT_FT.setStoreTermVectorOffsets( true );
+        TEXT_FT.setStoreTermVectorPayloads( true );
+        TEXT_FT.setStoreTermVectorPositions( true );
+        TEXT_FT.setTokenized( true );
+    }
 
     private FieldFactory fieldFactory = new FieldFactory();
     private Set<Long> users = new HashSet<>();
@@ -73,7 +83,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     @Override
     public void afterResourcesInitialized() throws ResourceInitializationException {
         super.afterResourcesInitialized();
-        
+
         if( docBroker == null ) docBroker = new FeatureExtractor();
         if( coverBroker == null ) coverBroker = docBroker;
         if( tsFactory == null ) tsFactory = new LuceneTSFactory();
@@ -81,12 +91,12 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
             writerProvider = new WriterProvider();
             writerProvider.initialize();
         }
-        
+
         getLogger().log( Level.INFO,
-            "LuceneIndexer: Indexing CAS data to field {0}.", fieldName 
+            "LuceneIndexer: Indexing CAS data to field {0}.", fieldName
         );
     }
-    
+
     @Override
     public Long openSession() {
         Long token = tokenProvider.getAndIncrement();
@@ -110,7 +120,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
             }
         }
     }
-    
+
     @Override
     public void configure( CAS conf ) throws Exception {
         docBroker.configure( conf );
@@ -134,7 +144,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     @Override
-    public Document addMetadata( Document doc, Collection<AnnotationFS> data ) 
+    public Document addMetadata( Document doc, Collection<AnnotationFS> data )
     throws DocumentMetadataException {
         if( data != null && data.size() > 0 ) {
             Datum d = new Datum();
@@ -163,9 +173,9 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         for( Map.Entry<String,List<AnnotationFS>> e : tokens.entrySet() ) {
             String field = e.getKey();
             List<AnnotationFS> anns = e.getValue();
-            
+
             if( anns == null || anns.isEmpty() ) continue;
-            
+
             TokenStream ts;
             try {
                 ts = tsFactory.makeTokens( field, anns, offset );
@@ -173,7 +183,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
                 failures.incrementAndGet();
                 throw new TokenStreamException( ex );
             }
-            doc.add( new Field( field, ts, makeFieldType() ) );
+            doc.add( new Field( field, ts, TEXT_FT ) );
         }
         return doc;
     }
@@ -182,18 +192,6 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     public void index( Document doc ) throws IOException {
         successes.incrementAndGet();
         writerProvider.index( doc );
-    }
-
-    private FieldType makeFieldType() {
-        FieldType ft = new FieldType();
-        ft.setIndexOptions( IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS );
-        ft.setStoreTermVectors( true );
-        ft.setStoreTermVectorOffsets( true );
-        ft.setStoreTermVectorPayloads( true );
-        ft.setStoreTermVectorPositions( true );
-//        ft.setIndexed( true );
-        ft.setTokenized( true );
-        return ft;
     }
 
     protected void validateMetadata( Datum d ) {}

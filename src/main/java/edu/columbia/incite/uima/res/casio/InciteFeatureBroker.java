@@ -5,6 +5,7 @@
  */
 package edu.columbia.incite.uima.res.casio;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -24,7 +25,7 @@ import edu.columbia.incite.util.data.DataFieldType;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBroker<Datum> {
-    
+
     public static final String ID_FIELD = "id";
     public static final String COL_FIELD = "doc:Collection";
     public static final String URI_FIELD = "doc:URI";
@@ -34,51 +35,51 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
     public static final String SKIP_FIELD = "proc:Skip";
     public static final String SUB_SUFFIX = "_subject";
     public static final String OBJ_SUFFIX = "_object";
-    
+
     public static final String PARAM_ADD_PROC = "addProc";
     @ConfigurationParameter( name = PARAM_ADD_PROC, mandatory = false )
     private boolean addProc = false;
 
     @Override
-    public Datum values( AnnotationFS ann ) throws CASException {
+    public Datum values( AnnotationFS ann, boolean merge ) throws CASException {
         if( !( ann instanceof Span ) ) return null;
         Datum d = new Datum();
-        values( ann, d );
+        values( ann, d, merge );
         return d;
     }
 
     @Override
-    public void values( AnnotationFS ann, Datum tgt ) throws CASException {
+    public void values( AnnotationFS ann, Datum tgt, boolean merge ) throws CASException {
         if( !( ann instanceof Span ) ) return;
         Span span = (Span) ann;
-        
+
         if( span.getId() != null )
-            tgt.set(new DataField( ID_FIELD, DataFieldType.STRING ), span.getId() );
+            tgt.set( new DataField( ID_FIELD, DataFieldType.STRING ), span.getId() );
         if( span.getAttributes() != null ) {
             for( int i = 0; i < span.getAttributes().size(); i++ ) {
                 DataField f = new DataField( span.getAttributes( i ).getK(), DataFieldType.STRING );
                 tgt.set( f, span.getAttributes( i ).getV() );
             }
         }
-        
+
         if( span.getTuples() != null ) {
             for( int i = 0; i < span.getTuples().size(); i++ ) {
                 Tuple tuple = span.getTuples( i );
-                
+
                 boolean isSubject;
                 if( tuple.getSubject().equals( span ) ) isSubject = true;
                 else if( tuple.getObject().equals( span ) ) isSubject = false;
                 else continue;
-                
+
                 String pred = tuple.getPredicate();
                 Span targ = isSubject ? tuple.getObject() : tuple.getSubject();
-                String value = targ.getType().getShortName() 
+                String value = targ.getType().getShortName()
                     + TypeSystem.FEATURE_SEPARATOR + targ.getId();
                 String predKey = isSubject ? pred + SUB_SUFFIX : pred + OBJ_SUFFIX;
                 tgt.set( new DataField( predKey, DataFieldType.STRING ), value );
-            } 
+            }
         }
-        
+
         if( ann instanceof Document ) {
             Document doc = (Document) ann;
             tgt.set( new DataField( COL_FIELD, DataFieldType.STRING ), doc.getCollection() );
@@ -92,4 +93,7 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
         }
     }
 
+    @Override
+    public void configure( CAS conf ) throws Exception {
+    }
 }

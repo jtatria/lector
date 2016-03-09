@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -51,67 +51,67 @@ import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class NaiveNgram extends AbstractEngine {
-    
+
     public static final String PARAM_FOCUS_REGEX = "focusRegex";
     @ConfigurationParameter( name = PARAM_FOCUS_REGEX, mandatory = true )
     private String focusRegex;
-    
+
     public static final String PARAM_MARKER_STRING = "marker";
     @ConfigurationParameter( name = PARAM_MARKER_STRING, mandatory = false, defaultValue = "|%t|" )
     private String marker;
-    
+
     public static final String PARAM_WINDOW_SIZE = "windowSize";
     @ConfigurationParameter( name = PARAM_WINDOW_SIZE, mandatory = false, defaultValue = "3" )
     private Integer w;
-    
+
     public static final String PARAM_OUTDIR = "outDir";
     @ConfigurationParameter( name = PARAM_OUTDIR, mandatory = false )
     private String outDir;
-    
+
     public static final String PARAM_OUTFILE = "outfile";
     @ConfigurationParameter( name = PARAM_OUTFILE, mandatory = false )
     private String outFile;
-    
+
     public static final String RES_DATA = "dataResource";
     @ExternalResource( key = RES_DATA, mandatory = false )
     private SimpleDataResource<DataSet<Datum>> data;
-    
+
     private Pattern focus;
-    
+
     private Map<List<String>,Integer> seen = new HashMap<>();
-    
+
     private DataField<String>[] fields;
     private DataField<Long> ct;
-    
+
     @NullOnRelease private List<Token> tokens;
     @NullOnRelease private Integer n;
     @NullOnRelease private Boolean stop;
-    
+
     private Long sessionId;
-    
+
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
-        
+
         focus = Pattern.compile( "^" + focusRegex + "$" );
-        
+
         outDir = outDir == null ? System.getProperty( "user.dir" ) : outDir;
         outFile = outFile == null ? "ngrams.xml" : outFile;
-        
+
         fields = makeFields();
-        
+
         if( data == null ) data = new SimpleDataResource<>();
-        
+
 //        sessionId = data.openSession();
 //        data.configure( new DataSet<>() );
-        
+
         data.setMerger( ( DataSet<Datum> t, DataSet<Datum> u ) -> {
             for( Datum r : u.getRecords() ) {
                 t.addRecord( r );
             }
             return t;
         } );
-        
+
         data.setConsumer( ( DataSet<Datum> t ) -> {
             try {
                 OutputStream os = FileUtils.getOutputStream( outDir, outFile, true, true );
@@ -128,7 +128,7 @@ public class NaiveNgram extends AbstractEngine {
         n = tokens.size();
         stop = n <= 0;
     }
-    
+
     @Override
     protected void realProcess( JCas jcas ) throws AnalysisEngineProcessException {
         if( stop ) return;
@@ -137,7 +137,7 @@ public class NaiveNgram extends AbstractEngine {
                 updateDataPoint( Collections.<Token>window( i, w, tokens ) );
         }
     }
-    
+
     @Override
     public void collectionProcessComplete() {
 //        data.closeSession( sessionId );
@@ -152,7 +152,7 @@ public class NaiveNgram extends AbstractEngine {
                 DataFieldType.STRING
             );
         }
-        ct = new DataField<>( "ct", DataFieldType.LONG, true );
+        ct = new DataField<>( "ct", DataFieldType.LONG );
         return f;
     }
 

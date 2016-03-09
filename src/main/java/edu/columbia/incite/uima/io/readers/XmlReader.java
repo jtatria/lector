@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,13 +53,12 @@ import org.xml.sax.SAXException;
 import edu.columbia.incite.uima.io.resources.SaxHandler;
 
 /**
- * Collection reader that creates CASes from XML elements. This component takes an input director
+ * Collection reader that creates CASes from XML elements. This component takes an input directory
  * containing XML files and an XPath expression that produces a sequence of XML elements
- * corresponding to a CAS document and writes each of this elements to a SAX handler in order to
+ * corresponding to CAS documents and writes each of this elements to a SAX handler in order to
  * populate new CASes.
  *
- * TODO: refactor using the new interface in {@link AbstractFileReader},
- * 
+ *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class XmlReader extends AbstractFileReader {
@@ -116,7 +115,8 @@ public class XmlReader extends AbstractFileReader {
 
         // Announce ourselves to the world.
         if( !xpathExpr.equals( "" ) ) {
-            getLogger().log( Level.INFO, "Xpath XML reader: collecting cases from sequence {0}", new Object[] { xpathExpr }
+            getLogger().log( Level.INFO,
+                "Xpath XML reader: collecting cases from sequence {0}", xpathExpr
             );
         }
 
@@ -210,7 +210,7 @@ public class XmlReader extends AbstractFileReader {
 
             try( InputStream is = Files.newInputStream( curPath ) ) {
                 // This part is fugly. XML parsing in java sucks. I miss XML::Twig.
-                // Eventually, this should all be moved to a resource handler, 
+                // Eventually, this should all be moved to a resource handler,
                 // ideally using BaseX (or another xquery processor) as I/O layer.
                 InputSource src = new InputSource( is );        // Get input stream
 

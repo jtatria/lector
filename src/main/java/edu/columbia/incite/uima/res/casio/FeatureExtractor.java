@@ -16,7 +16,6 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeaturePath;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
@@ -28,59 +27,57 @@ import edu.columbia.incite.util.data.DataFieldType;
 
 /**
  * An implementation of a {@link FeatureBroker} that extracts all values found in an annotation with no prior knowledge.
- * 
+ *
  * Primitive feature data is always added; Built-in UIMA features are excluded by default by may be included. Non-primitive feature values are either ommitted or dereferenced recursively.
- * 
+ *
  * Internally, this feature broker will build and maintain a collection of feature paths to access data from different annotation types as they are found.
- * 
+ *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker<Datum> {
-    
+
     /**
      * Omit built-in UIMA features (begin, end, sofa, etc). Enabled by default.
      */
     public static final String PARAM_OMIT_BUILTINS = "omitBuiltIns";
     @ConfigurationParameter( name = PARAM_OMIT_BUILTINS, mandatory = false, defaultValue = "true" )
     private boolean omitBuiltIns = true;
-    
+
     /**
      * Follow non-primitive feature values and add values from referenced features.
      */
     public static final String PARAM_DEREFERENCE = "dereference";
     @ConfigurationParameter( name = PARAM_DEREFERENCE, mandatory = false, defaultValue = "true" )
     private boolean dereference = false;
-    
+
     /**
      * Include SOFA string in extracted values. Disabled by default.
      */
     public static final String PARAM_INCLUDE_SOFASTRING = "includeSofa";
     @ConfigurationParameter( name = PARAM_INCLUDE_SOFASTRING, mandatory = false, defaultValue = "true" )
     private boolean includeSofa = false;
-    
+
     private Map<Type,List<FeaturePath>> cache = new ConcurrentHashMap<>();
-    
+
     @Override
-    public Datum values( AnnotationFS ann ) throws CASException {
+    public Datum values( AnnotationFS ann, boolean merge ) throws CASException {
         Datum d = new Datum();
-        values( ann, d );
+        values( ann, d, merge );
         return d;
     }
 
     @Override
-    public void values( AnnotationFS ann, Datum tgt ) throws CASException {
+    public void values( AnnotationFS ann, Datum tgt, boolean merge ) throws CASException {
         Type type = getEffectiveType( ann );
         List<FeaturePath> featurePaths = getFeaturePaths( type, ann );
-        for( FeaturePath fp : featurePaths ) addData( fp, ann, tgt );
-//        {
-//            fp.typeInit( type );
-            
-//        }
+        for( FeaturePath fp : featurePaths ) addData( fp, ann, tgt, merge );
     }
-    
-    protected void addData( FeaturePath fp, AnnotationFS ann, Datum tgt ) throws CASException {
+
+    protected void addData( FeaturePath fp, AnnotationFS ann, Datum tgt, boolean merge ) throws CASException {
         Feature last = fp.getFeature( fp.size() - 1 );
-        String name = last.getDomain().getShortName() + "_" + last.getShortName();
+        String name = merge ?
+            last.getDomain().getShortName() + "_" + last.getShortName() :
+            ann.getType().getShortName() + "_" + last.getShortName();
 
         switch( fp.getTypClass( ann ) ) {
             case TYPE_CLASS_STRING :
@@ -107,8 +104,8 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
             case TYPE_CLASS_BOOLEAN :
                 addScalar( name, tgt, DataFieldType.BOOLEAN, fp.getBooleanValue( ann ) );
                 break;
-            
-            case TYPE_CLASS_STRINGARRAY : 
+
+            case TYPE_CLASS_STRINGARRAY :
                 addArray( name, tgt, DataFieldType.STRING, fp.getValueAsString( ann ) );
                 break;
             case TYPE_CLASS_BYTEARRAY :
@@ -132,31 +129,29 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
             case TYPE_CLASS_BOOLEANARRAY :
                 addArray( name, tgt, DataFieldType.BOOLEAN, fp.getValueAsString( ann ) );
                 break;
-                
+
             case TYPE_CLASS_FS :
-                break;
+                break; // TODO Not suppoerted yet.
             case TYPE_CLASS_FSARRAY :
-                break;
-                
-            case TYPE_CLASS_INVALID :
-                throw new CASException();
-                
-            default:
-                throw new AssertionError( fp.getTypClass( ann ).name() );
+                break; // TODO Not supported yet.
+
+            case TYPE_CLASS_INVALID : throw new CASException();
+
+            default: throw new AssertionError( fp.getTypClass( ann ).name() );
         }
-        
+
     }
 
     private void addScalar( String name, Datum tgt, DataFieldType ft, Serializable v ) {
         if( v == null ) return;
-        tgt.set(new DataField( name, ft ), v );
+        tgt.set( new DataField( name, ft ), v );
     }
 
     private void addArray( String name, Datum tgt, DataFieldType ft, String array ) {
         if( array == null ) return;
         int i = 0;
         for( String v : array.split( "," ) ) {
-            tgt.set(new DataField( name + Integer.toString( i++ ), ft ), ft.decode( v ) );
+            tgt.set( new DataField( name + Integer.toString( i++ ), ft ), ft.decode( v ) );
         }
     }
 
@@ -166,7 +161,7 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
 
     protected List<FeaturePath> getFeaturePaths( Type type, AnnotationFS ann ) throws CASException {
         if( cache.containsKey( type ) ) return cache.get( type );
-        
+
         List<FeaturePath> fps = new ArrayList<>();
         for( Feature f : ann.getType().getFeatures() ) {
             if( isOmited( f ) ) continue;
@@ -174,7 +169,7 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
             fp.typeInit( type );
             fps.addAll( makePaths( ann, fp, f ) );
         }
-        
+
         cache.put( type, fps );
         return fps;
     }
@@ -202,7 +197,7 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
         }
         return copy;
     }
-    
+
     private boolean isOmited( Feature f ) {
         if( f.getName().equals( CAS.FEATURE_BASE_NAME_SOFA ) ) {
             return !includeSofa;
@@ -218,6 +213,10 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
             || f.getDomain().getName().equals( CAS.TYPE_NAME_ANNOTATION_BASE )
             || f.getDomain().getName().equals( CAS.TYPE_NAME_DOCUMENT_ANNOTATION )
             || f.getDomain().getName().equals( CAS.TYPE_NAME_SOFA );
+    }
+
+    @Override
+    public void configure( CAS conf ) throws Exception {
     }
 
 }

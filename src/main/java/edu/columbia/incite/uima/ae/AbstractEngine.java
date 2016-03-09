@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package edu.columbia.incite.uima.ae;
+
+import java.util.logging.Logger;
 
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
@@ -45,7 +47,7 @@ import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
-    
+
     // CAS metadata parameters
     public static final String PARAM_DOCUMENT_TYPE = "dmdTypeName";
     @ConfigurationParameter( name = PARAM_DOCUMENT_TYPE, mandatory = false,
@@ -61,26 +63,26 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     @ConfigurationParameter( name = PARAM_DOCUMENT_FEATURE_PATTERNS, mandatory = false,
         description = "Feature name patterns for document metadata features" )
     protected String[] dmdFeatPatterns;
-    
+
     public static final String RES_DMD_BROKER = "dmdFeatureBroker";
     @ExternalResource( key = RES_DMD_BROKER, mandatory = false,
         description = "Feature broker for document metadata annotations" )
     private FeatureBroker<Datum> dmdBroker;
-    
+
     protected Type dmdType;
     protected Feature dmdIdF;
     protected boolean customDmd = false;
-    
+
     @NullOnRelease
     private Annotation curCasData;
-    
+
     private int curCasIndex = 0;
     private TypeSystem ts;
-        
+
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
-        
+
         if( dmdBroker == null ) {
             if( dmdTypeName != null ) { // Custom metadata types. Use broker.
                 if( dmdIdFeatName == null ) {
@@ -99,14 +101,14 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
             }
         }
     }
-    
+
     @Override
     public void process( JCas jcas ) throws AnalysisEngineProcessException {
         preProcess( jcas );
         realProcess( jcas );
         postProcess( jcas );
     }
-            
+
     protected Datum getMetadata() throws AnalysisEngineProcessException {
         if( curCasData != null ) {
             try {
@@ -117,7 +119,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         }
         return null;
     }
-    
+
     protected String getDocumentId() {
         if( curCasData != null ) {
             if( customDmd ) {
@@ -147,24 +149,24 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         } else {
             dmdType = jcas.getCasType( Document.type );
         }
-        
+
         if( dmdBroker != null ) try {
             dmdBroker.configure( jcas.getCas() );
-        } catch( CASException ex ) {
+        } catch( Exception ex ) {
             throw new AnalysisEngineProcessException( ex );
         }
     }
-    
+
     protected void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
         curCasIndex++;
         if( ts == null || !ts.equals( jcas.getTypeSystem() ) ) initTypes( jcas );
         curCasData = jcas.getAnnotationIndex( dmdType ).iterator().next();
     }
-    
+
     protected abstract void realProcess( JCas jcas ) throws AnalysisEngineProcessException;
-    
+
     protected void postProcess( JCas jcas ) {
         Resources.releaseFor( this );
     }
-    
+
 }

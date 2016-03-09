@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ import edu.columbia.incite.uima.api.SessionResource;
  * document object from a collection of UIMA annotations <em>covering</em> the source document
  * annotation and (2) indexing tokens for the created document will be created from a collection of
  * UIMA annotations <em>covered</em> by the source document annotation. These assumptions are not
- * enforced by this interface, allowing for different indexing strategies depending on subclasses
+ * enforced by this interface, allowing for different indexing strategies depending on subclass
  * implementations.
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
@@ -153,7 +153,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
         public IndexingException( String msg ) {
             super( new Throwable( msg ) );
         }
-        
+
         public IndexingException( Exception ex ) {
             super( ex );
         }

@@ -27,21 +27,21 @@ import edu.columbia.incite.util.data.Datum;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 class FieldFactory {
-    
+
     private BiMap<DataField,Field> cache =
         Maps.synchronizedBiMap( HashBiMap.<DataField,Field>create() );
-    
+
     public Set<Field> getFields() {
         return cache.inverse().keySet();
     }
-    
+
     public IndexableField makeField( DataField f, Datum d ) {
-        
+
         if( !cache.containsKey( f ) ) {
             cache.put( f, buildField( f ) );
         }
         Field field = cache.get( f );
-                
+
         switch( f.type() ) {
             case STRING: case CHAR: case BOOLEAN: {
                 String v = (String) f.get( d );

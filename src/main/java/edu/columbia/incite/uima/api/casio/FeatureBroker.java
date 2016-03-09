@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -41,7 +41,10 @@ public interface FeatureBroker<D> extends ConfigurableResource<CAS> {
      *
      * @throws CASException If annotation data can not be accessed.
      */
-    D values( AnnotationFS ann ) throws CASException;
+    default D values( AnnotationFS ann ) throws CASException {
+        return values( ann, true );
+    }
+    D values( AnnotationFS ann, boolean merge ) throws CASException;
 
     /**
      * Add feature values from the given annotation to the given instance of D.
@@ -52,19 +55,9 @@ public interface FeatureBroker<D> extends ConfigurableResource<CAS> {
      *
      * @throws CASException If annotation data can not be accessed.
      */
-    void values( AnnotationFS ann, D tgt ) throws CASException;
-
-    /**
-     * Initializes this feature broker to access data from the given CAS.
-     * This allows the signaling of type system changes, etc. in order to e.g. create and initialize
-     * Feature Paths, etc.
-     *
-     * @param cas A CAS from which annotations will have their feature values extracted.
-     *
-     * @throws CASException If configuration fails.
-     */
-    @Override
-    default void configure( CAS cas ) throws CASException {
-        // Nothing by default.
+    default void values( AnnotationFS ann, D tgt ) throws CASException {
+        values( ann, tgt, true );
     }
+    void values( AnnotationFS ann, D tgt, boolean merge ) throws CASException;
+
 }

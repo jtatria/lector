@@ -5,82 +5,46 @@
  */
 package edu.columbia.incite.uima.run;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import edu.columbia.incite.util.io.FileUtils;
+import edu.columbia.incite.uima.io.readers.BinaryReader;
 
 /**
  *
  * @author Jose Tomas Atria <jtatria@gmail.com>
  */
-public final class CPEConf {
-    public static final String META_DIR        = ".metaDir";
-    public static final String ACTION_ON_ERROR = ".actionOnError";
-    public static final String DUMP_METADATA   = ".dumpMetadata";
-    public static final String THREADS         = ".threads";
-    public static final String READER_CLASS    = ".readerClass";
-    public static final String AE_CLASSES      = ".aeCLasses";
+public class CPEConf extends edu.columbia.incite.util.run.Conf {
 
-    private static final String NAMESPACE = "edu.columbia.incite";
-    
-    private final Properties props;
-    private final String ns;
-    
+    public static final String META_DIR        = "metaDir";
+    public static final String ACTION_ON_ERROR = "actionOnError";
+    public static final String DUMP_METADATA   = "dumpMetadata";
+    public static final String THREADS         = "threads";
+    public static final String READER_CLASS    = "readerClass";
+    public static final String AE_CLASSES      = "aeCLasses";
+
     public CPEConf( String ns, Properties props ) {
-        this.ns = ns;
-        this.props = props;
-        
-        if( Boolean.parseBoolean( getSetting( DUMP_METADATA ) ) ) {
-            try( Writer w = FileUtils.getWriter( getSetting( META_DIR ), "config.properties", true, true ) ) {
-                dump( w );
-            } catch( IOException ex ) {}
-        }
-    }
-    
-    private void dump( Writer w ) throws IOException {
-        List<String> out = new ArrayList<>();
-        props.stringPropertyNames().stream().filter( ( k ) -> ( k.startsWith( NAMESPACE ) ) )
-            .forEach( ( k ) -> out.add( String.format( "%s=%s", k, props.getProperty( k ) ) ) );
-        out.sort( ( String s1, String s2 ) -> s1.compareTo( s2 ) );
-        PrintWriter pw = new PrintWriter( w );
-        out.stream().forEach( ( line ) -> pw.println( line ) );
-        pw.flush();
+        super( ns, props );
+        factories.put( Class.class, CLASS_FACTORY );
     }
 
     public String getActionOnError() {
-        return getSetting( ACTION_ON_ERROR );
+        return getString( ACTION_ON_ERROR, "continue" );
     }
 
     public int getNumberOfThreads() {
-        return Integer.parseInt( getSetting( THREADS ) );
+        return getInteger( THREADS, Runtime.getRuntime().availableProcessors() + 2 );
     }
 
-    public Class getReaderClass() throws ClassNotFoundException {
-        return Class.forName( getSetting( READER_CLASS ) );
+    public Class getReaderClass() {
+        return getOther( READER_CLASS, Class.class, BinaryReader.class );
     }
 
-    public List<Class> getAEClasses() throws ClassNotFoundException {
-        List<Class> aeClasses = new ArrayList<>();
-        for( String aeClass : getSetting(AE_CLASSES ).split( "," ) ) {
-            aeClasses.add( Class.forName( aeClass ) );
-        }
-        return aeClasses;
-    }
-
-    public Properties getProps() {
-        return this.props;
+    public List<Class> getAEClasses() {
+        return getList( AE_CLASSES, Class.class, null );
     }
 
     public String getMetaOutputDir() {
-        return getSetting( META_DIR );
-    }
-    
-    private String getSetting( String key ) {
-        return props.getProperty( ns + key );
+        return getString( META_DIR, System.getProperty( "user.dir" ) + "/meta" );
     }
 }
