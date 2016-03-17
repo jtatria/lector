@@ -22,7 +22,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
-import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
@@ -40,10 +39,6 @@ import edu.columbia.incite.util.data.Datum;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document> {
-
-    public static final String PARAM_FIELD_NAME = "fieldName";
-    @ConfigurationParameter( name = PARAM_FIELD_NAME, mandatory = false, defaultValue = "" )
-    private String fieldName;
 
     public static final String RES_DOCUMENT_BROKER = "docBroker";
     @ExternalResource( key = RES_DOCUMENT_BROKER, api = FeatureBroker.class, mandatory = false )
@@ -83,7 +78,6 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     @Override
     public void afterResourcesInitialized() throws ResourceInitializationException {
         super.afterResourcesInitialized();
-
         if( docBroker == null ) docBroker = new FeatureExtractor();
         if( coverBroker == null ) coverBroker = docBroker;
         if( tsFactory == null ) tsFactory = new LuceneTSFactory();
@@ -91,10 +85,6 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
             writerProvider = new WriterProvider();
             writerProvider.initialize();
         }
-
-        getLogger().log( Level.INFO,
-            "LuceneIndexer: Indexing CAS data to field {0}.", fieldName
-        );
     }
 
     @Override
@@ -190,8 +180,8 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
 
     @Override
     public void index( Document doc ) throws IOException {
-        successes.incrementAndGet();
         writerProvider.index( doc );
+        successes.incrementAndGet();
     }
 
     protected void validateMetadata( Datum d ) {}

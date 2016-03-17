@@ -26,19 +26,19 @@ public abstract class UIMATokenStream extends TokenStream {
     // Input data
     private Collection<AnnotationFS> src;
     private Integer offset;
-    
+
     // State data
     private Iterator<AnnotationFS> annIt;
     private AnnotationFS cur;
     private Integer last = 0;
-    
+
     public UIMATokenStream() {
         addAttribute( OffsetAttribute.class );
         addAttribute( CharTermAttribute.class );
         addAttribute( PayloadAttribute.class );
         addAttribute( TypeAttribute.class );
     }
-    
+
     public UIMATokenStream setInput( Collection<AnnotationFS> tokens, int offset ) {
         this.src = tokens;
         this.offset = offset;
@@ -48,17 +48,15 @@ public abstract class UIMATokenStream extends TokenStream {
     @Override
     public void close() throws IOException {
         super.close();
-        
         // Clear input.
         this.src = null;
         this.offset = null;
     }
-    
+
     @Override
     public void end() throws IOException {
         super.end();
         addAttribute( OffsetAttribute.class ).setOffset( last, last );
-        
         // Clear state.
         this.annIt = null;
         this.cur = null;
@@ -67,17 +65,14 @@ public abstract class UIMATokenStream extends TokenStream {
     @Override
     public void reset() throws IOException {
         super.reset();
-        
         if( src == null ) {
             throw new IllegalStateException( "Input not set" );
         }
-        
         clearAttributes();
-        
         annIt = src.iterator();
         last = 0;
     }
-    
+
     @Override
     public boolean incrementToken() throws IOException {
         clearAttributes();
@@ -93,13 +88,12 @@ public abstract class UIMATokenStream extends TokenStream {
             getAttribute( CharTermAttribute.class ).append( getCharTerm( cur ) );
             getAttribute( PayloadAttribute.class ).setPayload( getPayload( cur ) );
             getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
-            
             return true;
         } else return false;
     }
-    
+
     protected abstract String getCharTerm( AnnotationFS cur );
-    
+
     protected abstract BytesRef getPayload( AnnotationFS cur );
 
 }

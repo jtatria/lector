@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -59,13 +59,13 @@ public class CASIndexer<D> extends AbstractEngine {
     public static final String PARAM_TOKEN_TYPENAMES = "tokenTypeNames";
     @ConfigurationParameter( name = PARAM_TOKEN_TYPENAMES, mandatory = false )
     private String[] tokenTypeNames;
-    
+
     public static final String PARAM_TYPEFIELD_MAP = "typeFieldMap";
     @ConfigurationParameter( name = PARAM_TYPEFIELD_MAP, mandatory = false )
     private String[] typeFieldMap;
 
     public static final String PARAM_USE_COVERS = "useCovers";
-    @ConfigurationParameter( 
+    @ConfigurationParameter(
         name = PARAM_USE_COVERS, mandatory = false, defaultValue = "false",
         description = "Include features from covering annotations as document metadata"
     )
@@ -75,7 +75,7 @@ public class CASIndexer<D> extends AbstractEngine {
     @ConfigurationParameter( name = PARAM_COVER_TYPENAME, mandatory = false,
         description = "Typename for cover annotation to include as metadata" )
     private String[] coverTypeNames;
-    
+
     public static final String RES_INDEXER = "indexer";
     @ExternalResource( key = RES_INDEXER, mandatory = true,
         description = "Index writing intrerface object" )
@@ -86,24 +86,24 @@ public class CASIndexer<D> extends AbstractEngine {
 
     @NullOnRelease
     private Map<AnnotationFS,Collection<AnnotationFS>> coverIndex;
-    
+
     @NullOnRelease
     private Set<Type> tokenTypes;
-    
+
     @NullOnRelease
     private Set<Type> coverTypes;
 
     private Map<String,String> typeMap = new HashMap<>();
-    
+
     private Long token;
 
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         // TODO: Add option to default to filed-per-type whe no typemap defined.
         super.initialize( ctx );
-        
+
         token = indexer.openSession();
-        
+
         FlagSet flags = new FlagSet( tokenTypeNames != null, typeFieldMap != null );
         // TODO: replace by flags.toInt()
         switch( (int) flags.toLong() ) {
@@ -120,7 +120,7 @@ public class CASIndexer<D> extends AbstractEngine {
                 }
                 break;
             }
-            case 2: { 
+            case 2: {
                 if( typeFieldMap.length % 2 != 0 ) {
                     throw new ResourceInitializationException( new IllegalArgumentException(
                         String.format( "Odd number of elements found in %s value.",
@@ -153,13 +153,17 @@ public class CASIndexer<D> extends AbstractEngine {
                 }
             }
         }
-        
-        getLogger().log( Level.INFO, 
+
+        getLogger().log( Level.INFO,
             "CASIndexer initialized. Using {0} as context annotations and {1} as tokens."
             , new Object[]{ docTypeName, typeMap.keySet().toString() }
         );
+        getLogger().log( Level.INFO,
+            "Writing CAS data to fields: {0}", typeMap.values().toString()
+        );
+
     }
-    
+
     @Override
     protected void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
         super.preProcess( jcas );
@@ -168,16 +172,16 @@ public class CASIndexer<D> extends AbstractEngine {
         Type docType = TypeSystems.checkType( jcas.getTypeSystem(), docTypeName );
         Type annType = TypeSystems.checkType( jcas.getTypeSystem(), CAS.TYPE_NAME_ANNOTATION );
         this.tokenTypes = checkTypes( jcas, typeMap.keySet() );
-        
+
         tokenIndex = CasUtil.indexCovered( jcas.getCas(), docType, annType );
-        
+
         if( useCovers ) {
             coverIndex = CasUtil.indexCovering( jcas.getCas(), docType, annType );
             this.coverTypes = checkTypes( jcas, Arrays.asList( coverTypeNames ) );
         }
-        
+
         getLogger().log( Level.INFO, "Indexing {0}. Found {1} context annotations."
-            , new Object[]{ getDocumentId(), Integer.toString( tokenIndex.keySet().size() ) } 
+            , new Object[]{ getDocumentId(), Integer.toString( tokenIndex.keySet().size() ) }
         );
     }
 
@@ -188,7 +192,7 @@ public class CASIndexer<D> extends AbstractEngine {
         } catch( Exception ex ) {
             throw new AnalysisEngineProcessException( ex );
         }
-        
+
         int ctxs = 0;
         for( AnnotationFS ctx : tokenIndex.keySet() ) {
             ctxs++;
@@ -238,7 +242,7 @@ public class CASIndexer<D> extends AbstractEngine {
         if( tokenIndex == null ) return null;
         return sortTypes( filterTypes( tokenIndex.get( docAnn ), tokenTypes ), typeMap );
     }
-    
+
     private Collection<AnnotationFS> filterTypes( Collection<AnnotationFS> input, Set<Type> types ) {
         if( types.isEmpty() ) return input;
         List<AnnotationFS> ret = new ArrayList<>();
@@ -260,12 +264,12 @@ public class CASIndexer<D> extends AbstractEngine {
         Map<String,List<AnnotationFS>> ret = new HashMap<>();
         for( AnnotationFS ann : anns ) {
             TypeSystem ts = ann.getView().getTypeSystem();
-            
+
             Type type = ann.getType();
             while( ts.getParent( type ) != null && !typeMap.containsKey( type.getName() ) ) {
                 type = ts.getParent( type );
             }
-            
+
             if( !ret.containsKey( typeMap.get( type.getName() ) ) ) {
                 ret.put( typeMap.get( type.getName() ), new ArrayList<>() );
             }
