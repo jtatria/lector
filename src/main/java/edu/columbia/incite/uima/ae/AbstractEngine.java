@@ -16,8 +16,6 @@
  */
 package edu.columbia.incite.uima.ae;
 
-import java.util.logging.Logger;
-
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CASException;

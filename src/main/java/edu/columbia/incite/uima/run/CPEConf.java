@@ -5,10 +5,13 @@
  */
 package edu.columbia.incite.uima.run;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 import edu.columbia.incite.uima.io.readers.BinaryReader;
+import edu.columbia.incite.uima.io.writers.BinaryWriter;
 
 /**
  *
@@ -22,6 +25,7 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
     public static final String THREADS         = "threads";
     public static final String READER_CLASS    = "readerClass";
     public static final String AE_CLASSES      = "aeCLasses";
+    public static final String CONSUMER        = "consumer";
 
     public CPEConf( String ns, Properties props ) {
         super( ns, props );
@@ -41,7 +45,11 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
     }
 
     public List<Class> getAEClasses() {
-        return getList( AE_CLASSES, Class.class, null );
+        return getList( AE_CLASSES, Class.class, Collections.EMPTY_LIST );
+    }
+
+    public Class consumer() {
+        return getOther( CONSUMER, Class.class, null );
     }
 
     public String getMetaOutputDir() {

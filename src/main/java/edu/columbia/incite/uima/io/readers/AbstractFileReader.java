@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -152,11 +152,11 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
 
         if( addDeltas ) {
             List<Path> deltas = findDeltas();
-            
+
             if( deltas != null && deltas.size() > 0 ) getLogger().log(
                 Level.INFO, "Adding {0} delta files to CAS.", Integer.toString( deltas.size() )
             );
-            
+
             for( Path delta : deltas ) {
                 try {
                     addDataFromFile( jcas, new FileInputStream( delta.toFile() ) );
