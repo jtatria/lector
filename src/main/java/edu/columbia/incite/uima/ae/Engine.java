@@ -40,9 +40,9 @@ public class Engine extends AbstractEngine {
 
     @Override
     public void realProcess( JCas jcas ) throws AnalysisEngineProcessException {
-        Document dmd = jcas.getAnnotationIndex( Document.class ).iterator().next();
+        String id = getDocumentId();
         getLogger().log( Level.INFO, "Marker engine running on cas {0}. {1} CASes seen, {2} total CASes.",
-            new Object[]{ dmd.getId(), Integer.toString( local++ ), Integer.toString( global++ ) }
+            new Object[]{ id, Integer.toString( local++ ), Integer.toString( global++ ) }
         );
 
         Map<String,Long> anns = new HashMap<>();
@@ -54,9 +54,14 @@ public class Engine extends AbstractEngine {
             anns.put( k, anns.get( k ) + 1 );
         }
 
+        StringBuilder sb = new StringBuilder();
+        sb.append( "Document: " );
+        sb.append( id );
+        sb.append( ". Annotations:\n" );
         for( Entry<String,Long> e : anns.entrySet() ) {
-            String msg = String.format( "%s\t%d", e.getKey(), e.getValue() );
-            getLogger().log( Level.INFO, String.format( "Found annotations: %s", msg ) );
+            String msg = String.format( "\t\t\t%s: %d\n", e.getKey(), e.getValue() );
+            sb.append( msg );
         }
+        getLogger().log( Level.INFO, String.format( sb.toString() ) );
     }
 }
