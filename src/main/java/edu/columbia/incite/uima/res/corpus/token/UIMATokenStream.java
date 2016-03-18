@@ -86,7 +86,7 @@ public abstract class UIMATokenStream extends TokenStream {
             int e = cur.getEnd() - offset;
             getAttribute( OffsetAttribute.class ).setOffset( b, e );
             getAttribute( CharTermAttribute.class ).append( getCharTerm( cur ) );
-            getAttribute( PayloadAttribute.class ).setPayload( getPayload( cur ) );
+            getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( getPayload( cur ) ) );
             getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
             return true;
         } else return false;
@@ -94,6 +94,6 @@ public abstract class UIMATokenStream extends TokenStream {
 
     protected abstract String getCharTerm( AnnotationFS cur );
 
-    protected abstract BytesRef getPayload( AnnotationFS cur );
+    protected abstract byte[] getPayload( AnnotationFS cur );
 
 }

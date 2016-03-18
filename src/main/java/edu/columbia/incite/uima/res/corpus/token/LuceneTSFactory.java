@@ -68,8 +68,8 @@ public class LuceneTSFactory extends Resource_ImplBase implements TokenFactory<T
         }
 
         @Override
-        protected BytesRef getPayload( AnnotationFS cur ) {
-            return new BytesRef();
+        protected byte[] getPayload( AnnotationFS cur ) {
+            return new byte[]{};
         }
     }
 }
