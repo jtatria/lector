@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -91,26 +91,16 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     private TextFilter textFilter;
 
     // Created internally
-    @NullOnRelease
-    private StringBuffer inBuffer;
-    @NullOnRelease
-    private StringBuffer outBuffer;
-    @NullOnRelease
-    private Stack<Annotation> annStack;
-    @NullOnRelease
-    private XPathNode curNode;
-    @NullOnRelease
-    private Integer curPara;
-    @NullOnRelease
-    private Paragraph paraAnn;
+    @NullOnRelease protected StringBuffer inBuffer;
+    @NullOnRelease protected StringBuffer outBuffer;
+    @NullOnRelease protected Stack<Annotation> annStack;
+    @NullOnRelease protected XPathNode curNode;
+    @NullOnRelease protected Integer curPara;
+    @NullOnRelease protected Paragraph paraAnn;
 
     // Set on configure
-    @NullOnRelease
-    private String docId;
-    @NullOnRelease
-    private Type paraType;
-    @NullOnRelease
-    private JCas jcas;
+    @NullOnRelease private String docId;
+    @NullOnRelease private JCas jcas;
 
     @Override
     public boolean initialize( ResourceSpecifier spec, Map<String, Object> params )
