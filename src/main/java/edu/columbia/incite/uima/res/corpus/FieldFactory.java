@@ -36,11 +36,7 @@ class FieldFactory {
     }
 
     public IndexableField makeField( DataField f, Datum d ) {
-
-        if( !cache.containsKey( f ) ) {
-            cache.put( f, buildField( f ) );
-        }
-        Field field = cache.get( f );
+        Field field = cache.computeIfAbsent( f, ( DataField fld ) -> buildField( fld ) );
 
         switch( f.type() ) {
             case STRING: case CHAR: case BOOLEAN: {

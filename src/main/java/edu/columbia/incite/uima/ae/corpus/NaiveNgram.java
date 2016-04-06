@@ -134,7 +134,7 @@ public class NaiveNgram extends AbstractEngine {
         if( stop ) return;
         for( int i = 0; i < n; i++ ) {
             if( focus.matcher( tokens.get( i ).getCoveredText() ).find() )
-                updateDataPoint( Collections.<Token>window( i, w, tokens ) );
+                updateDataPoint( Collections.<Token>window( tokens, i, w ) );
         }
     }
 
