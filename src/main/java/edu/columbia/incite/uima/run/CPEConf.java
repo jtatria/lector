@@ -29,7 +29,6 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
 
     public CPEConf( String ns, Properties props ) {
         super( ns, props );
-        factories.put( Class.class, CLASS_FACTORY );
     }
 
     public String getActionOnError() {
@@ -41,7 +40,7 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
     }
 
     public Class getReaderClass() {
-        return getOther( READER_CLASS, Class.class, BinaryReader.class );
+        return getClass( READER_CLASS, BinaryReader.class );
     }
 
     public List<Class> getAEClasses() {
@@ -49,7 +48,7 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
     }
 
     public Class consumer() {
-        return getOther( CONSUMER, Class.class, null );
+        return getClass( CONSUMER, null );
     }
 
     public String getMetaOutputDir() {
