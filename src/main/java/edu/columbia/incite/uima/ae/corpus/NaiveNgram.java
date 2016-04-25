@@ -38,7 +38,7 @@ import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.ae.AbstractEngine;
 import edu.columbia.incite.uima.res.dataio.SimpleDataResource;
-import edu.columbia.incite.util.collection.Collections;
+import edu.columbia.incite.util.collection.CollectionTools;
 import edu.columbia.incite.util.data.DataSet;
 import edu.columbia.incite.util.data.Datum;
 import edu.columbia.incite.util.data.DataField;
@@ -134,7 +134,7 @@ public class NaiveNgram extends AbstractEngine {
         if( stop ) return;
         for( int i = 0; i < n; i++ ) {
             if( focus.matcher( tokens.get( i ).getCoveredText() ).find() )
-                updateDataPoint( Collections.<Token>window( tokens, w, i ) );
+                updateDataPoint( CollectionTools.<Token>window( tokens, w, i ) );
         }
     }
 
