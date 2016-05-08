@@ -14,37 +14,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.columbia.incite.uima.api.util;
+package edu.columbia.incite.uima.api.types;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
-import edu.columbia.incite.uima.api.types.Document;
-import edu.columbia.incite.uima.api.types.Entity;
-import edu.columbia.incite.uima.api.types.Segment;
-import edu.columbia.incite.uima.api.types.Span;
-
 /**
  *
  * @author Jose Tomas Atria <jtatria@gmail.com>
  */
-public abstract class Types {
+public abstract class InciteTypes {
     /** Type name for document meta-data annotations. **/
-    public static final String DOCUMENT_TYPE = Document.class.getName();
+    public static final String DOCUMENT_TYPE   = Document.class.getName();
     /** Type name for the root type in this type system. **/
-    public static final String BASE_TYPE = Span.class.getName();
+    public static final String BASE_TYPE       = Span.class.getName();
     /** Type name for the segment root type. **/
-    public static final String SEGMENT_TYPE = Segment.class.getName();
+    public static final String SEGMENT_TYPE    = Segment.class.getName();
     /** Type name for the entity root type. **/
-    public static final String ENTITY_TYPE = Entity.class.getName();
+    public static final String ENTITY_TYPE     = Entity.class.getName();
     /** Feature name for document id's. **/
-    public static final String DOC_ID_FEATURE = "id";
+    public static final String DOC_ID_FEATURE  = "id";
     /** Feature name for document URI's. **/
     public static final String DOC_URI_FEATURE = "uri";
     
-    private Types(){
+    private InciteTypes(){
         // No instances.
     };
     

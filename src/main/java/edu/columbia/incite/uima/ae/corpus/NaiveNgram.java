@@ -45,7 +45,7 @@ import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.DataFieldType;
 import edu.columbia.incite.util.data.jaxb.JAXBDataSet;
 import edu.columbia.incite.util.io.FileUtils;
-import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
+import edu.columbia.incite.util.reflex.annotations.Resource;
 /**
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
@@ -83,9 +83,9 @@ public class NaiveNgram extends AbstractEngine {
     private DataField<String>[] fields;
     private DataField<Long> ct;
 
-    @NullOnRelease private List<Token> tokens;
-    @NullOnRelease private Integer n;
-    @NullOnRelease private Boolean stop;
+    @Resource private List<Token> tokens;
+    @Resource private Integer n;
+    @Resource private Boolean stop;
 
     private Long sessionId;
 

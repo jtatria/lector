@@ -32,13 +32,13 @@ import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.types.Document;
-import edu.columbia.incite.uima.api.util.Types;
+import edu.columbia.incite.uima.api.types.InciteTypes;
 import edu.columbia.incite.uima.res.casio.FeaturePathBroker;
 import edu.columbia.incite.uima.res.casio.InciteFeatureBroker;
-import edu.columbia.incite.uima.util.TypeSystems;
+import edu.columbia.incite.uima.util.Types;
 import edu.columbia.incite.util.data.Datum;
 import edu.columbia.incite.util.reflex.Resources;
-import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
+import edu.columbia.incite.util.reflex.annotations.Resource;
 
 /**
  *
@@ -49,7 +49,11 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     // CAS metadata parameters
     public static final String PARAM_DOCUMENT_TYPE = "dmdTypeName";
     @ConfigurationParameter( name = PARAM_DOCUMENT_TYPE, mandatory = false,
-        description = "Typename for document metadata annotations" )
+        description = "Typename for document metadata annotations"
+        // Java sucks: this is impossible to achieve because java lacks macros, and a reference to 
+        // a final static field is not constant enough for f*cking javac.
+        // , defaultValue = PARAM_DOCUMENT_TYPE_DFLT
+    )
     protected String dmdTypeName;
 
     public static final String PARAM_DOC_ID_FEATURE = "dmdIdFeatName";
@@ -71,7 +75,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     protected Feature dmdIdF;
     protected boolean customDmd = false;
 
-    @NullOnRelease
+    @Resource
     private Annotation curCasData;
 
     private int curCasIndex = 0;
@@ -94,7 +98,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
                     dmdBroker = new FeaturePathBroker( dmdFeatPatterns, true );
                 }
             } else {
-                dmdTypeName = Types.DOCUMENT_TYPE;
+                dmdTypeName = InciteTypes.DOCUMENT_TYPE;
                 dmdBroker = new InciteFeatureBroker();
             }
         }
@@ -127,7 +131,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
             }
         } else {
             getLogger().log( Level.WARNING, "No metadata for CAS. Using naive ids." );
-            return "doc_" + Integer.toString( curCasIndex );
+            return "doc-" + Integer.toString( curCasIndex );
         }
     }
 
@@ -135,8 +139,8 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         this.ts = jcas.getTypeSystem();
 
         if( customDmd ) {
-            dmdType = TypeSystems.checkType( ts, dmdTypeName );
-            dmdIdF = TypeSystems.checkFeature( dmdType, dmdIdFeatName );
+            dmdType = Types.checkType( ts, dmdTypeName );
+            dmdIdF = Types.checkFeature( dmdType, dmdIdFeatName );
             if( !dmdIdF.getRange().isPrimitive() ) {
                 throw new AnalysisEngineProcessException(
                     new Exception(
@@ -164,7 +168,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     protected abstract void realProcess( JCas jcas ) throws AnalysisEngineProcessException;
 
     protected void postProcess( JCas jcas ) {
-        Resources.releaseFor( this );
+        Resources.destroyFor( this );
     }
 
 }

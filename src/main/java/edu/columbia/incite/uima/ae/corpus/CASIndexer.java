@@ -41,9 +41,12 @@ import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.api.corpus.Indexer;
 import edu.columbia.incite.uima.ae.AbstractEngine;
-import edu.columbia.incite.uima.util.TypeSystems;
+import edu.columbia.incite.uima.util.Types;
 import edu.columbia.incite.util.flags.FlagSet;
-import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
+
+import static edu.columbia.incite.uima.util.Types.filterTypes;
+
+import edu.columbia.incite.util.reflex.annotations.Resource;
 
 /**
  *
@@ -81,16 +84,16 @@ public class CASIndexer<D> extends AbstractEngine {
         description = "Index writing intrerface object" )
     private Indexer<D> indexer;
 
-    @NullOnRelease
+    @Resource
     private Map<AnnotationFS,Collection<AnnotationFS>> tokenIndex;
 
-    @NullOnRelease
+    @Resource
     private Map<AnnotationFS,Collection<AnnotationFS>> coverIndex;
 
-    @NullOnRelease
+    @Resource
     private Set<Type> tokenTypes;
 
-    @NullOnRelease
+    @Resource
     private Set<Type> coverTypes;
 
     private Map<String,String> typeMap = new HashMap<>();
@@ -99,7 +102,7 @@ public class CASIndexer<D> extends AbstractEngine {
 
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
-        // TODO: Add option to default to filed-per-type whe no typemap defined.
+        // TODO: Add option to default to field-per-type when no typemap defined.
         super.initialize( ctx );
 
         token = indexer.openSession();
@@ -169,8 +172,8 @@ public class CASIndexer<D> extends AbstractEngine {
         super.preProcess( jcas );
 
         // check for types.
-        Type docType = TypeSystems.checkType( jcas.getTypeSystem(), docTypeName );
-        Type annType = TypeSystems.checkType( jcas.getTypeSystem(), CAS.TYPE_NAME_ANNOTATION );
+        Type docType = Types.checkType( jcas.getTypeSystem(), docTypeName );
+        Type annType = Types.checkType( jcas.getTypeSystem(), CAS.TYPE_NAME_ANNOTATION );
         this.tokenTypes = checkTypes( jcas, typeMap.keySet() );
 
         tokenIndex = CasUtil.indexCovered( jcas.getCas(), docType, annType );
@@ -243,23 +246,6 @@ public class CASIndexer<D> extends AbstractEngine {
         return sortTypes( filterTypes( tokenIndex.get( docAnn ), tokenTypes ), typeMap );
     }
 
-    private Collection<AnnotationFS> filterTypes( Collection<AnnotationFS> input, Set<Type> types ) {
-        if( types.isEmpty() ) return input;
-        List<AnnotationFS> ret = new ArrayList<>();
-        for( AnnotationFS ann : input ) {
-            Type type = ann.getType();
-            TypeSystem ts = ann.getView().getTypeSystem();
-            while( type != null ) {
-                if( types.contains( type ) ) {
-                    ret.add( ann );
-                    break;
-                }
-                type = ts.getParent( type );
-            }
-        }
-        return ret;
-    }
-
     private Map<String,List<AnnotationFS>> sortTypes( Collection<AnnotationFS> anns, Map<String,String> typeMap ) {
         Map<String,List<AnnotationFS>> ret = new HashMap<>();
         for( AnnotationFS ann : anns ) {
@@ -281,7 +267,7 @@ public class CASIndexer<D> extends AbstractEngine {
     private Set<Type> checkTypes( JCas jcas, Collection<String> typeNames ) throws AnalysisEngineProcessException {
         Set<Type> ret = new HashSet<>();
         for( String typeName : typeNames ) {
-            ret.add( TypeSystems.checkType( jcas.getTypeSystem(), typeName ) );
+            ret.add(Types.checkType( jcas.getTypeSystem(), typeName ) );
         }
         return ret;
     }

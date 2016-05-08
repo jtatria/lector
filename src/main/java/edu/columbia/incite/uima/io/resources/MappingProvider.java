@@ -27,7 +27,7 @@ import edu.columbia.incite.uima.api.ConfigurableResource;
 /**
  * Resource implementing a mapping between string keys and UIMA annotation types and features.
  * This resource is designed to be used in order to implement a mapping between data keys in a 
- * source document and elements in a type system, e.g. between XML element and attribute names and 
+ * source document and members of a type system, e.g. between XML element and attribute names and 
  * UIMA types and features.
  * 
  * @author José Tomás Atria <ja2612@columbia.edu>
@@ -73,12 +73,12 @@ public interface MappingProvider extends ConfigurableResource<CAS> {
     boolean isAnnotation( String key );    
 
     /**
-     * Return true if this key corresponds to line-break to be inserted in the CAS document text.
+     * Return true if this key corresponds to a line-break to be inserted in the CAS document text.
      * 
      * @param key A string key, typically an XML element qName
      * @return      {@code true} if this key is indicates a line-break.
      */
-    boolean isLineBreak( String key );
+    boolean isLineBreak( String key ); // TODO: get rid of this abomination.
     
     /**
      * Return true if this key corresponds to a paragraph break in the CAS document text.

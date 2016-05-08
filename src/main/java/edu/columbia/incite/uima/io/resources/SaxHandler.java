@@ -16,7 +16,6 @@
  */
 package edu.columbia.incite.uima.io.resources;
 
-import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.Resource;
 import org.apache.uima.resource.ResourceProcessException;
@@ -39,8 +38,8 @@ import org.xml.sax.ContentHandler;
 public interface SaxHandler extends Resource, ContentHandler {
 
     /**
-     * Pass a reference to an empty CAS to this SAX handler. This is typically done at the beginning of
-     * a reader's
+     * Pass a reference to an empty CAS to this SAX handler. This is typically done at the beginning
+     * of a reader's
      * {@link org.apache.uima.collection.CollectionReader#getNext(org.apache.uima.cas.CAS)
      * getNext(CAS)} method, before any SAX events are written to the handler.
      * <br>

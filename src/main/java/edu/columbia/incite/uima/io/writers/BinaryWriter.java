@@ -75,7 +75,7 @@ public class BinaryWriter extends AbstractFileWriter {
     }
     
     @Override
-    public void process( JCas jcas ) throws AnalysisEngineProcessException {
+    public void realProcess( JCas jcas ) throws AnalysisEngineProcessException {
         OutputStream os = getOutputStreamForCas( jcas.getCas() );
         
         getLogger().log( Level.INFO, "Writing {0} CAS to {1}{2}{3}"
@@ -182,5 +182,5 @@ public class BinaryWriter extends AbstractFileWriter {
         OutputStream os = FileUtils.getOutputStream( outputDir, tsFile, mkdirs, overwrite );
         writeTypeSystem( jcas, os );
         needsTsWritten = false;
-    }    
+    }
 }

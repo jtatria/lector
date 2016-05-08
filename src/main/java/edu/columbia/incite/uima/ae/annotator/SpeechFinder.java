@@ -33,7 +33,7 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import edu.columbia.incite.uima.util.TypeSystems;
+import edu.columbia.incite.uima.util.Types;
 
 /**
  *
@@ -68,7 +68,7 @@ public class SpeechFinder extends CasAnnotator_ImplBase {
         Type trialType = cas.getTypeSystem().getType( sectTypeName );
         Type baseType = cas.getTypeSystem().getType( baseTypeName );
 
-        TypeSystems.checkTypes( cas.getTypeSystem(), sectTypeName, baseTypeName );
+        Types.checkTypes( cas.getTypeSystem(), sectTypeName, baseTypeName );
         
         AnnotationIndex<AnnotationFS> trials = cas.getAnnotationIndex( trialType );
 

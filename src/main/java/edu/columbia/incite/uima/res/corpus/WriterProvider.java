@@ -41,11 +41,11 @@ public class WriterProvider extends Resource_ImplBase {
     )
     private Double rbSize;
 
-    public static final String PARAM_MAX_THREADS = "maxThreads";
-    @ConfigurationParameter( name = PARAM_MAX_THREADS, mandatory = false,
-        description = "Maximum number of threads for indexing process."
-    )
-    private Integer maxThreads;
+//    public static final String PARAM_MAX_THREADS = "maxThreads";
+//    @ConfigurationParameter( name = PARAM_MAX_THREADS, mandatory = false,
+//        description = "Maximum number of threads for indexing process."
+//    )
+//    private Integer maxThreads;
 
     public static final String PARAM_USE_COMPOUND_FILE = "compound";
     @ConfigurationParameter( name = PARAM_USE_COMPOUND_FILE, mandatory = false,

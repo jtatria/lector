@@ -29,9 +29,10 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.columbia.incite.uima.ae.AbstractEngine;
-import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
 
 import java.util.regex.Pattern;
+
+import edu.columbia.incite.util.reflex.annotations.Resource;
 
 /**
  *
@@ -54,7 +55,7 @@ public class TokenFilter extends AbstractEngine {
     private Pattern period;
     private Pattern abbrev;
     
-    @NullOnRelease
+    @Resource
     private List<Token> tokens;
     
     @Override

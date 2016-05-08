@@ -32,7 +32,7 @@ import org.apache.uima.fit.component.CasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.util.Level;
 
-import edu.columbia.incite.uima.util.TypeSystems;
+import edu.columbia.incite.uima.util.Types;
 
 /**
  *
@@ -67,8 +67,8 @@ public class TypeTranslator extends CasAnnotator_ImplBase {
         
     @Override
     public void process( CAS cas ) throws AnalysisEngineProcessException {
-        Type srcType = TypeSystems.checkType( cas.getTypeSystem(), srcTypeName );
-        Type tgtType = TypeSystems.checkType( cas.getTypeSystem(), tgtTypeName );
+        Type srcType = Types.checkType( cas.getTypeSystem(), srcTypeName );
+        Type tgtType = Types.checkType( cas.getTypeSystem(), tgtTypeName );
         
         if( overwrite ) {
             List<AnnotationFS> removes = new ArrayList<>();

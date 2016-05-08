@@ -16,8 +16,10 @@
  */
 package edu.columbia.incite.uima.util;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.regex.Pattern;
+
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -60,5 +62,16 @@ public abstract class Annotations {
         } else {
             return !Pattern.compile( pattern.substring( exPrefix.length() ) ).matcher( check ).matches();
         }
+    }
+    
+    public static Comparator<AnnotationFS> uimaSort() {
+        return new Comparator<AnnotationFS>(){
+            @Override
+            public int compare( AnnotationFS o1, AnnotationFS o2 ) {
+                int ret = Integer.compare( o1.getBegin(), o2.getBegin() );
+                if( ret == 0 ) ret = Integer.compare( o2.getEnd(), o1.getEnd() );
+                return ret;
+            }
+        };
     }
 }

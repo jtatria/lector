@@ -44,7 +44,7 @@ import edu.columbia.incite.uima.api.SessionResource;
  */
 public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<Long> {
 
-    public static final String DEFAULT_FIELD = "contents";
+    public static final String DEFAULT_FIELD = "text";
 
     /**
      * Creates an instance of type D from the given UIMA annotation.

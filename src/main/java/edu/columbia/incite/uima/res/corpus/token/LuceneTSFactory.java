@@ -69,7 +69,7 @@ public class LuceneTSFactory extends Resource_ImplBase implements TokenFactory<T
 
         @Override
         protected byte[] getPayload( AnnotationFS cur ) {
-            return new byte[]{};
+            return BytesRef.EMPTY_BYTES;
         }
     }
 }

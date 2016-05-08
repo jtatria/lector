@@ -92,9 +92,8 @@ public class XmiSerializer extends AbstractFileWriter {
         
     }
 
-    private int curDelta = 0;
     @Override
-    public void process( JCas jcas ) throws AnalysisEngineProcessException {
+    public void realProcess( JCas jcas ) throws AnalysisEngineProcessException {
         String baseName = getFileNameForCas( jcas.getCas() );
         
         int i = 0;
@@ -120,5 +119,5 @@ public class XmiSerializer extends AbstractFileWriter {
         
         curData = null;
         curMarker = null;
-    }    
+    }
 }

@@ -19,24 +19,17 @@ package edu.columbia.incite.uima.io.writers;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
-import org.apache.uima.fit.descriptor.ExternalResource;
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
-import edu.columbia.incite.uima.api.casio.TypeProvider;
-import edu.columbia.incite.uima.res.casio.InciteTypeProvider;
-import edu.columbia.incite.uima.util.TypeSystems;
+import edu.columbia.incite.uima.ae.AbstractEngine;
 import edu.columbia.incite.util.io.FileUtils;
 
 /**
@@ -44,7 +37,7 @@ import edu.columbia.incite.util.io.FileUtils;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
+public abstract class AbstractFileWriter extends AbstractEngine {
 
     /**
      * Directory where CAS files will be saved.
@@ -52,13 +45,6 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
     public static final String PARAM_OUTPUT_DIR = "outputDir";
     @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = true )
     protected String outputDir;
-
-    /**
-     * File name pattern.
-     */
-    public static final String PARAM_FILE_PATTERN = "fileNamePattern";
-    @ConfigurationParameter( name = PARAM_FILE_PATTERN, mandatory = false, defaultValue = "%c.%e" )
-    protected String fileNamePattern;
 
     /**
      * Create directories if they don't exist.
@@ -75,63 +61,27 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
     protected Boolean overwrite;
 
     /**
+     * File name pattern.
+     */
+    public static final String PARAM_FILE_PATTERN = "fileNamePattern";
+    @ConfigurationParameter( name = PARAM_FILE_PATTERN, mandatory = false, defaultValue = "%c.%e" )
+    protected String fileNamePattern;
+
+    /**
      * Filename extension to use. Default is ".data"
      */
     public static final String PARAM_FILE_EXTENSION = "fileNameExtension";
+    // TODO: File name separator hardcoded.
     @ConfigurationParameter( name = PARAM_FILE_EXTENSION, mandatory = false, defaultValue = ".data" )
     protected String ext;
-
-    /**
-     * Type name for CAS Document Metadata. If provided, this will be used to determine file names,
-     * as per the configured file name pattern.
-     */
-    public final static String PARAM_DMD_TYPE = "dmdTypeName";
-    @ConfigurationParameter( name = PARAM_DMD_TYPE, mandatory = false )
-    protected String dmdTypeName;
-
-    /**
-     * Feature name for a feature in the Document Metadata annotation that contains the file name.
-     */
-    public final static String PARAM_FILENAME_FEAT = "fileNameFeature";
-    @ConfigurationParameter( name = PARAM_FILENAME_FEAT, mandatory = false )
-    protected String fileNameFeat;
-
-    /**
-     * Resource implementing TypeProvider to access Document Metadata if no type or feature is
-     * specified.
-     */
-    public final static String RES_NAME_PROVIDER = "nameProvider";
-    @ExternalResource(
-         key = RES_NAME_PROVIDER, api = TypeProvider.class, mandatory = false,
-         description = "Name provider for metadata type and features. Mandatory if no metadata "
-         + "type and feature names are provided."
-    )
-    private TypeProvider nameProvider;
-
-    private boolean useNameProvider = true;
-
+  
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
 
-        getLogger().log( Level.INFO, "{0} file CAS writer initialized. {1}riting CAS files to {2}",
+        getLogger().log( Level.INFO, "{0} file writer initialized. {1}riting data to files in {2}",
             new Object[] { this.getClass().getSimpleName(), overwrite ? "Overw" : "W", outputDir }
         );
-
-        if( dmdTypeName == null || fileNameFeat == null ) {
-            String msg = "No features provided for filenaming; ";
-            if( nameProvider == null ) {
-                getLogger().log( Level.INFO, msg + "Using Incite name provider." );
-                nameProvider = new InciteTypeProvider();
-            } else {
-                getLogger().log( Level.INFO, msg + "Using configured name provider {0}",
-                    new Object[] { nameProvider.getMetaData().getName() }
-                );
-            }
-        } else {
-            useNameProvider = false;
-        }
-
     }
 
     /**
@@ -154,6 +104,10 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
             throw new AnalysisEngineProcessException( ex );
         }
     }
+    
+    public OutputStream getOutputStreamForCas( JCas jcas ) throws AnalysisEngineProcessException {
+        return getOutputStreamForCas( jcas.getCas() );
+    }
 
     /**
      * Produce writer to write CAS data to. The writer will be created following the configured
@@ -164,7 +118,7 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
      * @return A valid writer, pointing to an existing file named as per the given CAS's metadata
      *         information.
      *
-     * @throws AnalysisEngineProcessException If reading CAS data failed, or an output stream could
+     * @throws AnalysisEngineProcessException If reading CAS data failed, or writer could
      *                                        not be obtained.
      */
     public Writer getWriterForCas( CAS cas ) throws AnalysisEngineProcessException {
@@ -175,8 +129,12 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
             throw new AnalysisEngineProcessException( ex );
         }
     }
+    
+    public Writer getWriterForCas( JCas jcas ) throws AnalysisEngineProcessException {
+        return getWriterForCas( jcas.getCas() );
+    }
 
-    private final static AtomicInteger counter = new AtomicInteger();
+    private final static AtomicInteger COUNTER = new AtomicInteger();
 
     /**
      * Get a valid file name for the given CAS. This method will attempt to produce the most
@@ -193,29 +151,14 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
      *                                        correct name.
      */
     public String getFileNameForCas( CAS cas ) throws AnalysisEngineProcessException {
-        String fileName = null;
-        if( useNameProvider ) {
-            try {
-                nameProvider.configure( cas );
-            } catch( Exception ex ) {
-                throw new AnalysisEngineProcessException( ex );
-            }
-            fileName = nameProvider.getCasId( cas );
-        } else {
-            Type dmdType = TypeSystems.checkType( cas.getTypeSystem(), dmdTypeName );
-            Feature docIdF = TypeSystems.checkFeature( dmdType, fileNameFeat );
-            AnnotationFS dmd = cas.getAnnotationIndex( dmdType ).iterator().next();
-            if( dmd != null ) {
-                fileName = dmd.getFeatureValueAsString( docIdF );
-            }
-        }
-        if( fileName == null ) {
-            getLogger().log( Level.INFO, "No annotation found for document metadata. Using naive file names." );
-            fileName = "cas" + counter.getAndIncrement();
-        }
+        String fileName = getDocumentId();
         fileName = fileNamePattern.replaceAll( "%c", fileName );
         fileName = fileName.replaceAll( "\\.%e", ext );
         return fileName;
+    }
+    
+    public String getFileNameForCas( JCas jcas ) throws AnalysisEngineProcessException {
+        return getFileNameForCas( jcas.getCas() );
     }
 
     protected String getPattern() {
@@ -244,6 +187,11 @@ public abstract class AbstractFileWriter extends JCasAnnotator_ImplBase {
 
     protected boolean getOverwrite() {
         return this.overwrite;
+    }
+    
+    @Override
+    public void collectionProcessComplete() {
+        COUNTER.set( 0 );
     }
 
 }

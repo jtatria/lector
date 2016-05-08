@@ -54,17 +54,17 @@ import edu.columbia.incite.uima.io.resources.SaxHandler;
 
 /**
  * Collection reader that creates CASes from XML elements. This component takes an input directory
- * containing XML files and an XPath expression that produces a sequence of XML elements
+ * containing XML files and an (optional) XPath expression that produces a sequence of XML elements
  * corresponding to CAS documents and writes each of this elements to a SAX handler in order to
  * populate new CASes.
- *
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class XmlReader extends AbstractFileReader {
 
     /**
-     * Optional XPath expression for XML nodes that will be CASed.
+     * Optional XPath expression for XML nodes that will be CASed. Each document's root node will 
+     * be used if none is given.
      */
     public final static String PARAM_CAS_XPATH = "XPath";
     @ConfigurationParameter( name = PARAM_CAS_XPATH, mandatory = false, defaultValue = ""
@@ -163,17 +163,23 @@ public class XmlReader extends AbstractFileReader {
 
         // Populate CAS data.
         try {
-            // Pass cas to handler. CAS must be released when done.
+            // TODO: refactor this to get rid of the dependency on the ancient Dom4J. 
+            // See http://www.java2s.com/Code/Java/XML/ProduceaSAXstreamfromaDOMDocument.htm for an 
+            // example using (completely moronic and cumbersome) standard libraries
+            
+            // Pass CAS to handler. CAS must be released when done.
             saxHandler.configure( jcas );
 
             // Get a SAX writer.
             SAXWriter writer = new SAXWriter( saxHandler );
 
             // Start handler processing.
+            // TODO: review SAX spec to determine if this is appropriate when dealing with non-root nodes.
             saxHandler.startDocument();
             // Write data to handler.
             writer.write( curElt );
             // Finish handler processing.
+            // TODO: review SAX spec to determine if this is appropriate when dealing with non-root nodes.
             saxHandler.endDocument();
 
         } catch( SAXException | ResourceProcessException ex ) {

@@ -40,11 +40,11 @@ import org.xml.sax.SAXException;
 import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.Paragraph;
 import edu.columbia.incite.util.reflex.Resources;
-import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
 import edu.columbia.incite.util.xml.XPathNode;
+import edu.columbia.incite.util.reflex.annotations.Resource;
 
 /**
- * Default implementation of Incite's SAX handler for writing CAS data from XML data.
+ * Default implementation of Incite's SAX handler for reading CAS data from XML data.
  * This resource is capable of extracting SOFA data from an XML file's character data, as well as
  * populating the CAS with annotations created from XML elements and attributes.
  * Text normalization requires the instantiation and configuration of a {@link TextFilter}.
@@ -59,23 +59,42 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      * Filter text from XML character data before writing it to the CAS' SOFA. Requires a {@link TextFilter}.
      */
     public static final String PARAM_FILTER_TEXT = "filterText";
-    @ConfigurationParameter( name = PARAM_FILTER_TEXT, mandatory = false )
-    private Boolean filterText = true;
+    @ConfigurationParameter( name = PARAM_FILTER_TEXT, mandatory = false,
+        defaultValue = "true"
+    )
+    private Boolean filterText;
 
     /**
      * Create entity annotations from XML elements and attributes. Requires a {@link MappingProvider}.
      */
     public static final String PARAM_ANNOTATE = "annotate";
-    @ConfigurationParameter( name = PARAM_ANNOTATE, mandatory = false )
-    private Boolean annotate = true;
+    @ConfigurationParameter( name = PARAM_ANNOTATE, mandatory = false,
+        defaultValue = "true"
+    )
+    private Boolean annotate;
 
     /**
      * Create paragraph segments over SOFA data. Requires a {@link MappingProvider}.
      */
     public static final String PARAM_MAKE_PARAGRPAHS = "makeParagraphs";
-    @ConfigurationParameter( name = PARAM_MAKE_PARAGRPAHS, mandatory = false )
-    private Boolean makeParagraphs = true;
-
+    @ConfigurationParameter( name = PARAM_MAKE_PARAGRPAHS, mandatory = false,
+        defaultValue = "true"
+    )
+    private Boolean makeParagraphs;
+    
+    // TODO: add line break options. This is tricky, because the specific behaviour that needs to 
+    // be implemented will vary according to the values of makeParagraphs and filterText. For now, 
+    // we are asuming that there is a MappingProvider, and follow the mapping provider's 
+    // instructions with regards to what is a line break. i.e. we only break lines on endElement() 
+    // if the mapping provider returns true for isLineBreak(). However, this is not flexible enough 
+    // and makes a mapping provider necessary even if we are not creating annotations or paragraphs. 
+    // Furthermore, the actual procedure for breaking lines will be different if text is being 
+    // processed by a TextFilter. Now, if we are filtering, line breaks are appended to the output 
+    // character stream by calling the filter's appendBreak() method, which performs various snity
+    // checks before breaking. If we are not filtering, the HARDCODED VALUE \n is simply inserted 
+    // into the output character stream without any ceremony. This causes a whole deal of trouble 
+    // if the the input character stream is less than perfect, i.e. always.
+    
     /**
      * Shared resource providing a mapping from XML data to a UIMA type system.
      */
@@ -91,16 +110,16 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     private TextFilter textFilter;
 
     // Created internally
-    @NullOnRelease protected StringBuffer inBuffer;
-    @NullOnRelease protected StringBuffer outBuffer;
-    @NullOnRelease protected Stack<Annotation> annStack;
-    @NullOnRelease protected XPathNode curNode;
-    @NullOnRelease protected Integer curPara;
-    @NullOnRelease protected Paragraph paraAnn;
+    @Resource protected StringBuffer inBuffer;
+    @Resource protected StringBuffer outBuffer;
+    @Resource protected Stack<Annotation> annStack;
+    @Resource protected XPathNode curNode;
+    @Resource protected Integer curPara;
+    @Resource protected Paragraph paraAnn;
 
     // Set on configure
-    @NullOnRelease private String docId;
-    @NullOnRelease private JCas jcas;
+    @Resource private String docId;
+    @Resource private JCas jcas;
 
     @Override
     public boolean initialize( ResourceSpecifier spec, Map<String, Object> params )
@@ -110,10 +129,20 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         if( filterText && textFilter == null ) {
             textFilter = new InciteTextFilter();
         }
-        if( annotate && mappingProvider == null ) {
+        
+        if( ( annotate || makeParagraphs ) && mappingProvider == null ) {
             throw new ResourceInitializationException(
                 ResourceInitializationException.NO_RESOURCE_FOR_PARAMETERS,
                 new Object[] { RES_MAPPING_PROVIDER }
+            );
+        }
+        
+        if( mappingProvider == null ) {
+            getLogger().log( Level.WARNING, 
+                "Processing XML data without providing a MappingProvider is not entirely supported "
+                + "yet, as text processing with or without a textfilter relies on MappingProvider's "
+                + "'isLineBreak()' method. This notice will be removed as soon as this problem is "
+                + "fixed"
             );
         }
 
@@ -167,6 +196,9 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     public void endElement( String uri, String lName, String qName ) throws SAXException {
         this.curNode = this.curNode.parent();
         updateCharBuffers();
+        
+        // TODO FIX THIS: remove the dependency on mapping provider if we arenot using one, offer 
+        // alternative methods for breaking lines, etc.
         if( mappingProvider.isLineBreak( qName ) ) {
             if( filterText ) {
                 textFilter.appendBreak( outBuffer );
@@ -174,6 +206,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
                 outBuffer.append( "\n" );
             }
         }
+        
         if( annotate && mappingProvider.isAnnotation( qName ) ) {
             if( !annStack.empty() ) {
                 finishAnnotation( annStack.pop() );
@@ -206,7 +239,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
 
     @Override
     public void reset() {
-        Resources.releaseFor( this );
+        Resources.destroyFor( this );
     }
 
     private void updateCharBuffers() {

@@ -31,8 +31,8 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.util.CasCopier;
 
-import edu.columbia.incite.uima.util.TypeSystems;
-import edu.columbia.incite.util.reflex.annotations.NullOnRelease;
+import edu.columbia.incite.uima.util.Types;
+import edu.columbia.incite.util.reflex.annotations.Resource;
 
 /**
  *
@@ -54,18 +54,18 @@ public final class SegmentSplitter extends CasMultiplier_ImplBase {
     )
     private Boolean copyAnnotations;
 
-    @NullOnRelease
+    @Resource
     private CAS srcCas;
     
-    @NullOnRelease
+    @Resource
     private FSIterator<AnnotationFS> zoneIt;
     
-    @NullOnRelease
+    @Resource
     private Map<AnnotationFS, Collection<AnnotationFS>> annIndex;
 
     @Override
     public void process( CAS cas ) throws AnalysisEngineProcessException {
-        Type divType = TypeSystems.checkType( cas.getTypeSystem(), segTypename );
+        Type divType = Types.checkType( cas.getTypeSystem(), segTypename );
 
         srcCas = cas;
         zoneIt = cas.getAnnotationIndex( divType ).iterator();

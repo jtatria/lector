@@ -7,6 +7,7 @@ package edu.columbia.incite.uima.util;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,12 +29,39 @@ import org.apache.uima.resource.ExternalResourceDescription;
 import org.apache.uima.resource.Resource;
 import org.apache.uima.resource.ResourceInitializationException;
 
+import static edu.columbia.incite.util.reflex.ReflectionUtils.getFields;
+
 /**
  *
  * @author Jose Tomas Atria <jtatria@gmail.com>
  */
 public abstract class ComponentFactory {
 
+    public static Properties makeDefaultProperties( Class clz ) {
+        return makeDefaultProperties( clz, null );
+    }
+
+    public static Properties makeDefaultProperties( Class clz, Properties props ) {
+        props = props != null ? props : new Properties();
+        
+        List<Field> fs = getFields( clz );
+        for( Field f : fs ) {
+            if( isConfigurationParameter( f ) ) {
+                String key = f.getAnnotation( ConfigurationParameter.class ).name();
+                String[] dfvs = f.getAnnotation( ConfigurationParameter.class ).defaultValue();
+                String dfv = String.join( ",", dfvs );
+                props.setProperty( f.getDeclaringClass().getName() + "." + key, dfv );
+            } else if( isExternalResource( f ) ) {
+                String key = f.getAnnotation( ExternalResource.class ).key();
+                props.setProperty( f.getDeclaringClass().getName() + "." + key, "RESOURCE_IMPL_CLASS_HERE" );
+                Class<? extends Resource> api = f.getAnnotation( ExternalResource.class ).api();
+                props = makeDefaultProperties( api, props );
+            }
+        }
+        
+        return props;
+    }
+    
     public static List parseConfForClass( Class clz, Properties conf ) {
         List out = new ArrayList();
 
@@ -147,7 +175,7 @@ public abstract class ComponentFactory {
 
     private static Object getParameterValue( Class clz, Field f, Properties conf ) {
         String key = f.getAnnotation( ConfigurationParameter.class ).name();
-        if( conf.getProperty(clz.getName() + "." + key ) != null ) {
+        if( conf.getProperty( clz.getName() + "." + key ) != null ) {
             return parseArgument( f.getType(), conf.getProperty( clz.getName() + "." + key ) );
         } else if( conf.getProperty(f.getDeclaringClass().getName() + "." + key ) != null ) {
             return parseArgument( f.getType(), conf.getProperty( f.getDeclaringClass().getName() + "." + key ) );
@@ -183,17 +211,17 @@ public abstract class ComponentFactory {
     }
 
     private enum UimaFitType {
-        STRING( String.class ),
-        BYTE( Byte.class ),
-        SHORT( Short.class ),
-        INTEGER( Integer.class ),
-        LONG( Long.class ),
-        FLOAT( Float.class ),
-        DOUBLE( Double.class ),
-        BOOLEAN( Boolean.class ),
+        STRING(       String.class ),
+        BYTE(           Byte.class ),
+        SHORT(         Short.class ),
+        INTEGER(     Integer.class ),
+        LONG(           Long.class ),
+        FLOAT(         Float.class ),
+        DOUBLE(       Double.class ),
+        BOOLEAN(     Boolean.class ),
         CHARACTER( Character.class ),
-        LOCALE( Locale.class ),
-        PATTERN( Pattern.class )
+        LOCALE(       Locale.class ),
+        PATTERN(     Pattern.class ),
         ;
 
         static Map<Class,UimaFitType> FOR_CLASS = new HashMap<>();

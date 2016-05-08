@@ -17,21 +17,25 @@
 package edu.columbia.incite.uima.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
+
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.cas.text.AnnotationFS;
 
 /**
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public abstract class TypeSystems {
+public abstract class Types {
 
     public static Type findCommonParentType( TypeSystem ts, Type k, Type j ) {
         List<Type> kp = getTypeHierarchy( ts, k );
@@ -118,5 +122,32 @@ public abstract class TypeSystems {
     
     public static String getShortName( String typeName ) {
         return Pattern.compile( "(.*)\\.([A-Za-z]+)$" ).matcher( typeName ).replaceAll( "$2" );
+    }
+    
+    public static Collection<AnnotationFS> filterTypes( Collection<AnnotationFS> input, Set<Type> types ) {
+        if( types.isEmpty() ) return input;
+        List<AnnotationFS> ret = new ArrayList<>();
+        for( AnnotationFS ann : input ) {
+            Type type = ann.getType();
+            TypeSystem ts = ann.getView().getTypeSystem();
+            while( type != null ) {
+                if( types.contains( type ) ) {
+                    ret.add( ann );
+                    break;
+                }
+                type = ts.getParent( type );
+            }
+        }
+        return ret;
+    }
+    
+    public static boolean isType( AnnotationFS ann, Type chk ) {
+        if( ann == null || chk == null ) return false;
+        Type type = ann.getType();
+        while( type != null ) {
+            if( type == chk ) return true;
+            type = ann.getView().getTypeSystem().getParent( type );
+        }
+        return false;
     }
 }

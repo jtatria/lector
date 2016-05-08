@@ -14,7 +14,7 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.fit.component.Resource_ImplBase;
 
 import edu.columbia.incite.uima.api.casio.TypeProvider;
-import edu.columbia.incite.uima.api.util.Types;
+import edu.columbia.incite.uima.api.types.InciteTypes;
 
 /**
  *
@@ -26,32 +26,32 @@ public class InciteTypeProvider extends Resource_ImplBase implements TypeProvide
 
     @Override
     public Feature getDocumentIdFeature() {
-        return ts.getType( Types.DOCUMENT_TYPE ).getFeatureByBaseName( Types.DOC_ID_FEATURE );
+        return ts.getType(InciteTypes.DOCUMENT_TYPE ).getFeatureByBaseName(InciteTypes.DOC_ID_FEATURE );
     }
     
     @Override
     public List<Feature> getDocumentMetadataFeatures() {
-        return ts.getType( Types.DOCUMENT_TYPE ).getFeatures();
+        return ts.getType(InciteTypes.DOCUMENT_TYPE ).getFeatures();
     }
 
     @Override
     public Type getDocumentMetadataType() {
-        return ts.getType( Types.DOCUMENT_TYPE );
+        return ts.getType(InciteTypes.DOCUMENT_TYPE );
     }
     
     @Override
     public Type getBaseType() {
-        return ts.getType( Types.BASE_TYPE );
+        return ts.getType(InciteTypes.BASE_TYPE );
     }
 
     @Override
     public Type getSegmentType() {
-        return ts.getType( Types.SEGMENT_TYPE );
+        return ts.getType(InciteTypes.SEGMENT_TYPE );
     }
 
     @Override
     public Type getEntityType() {
-        return ts.getType( Types.ENTITY_TYPE );
+        return ts.getType(InciteTypes.ENTITY_TYPE );
     }
 
     @Override
