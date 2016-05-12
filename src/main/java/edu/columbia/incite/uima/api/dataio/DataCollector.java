@@ -39,7 +39,7 @@ import edu.columbia.incite.uima.api.OLDSessionResource;
  * @param <T>   Type for data objects.
  */
 @Deprecated
-public interface DataCollector<T> extends OLDSessionResource<AnalysisComponent,Map<String,String>> {
+public interface DataCollector<T> extends OLDSessionResource<AnalysisComponent,Map<String,String>> { // URGENT
     
     static final String PARAM_MERGE_DATA = "Merge data";
         

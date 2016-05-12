@@ -144,14 +144,14 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
 
     private void addScalar( String name, Datum tgt, DataFieldType ft, Serializable v ) {
         if( v == null ) return;
-        tgt.set( new DataField( name, ft ), v );
+        tgt.put( new DataField( name, ft ), v );
     }
 
     private void addArray( String name, Datum tgt, DataFieldType ft, String array ) {
         if( array == null ) return;
         int i = 0;
         for( String v : array.split( "," ) ) {
-            tgt.set( new DataField( name + Integer.toString( i++ ), ft ), ft.decode( v ) );
+            tgt.put( new DataField( name + Integer.toString( i++ ), ft ), ft.decode( v ) );
         }
     }
 

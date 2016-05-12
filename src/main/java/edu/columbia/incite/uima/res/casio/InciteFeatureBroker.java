@@ -54,11 +54,11 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
         Span span = (Span) ann;
 
         if( span.getId() != null )
-            tgt.set( new DataField( ID_FIELD, DataFieldType.STRING ), span.getId() );
+            tgt.put( new DataField( ID_FIELD, DataFieldType.STRING ), span.getId() );
         if( span.getAttributes() != null ) {
             for( int i = 0; i < span.getAttributes().size(); i++ ) {
                 DataField f = new DataField( span.getAttributes( i ).getK(), DataFieldType.STRING );
-                tgt.set( f, span.getAttributes( i ).getV() );
+                tgt.put( f, span.getAttributes( i ).getV() );
             }
         }
 
@@ -76,19 +76,19 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
                 String value = targ.getType().getShortName()
                     + TypeSystem.FEATURE_SEPARATOR + targ.getId();
                 String predKey = isSubject ? pred + SUB_SUFFIX : pred + OBJ_SUFFIX;
-                tgt.set( new DataField( predKey, DataFieldType.STRING ), value );
+                tgt.put( new DataField( predKey, DataFieldType.STRING ), value );
             }
         }
 
         if( ann instanceof Document ) {
             Document doc = (Document) ann;
-            tgt.set( new DataField( COL_FIELD, DataFieldType.STRING ), doc.getCollection() );
-            tgt.set( new DataField( URI_FIELD, DataFieldType.STRING ), doc.getUri() );
-            tgt.set( new DataField( XPT_FIELD, DataFieldType.STRING ), doc.getXpath() );
-            tgt.set( new DataField( IND_FIELD, DataFieldType.INTEGER ), doc.getIndex() );
+            tgt.put( new DataField( COL_FIELD, DataFieldType.STRING ), doc.getCollection() );
+            tgt.put( new DataField( URI_FIELD, DataFieldType.STRING ), doc.getUri() );
+            tgt.put( new DataField( XPT_FIELD, DataFieldType.STRING ), doc.getXpath() );
+            tgt.put( new DataField( IND_FIELD, DataFieldType.INTEGER ), doc.getIndex() );
             if( addProc ) {
-                tgt.set( new DataField( LAST_FIELD, DataFieldType.BOOLEAN ), doc.getProc_isLast() );
-                tgt.set( new DataField( SKIP_FIELD, DataFieldType.BOOLEAN ), doc.getProc_skip() );
+                tgt.put( new DataField( LAST_FIELD, DataFieldType.BOOLEAN ), doc.getProc_isLast() );
+                tgt.put( new DataField( SKIP_FIELD, DataFieldType.BOOLEAN ), doc.getProc_skip() );
             }
         }
     }

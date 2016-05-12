@@ -57,7 +57,7 @@ public class DecoratingBroker extends Resource_ImplBase implements FeatureBroker
     private Datum decorate( Datum d, AnnotationFS ann ) {
         for( DataField f : decorations.keySet() ) {
             Serializable v = decorations.get( f ).apply( ann );
-            d.set( f, v );
+            d.put( f, v );
         }
         return d;
     }

@@ -51,6 +51,7 @@ import edu.columbia.incite.util.reflex.annotations.Resource;
 /**
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
+ * @param <D>
  */
 public class CASIndexer<D> extends AbstractEngine {
 
@@ -70,7 +71,8 @@ public class CASIndexer<D> extends AbstractEngine {
     public static final String PARAM_USE_COVERS = "useCovers";
     @ConfigurationParameter(
         name = PARAM_USE_COVERS, mandatory = false, defaultValue = "false",
-        description = "Include features from covering annotations as document metadata"
+        description = "Include features from covering annotations as document "
+            + "metadata"
     )
     private Boolean useCovers;
 
@@ -101,7 +103,8 @@ public class CASIndexer<D> extends AbstractEngine {
     private Long token;
 
     @Override
-    public void initialize( UimaContext ctx ) throws ResourceInitializationException {
+    public void initialize( UimaContext ctx ) 
+    throws ResourceInitializationException {
         // TODO: Add option to default to field-per-type when no typemap defined.
         super.initialize( ctx );
 
@@ -200,10 +203,10 @@ public class CASIndexer<D> extends AbstractEngine {
         for( AnnotationFS ctx : tokenIndex.keySet() ) {
             ctxs++;
             try {
-                D doc = indexer.createDocument( ctx );
-                indexer.addMetadata( doc, getCovers( ctx ) );
-                indexer.makeTokens( doc, getTokens( ctx ), ctx.getBegin() );
-                indexer.index( doc );
+                D doc = indexer.initDoc( ctx );
+                indexer.covers( doc, getCovers( ctx ) );
+                indexer.tokens( doc, getTokens( ctx ), ctx.getBegin() );
+                indexer.writeToIndex( doc );
             } catch( Indexer.DocumentCreationException ex ) {
                 String msg = String.format( "Document creation failed for context %s in CAS %s: %s",
                     ctxs, getDocumentId(), ex.getMessage()

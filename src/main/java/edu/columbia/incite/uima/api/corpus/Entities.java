@@ -16,6 +16,10 @@ import edu.columbia.incite.uima.api.types.Span;
  */
 public class Entities {
     
+    // This class uses Span as base entity type. This is because it is easier to create entity 
+    // types by extending Span rather than the simple Entity type (e.g. in OBO, OBOEntity extends 
+    // OBOSpan extends Span, so OBOEntities are not Entities). This should probabaly be revised
+    // in the TypeSystem.
     public static final String BASE = "ENT";
     public static final String SEP = Tokens.SEP;
     
@@ -37,11 +41,16 @@ public class Entities {
     }
         
     public enum EAction implements Function<Span,String> {
-        NONE,
-        ADD_TYPE,
-        ADD_ID,
-        ADD_TEXT,
-        ADD_DUMP,
+        /** remove entities **/
+        DELETE,
+        /** change entities by their UIMA type **/
+        TYPE,
+        /** change entities by their UIMA type + id **/
+        TYPE_ID,
+        /** change entities by their UIMA type + id + covered text **/
+        TYPE_ID_COVERED,
+        /** change entities by their UIMA type + id + covered text + ent.toString() **/
+        TYPE_ID_COVERED_DUMP,
         ;
         
         @Override

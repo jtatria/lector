@@ -57,7 +57,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      *
      * @throws edu.columbia.incite.uima.api.corpus.Indexer.DocumentCreationException
      */
-    D createDocument( AnnotationFS doc ) throws DocumentCreationException;
+    D initDoc( AnnotationFS doc ) throws DocumentCreationException;
 
     /**
      * Adds additional metadata to the given instance of D from a collection of UIMA
@@ -66,7 +66,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      * This is useful if the indexed document should inherit features from an arbitrary collection
      * of annotations e.g. covering annotations, metadata annotations, etc.
      *
-     * @param doc  An instance of D returned by {@link createDocument(AnnotationFS)}.
+     * @param doc  An instance of D returned by {@link #initDoc(AnnotationFS)}.
      * @param data A collection of {@link org.apache.uima.cas.text.AnnotationFS annotations}
      *             containing index document metadata.
      *
@@ -74,8 +74,10 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      *
      * @throws edu.columbia.incite.uima.api.corpus.Indexer.DocumentMetadataException
      */
-    D addMetadata( D doc, Collection<AnnotationFS> data ) throws DocumentMetadataException;
+    D covers( D doc, Collection<AnnotationFS> data ) throws DocumentMetadataException;
 
+    D text( D doc, String text, int offset );
+    
     /**
      * Produce token streams for the given index document from the given collection of UIMA
      * {@link org.apache.uima.cas.text.AnnotationFS annotations}.
@@ -84,7 +86,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      * documents are created from annotations with a begin offset not equal to 0 (e.g. when using
      * within-CAS segments).
      *
-     * @param doc    An instance of D returned by {@link createDocument(AnnotationFS)}.
+     * @param doc    An instance of D returned by {@link #initDoc(AnnotationFS)}.
      * @param tokens A collection of {@link org.apache.uima.cas.text.AnnotationFS annotations}
      *               containing token stream data.
      * @param offset Optional offset value that will be substracted from each annotation's begin
@@ -94,18 +96,18 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      *
      * @throws edu.columbia.incite.uima.api.corpus.Indexer.TokenStreamException
      */
-    D makeTokens( D doc, Map<String, List<AnnotationFS>> tokens, int offset ) throws TokenStreamException;
+    D tokens( D doc, Map<String,List<AnnotationFS>> tokens, int offset ) throws TokenStreamException;
 
     /**
     * Adds the given document to a capable index.
     *
-    * @param doc An instance of D created by {@link createDocument(AnnotationFS)}
+    * @param doc An instance of D created by {@link #initDoc(AnnotationFS)}
      * @throws edu.columbia.incite.uima.api.corpus.Indexer.IndexingException
     *
     * @throws IOException                                       if the underlying indexing process
     *                                                           failed.
     */
-    void index( D doc ) throws IndexingException, IOException;
+    void writeToIndex( D doc ) throws IndexingException, IOException;
 
     public class DocumentCreationException extends ResourceProcessException {
 

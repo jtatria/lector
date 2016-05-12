@@ -19,10 +19,10 @@ package edu.columbia.incite.uima.api;
 import org.apache.uima.resource.Resource;
 
 /**
- * A ConfigurableResource encapsulates a shared object that can modify its behaviour to respond to
- * processing events.
- * This resource can be used to e.g. configure access to a CAS's type system, set up pathnames for
- * data output, etc.
+ * A ConfigurableResource encapsulates a shared object that can modify its 
+ * behaviour to respond to processing events.
+ * This resource can be used to e.g. configure access to a CAS's type system, 
+ * set up pathnames for data output, etc.
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  * @param <C> Type for configuration data.

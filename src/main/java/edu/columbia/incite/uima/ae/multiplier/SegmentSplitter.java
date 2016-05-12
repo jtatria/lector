@@ -38,7 +38,7 @@ import edu.columbia.incite.util.reflex.annotations.Resource;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public final class SegmentSplitter extends CasMultiplier_ImplBase {
+public final class SegmentSplitter extends CasMultiplier_ImplBase { // URGENT
 
     public static final String PARAM_SEGMENT_TYPE = "segmentTypeName";
     @ConfigurationParameter(

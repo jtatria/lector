@@ -5,21 +5,18 @@
  */
 package edu.columbia.incite.uima.io.writers;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import org.apache.lucene.util.automaton.Automata;
@@ -33,7 +30,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
@@ -46,10 +42,11 @@ import edu.columbia.incite.uima.api.corpus.Entities;
 import edu.columbia.incite.uima.api.corpus.Entities.EAction;
 import edu.columbia.incite.uima.api.corpus.Tokens;
 import edu.columbia.incite.uima.api.corpus.Tokens.LAction;
+import edu.columbia.incite.uima.api.corpus.Tokens.LClass;
+import edu.columbia.incite.uima.api.corpus.Tokens.LSubst;
 import edu.columbia.incite.uima.api.corpus.Tokens.NLAction;
 import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.Span;
-import edu.columbia.incite.uima.util.Annotations;
 import edu.columbia.incite.uima.util.Types;
 import edu.columbia.incite.util.collection.CollectionTools;
 import edu.columbia.incite.util.io.FileUtils;
@@ -108,11 +105,11 @@ public class TextDumper extends AbstractFileWriter {
     public static final String PARAM_ACTION_ENTITIES = "entityAction";
     @ConfigurationParameter( name = PARAM_ACTION_ENTITIES, mandatory = false,
         description = "Action to take on found entities. See EAction's documentation for values.",
-//        defaultValue = "NONE"
-        defaultValue = "ADD_TYPE"
-//        defaultValue = "ADD_ID"
-//        defaultValue = "ADD_TEXT"
-//        defaultValue = "ADD_DUMP"
+//        defaultValue = "DELETE"
+        defaultValue = "TYPE"
+//        defaultValue = "TYPE_ID"
+//        defaultValue = "TYPE_ID_COVERED"
+//        defaultValue = "TYPE_ID_COVERED_DUMP"
         
     )
     private EAction eAction;
@@ -120,7 +117,7 @@ public class TextDumper extends AbstractFileWriter {
     public static final String PARAM_ADD_TYPE_TO_TERM = "addType";
     @ConfigurationParameter( name = PARAM_ADD_TYPE_TO_TERM, mandatory = false,
         description = "Include type names in dumped tokens. Setting this to true will force EAction"
-            + " to be at least 'ADD_TYPE'",
+            + " to be at least 'TYPE'",
         defaultValue = "false"
     )
     private Boolean addType;
@@ -129,7 +126,7 @@ public class TextDumper extends AbstractFileWriter {
     @ConfigurationParameter( name = PARAM_ADD_ENTITY_ID, mandatory = false,
         description = "Include entity id in entity tokens. This expects a feature named 'id' in "
             + "entity types. See 'Span' type definition in Incite's type system. Setting this to "
-            + "true will force EAction to be at least 'ADD_ID'",
+            + "true will force EAction to be at least 'TYPE_ID'",
         defaultValue = "false"
     )
     private Boolean addId;
@@ -137,44 +134,44 @@ public class TextDumper extends AbstractFileWriter {
     public static final String PARAM_ADD_TEXT = "addTxt";
     @ConfigurationParameter( name = PARAM_ADD_TEXT, mandatory = false,
         description = "Include covered text for entity annotations. Setting this to true will force"
-            + " EAction to be at least 'ADD_TEXT'",
+            + " EAction to be at least 'TYPE_ID_COVERED'",
         defaultValue = "false"
     )
     private Boolean addTxt;
     
     // Token class definitions.
-    public static final String PARAM_LEXICAL_CLASSDEF = "lexicalClassDef";
+    public static final String PARAM_LEXICAL_CLASSDEF = "lexicalClasses";
     @ConfigurationParameter( name = PARAM_LEXICAL_CLASSDEF, mandatory = false,
         // TODO: All token parsing formats and stuff should be spawned-off, and consolidated with 
         // SVM's token parsing.
-        description = "List of regular expressions patterns indicating non-lexical token classes",
+        description = "List of regular expressions patterns indicating lexical token classes",
         defaultValue = {
-//            "ADJ_JJ[SR]?",
-            "ADV_(WRB|RB[RS]?)",
-            "ART_(DT|EX|[PW]DT)",
-            "CARD_CD",
-            "CONJ_CC",
-//            "NN_NNS?",
-//            "NP_NNPS?",
-            "O_(\\#|``|''|\\$|FW|LS|POS|-[RL]RB-|UH)?",
-            "PP_(IN|RP|TO)",
-            "PR_(PR|W)P\\$?",
-            "PUNC_(SYM|[,:\\.])",
-//            "V_(MD|VB[DGNPZ]?)",
-            }
+            "ADJ",
+            "ADV",
+            "ART",
+            "CARD",
+            "CONJ",
+            "NN",
+            "NP",
+            "O",
+            "PP",
+            "PR",
+//            "PUNC",
+            "V",
+        }
     )
-    private String[] nlClass;
+    private String[] lexicalClasses;
     
-    public static final String PARAM_NLCLASS_OVERRIDES = "nlOverrides";
+    public static final String PARAM_NLCLASS_OVERRIDES = "lexicalOverrides";
     @ConfigurationParameter( name = PARAM_NLCLASS_OVERRIDES, mandatory = false,
-        description = "Overrides for non-lexical clases that should be included anyway. e.g. "
-            + "'PR_PRP_i' to include the singular first person 'I' even if other pronouns are "
+        description = "Overrides for tokens that should always be considered lexical . e.g. "
+            + "'PR_PRP_i' to include the singular first person 'I' even if pronouns are "
             + "excluded",
         defaultValue = {
 //            "PR_PRP_i",
         }
     )
-    private String[] nlOverrides;
+    private String[] lexicalOverrides;
 
     // Token transformations.
     public static final String PARAM_NON_LEXICAL_ACTION = "nlAction";
@@ -185,7 +182,7 @@ public class TextDumper extends AbstractFileWriter {
 //        defaultValue = "MARK"
 //        defaultValue = "POSG"
 //        defaultValue = "POSF"
-        
+//        defaultValue = "LEMMA"
     )
     private NLAction nlAction;
     
@@ -193,8 +190,8 @@ public class TextDumper extends AbstractFileWriter {
     @ConfigurationParameter( name = PARAM_LEXICAL_ACTION, mandatory = false,
         description = "Action to take when dealing with lexical tokens. See LAction for "
             + "possible values",
-        defaultValue = "ASIS"
-//        defaultValue = "LEMMA"
+//        defaultValue = "ASIS"
+        defaultValue = "LEMMA"
 //        defaultValue = "POSG"
 //        defaultValue = "POSF"
 //        defaultValue = "FULL"
@@ -207,25 +204,25 @@ public class TextDumper extends AbstractFileWriter {
             + "(Map-arrays are even-numbered lists in ( key0, value0, ... , keyN, valueN ) format, "
             + "a-la Perl)",
         defaultValue = {
-            // Dangling puntuation marks (including those not recognized by the POS tagger).
-            // In an ideal world, these would be represented by UNICODE classes, but our automata
-            // are not entirelly smart about them.
-            // TODO: test this and maybe patch automata to properly support unicode classes.
-//            "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+", "",
-//            "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡"
-//                + "£"
-//                + "¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+", "",
-            // Two or less letter words. Not recommended, too much breakage.
-//            ".{0,2}", "",
-            // TODO: this does not work, because stanford is splitting some moneis from their 
-            // suffixes.
-            // (British) Money amounts
-//            "[0-9]+-?[lds]\\.?", "MONEY",
-            // Ordinal numbers
-//            "[0-9]*(13th|[0456789]th|1st|2nd|3rd)", "ORDINAL",
+            "L_PUNCT",
+            "L_NUMBER",
+            "L_SHORT",
+            "L_MONEY",
+            "L_ORD",
         }
     )
     private String[] lemmaSubstitutions;
+    
+    public static final String PARAM_MARKED_SUBSTITUTIONS = "markedSubstitutions";
+    @ConfigurationParameter( name = PARAM_MARKED_SUBSTITUTIONS, mandatory = false,
+        description = "List of substitutions to be marked instead of deleted. If empty, all are deleted. If it contains '*', all are marked.",
+        defaultValue = {
+            "L_NUMBER",
+            "L_MONEY",
+            "L_ORD",
+        }
+    )
+    private String[] markedSubstitutions;
     
     // Nuclear option: ignore everything and just dump SOFA strings.
     public static final String PARAM_DUMP_RAW = "dumpRaw";
@@ -234,23 +231,24 @@ public class TextDumper extends AbstractFileWriter {
         defaultValue = "false"
     )
     private Boolean dumpRaw;
-    
-    public static final String PARAM_POST_NORMALIZE = "normalize";
-    @ConfigurationParameter( name = PARAM_POST_NORMALIZE, mandatory = false,
-        description = "Normalize tokens after all standard actions, i.e. before any custom "
-            + "substitutions",
-        defaultValue = "true"
-    )
-    private boolean normalize;
+//    
+//    public static final String PARAM_POST_NORMALIZE = "normalize";
+//    @ConfigurationParameter( name = PARAM_POST_NORMALIZE, mandatory = false,
+//        description = "Normalize tokens after all standard actions, i.e. before any custom "
+//            + "substitutions",
+//        defaultValue = "true"
+//    )
+//    private boolean normalize;
     
     // Non-lexical tokens.
-    private CharacterRunAutomaton nlCra;
+    private CharacterRunAutomaton lexicalCra;
     // Non-lexical overrides.
-    private CharacterRunAutomaton nlOverrideCra;
+    private CharacterRunAutomaton overrideCra;
     // Substitution candidates
     private CharacterRunAutomaton substCra;
-    // Substition map.
-    private Map<CharacterRunAutomaton,String> substs;
+    // Substitions.
+    private List<LSubst> substs;
+    private Set<LSubst> mSubsts;
     
     // NIO open options.
     private StandardOpenOption[] opts;
@@ -262,7 +260,7 @@ public class TextDumper extends AbstractFileWriter {
     private final Map<AnnotationFS,Collection<AnnotationFS>> docIndex = new HashMap<>();
     private final Map<AnnotationFS,Collection<AnnotationFS>> coverIndex = new HashMap<>();
     // Cover types.
-    private Type coverType;
+    private Type cType;
     // Types that will be dumped
     private final Set<Type> typesToDump = new HashSet<>();
     // Token type
@@ -289,82 +287,64 @@ public class TextDumper extends AbstractFileWriter {
         }
         this.opts = optsL.toArray( new StandardOpenOption[optsL.size()] );
         
-        // If we have a valid non-lexical class definition...
-        if( nlClass != null && nlClass.length != 0 ) {
-            // Accept anything that matches any of the given patterns.
-            // Any token accepted by this automaton will be assumed to point to a non-lexical term.
-            Automaton au = Automata.makeEmpty();
-            List<String> nls = CollectionTools.toSortedList( nlClass );
-            for( String nl : nls ) {
-                RegExp rx = new RegExp( nl + "_.*" ); // Add suffix to accept non-empty lemmas.
-                au = Operations.union( au, rx.toAutomaton() );
-            }
-            nlCra = new CharacterRunAutomaton( au );
+        if( lexicalClasses != null && lexicalClasses.length != 0 ) {
+            List<LClass> lclasses = Arrays.stream( lexicalClasses )
+                .map( LClass::valueOf )
+                .collect( Collectors.toList() );
+            Automaton au = LClass.make( lclasses.toArray( new LClass[lclasses.size()] ) );
+            this.lexicalCra = new CharacterRunAutomaton( au );
         } else {
-            // Reject everything. All tokens are assumed to point to lexical terms.
-            nlCra = new CharacterRunAutomaton( Automata.makeEmpty() );
+            this.lexicalCra = new CharacterRunAutomaton( Automata.makeAnyString() );
         }
         
         if( lemmaSubstitutions != null && lemmaSubstitutions.length != 0 ) {
-            if( lemmaSubstitutions.length % 2 != 0 ) throw new ResourceInitializationException(
-                "{0} parameters must come in pairs.",
-                new Object[]{ PARAM_LEMMA_SUBSTITUTIONS }
-            );
-            
-            Automaton au = Automata.makeEmpty();
-            substs = new HashMap<>();
-            for( int i = 0; i < lemmaSubstitutions.length; i++ ) {
-                Automaton rx = new RegExp( lemmaSubstitutions[i] ).toAutomaton();
-                au = Operations.union( au, rx );
-                substs.put( new CharacterRunAutomaton( rx ), lemmaSubstitutions[++i] );
-            }
-            substCra = new CharacterRunAutomaton( au );
+            this.substs = Arrays.stream( lemmaSubstitutions )
+                .map( LSubst::valueOf )
+                .collect( Collectors.toList() );
+            Automaton au = LSubst.make( substs.toArray( new LSubst[substs.size()] ) );
+            this.substCra = new CharacterRunAutomaton( au );            
         } else {
-            substCra = new CharacterRunAutomaton( Automata.makeEmpty() );
+            this.substCra = new CharacterRunAutomaton( Automata.makeEmpty() );
         }
         
-        // If we have valid overrides...
-        if( nlOverrides != null && nlOverrides.length != 0 ) {
+        if( markedSubstitutions != null && markedSubstitutions.length != 0 ) {
+            this.mSubsts = Arrays.stream( markedSubstitutions )
+                .map( LSubst::valueOf )
+                .collect( Collectors.toSet() );
+        }
+        
+        if( lexicalOverrides != null && lexicalOverrides.length != 0 ) {
             // Accept anything that matches the given patterns.
             // Any tokens accepted by this automaton will be considered lexical always.
             Automaton au = Automata.makeEmpty();
-            List<String> nlos = CollectionTools.toSortedList( nlOverrides );
-            for( String nlo : nlos ) {
+            List<String> lOverride = CollectionTools.toSortedList( lexicalOverrides );
+            for( String nlo : lOverride ) {
                 RegExp rx = new RegExp( nlo );
                 au = Operations.union( au, rx.toAutomaton() );
             }
-            nlOverrideCra = new CharacterRunAutomaton( au );
+            overrideCra = new CharacterRunAutomaton( au );
         } else {
-            // Reject everything. All tokens will have lexicality defined by class definition, above
-            nlOverrideCra = new CharacterRunAutomaton( Automata.makeEmpty() );
+            // Reject everything: Lexicality exclusively determined by class.
+            overrideCra = new CharacterRunAutomaton( Automata.makeEmpty() );
         }
         
         // Validate entity actions.
-        if( addType && eAction.compareTo( EAction.ADD_TYPE ) < 0 ) eAction = EAction.ADD_TYPE;
-        if( addId   && eAction.compareTo( EAction.ADD_ID   ) < 0 ) eAction = EAction.ADD_ID;
-        if( addTxt  && eAction.compareTo( EAction.ADD_TEXT ) < 0 ) eAction = EAction.ADD_TEXT;
+        if( addType && eAction.compareTo( EAction.TYPE ) < 0 ) eAction = EAction.TYPE;
+        if( addId   && eAction.compareTo( EAction.TYPE_ID   ) < 0 ) eAction = EAction.TYPE_ID;
+        if( addTxt  && eAction.compareTo( EAction.TYPE_ID_COVERED ) < 0 ) eAction = EAction.TYPE_ID_COVERED;
     }
     
     @Override
     protected void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
         super.preProcess( jcas );
         
-        coverType = secTypeName != null ?
+        cType = secTypeName != null ?
                          Types.checkType( jcas.getTypeSystem(), secTypeName ) :
                          jcas.getCasType( DocumentAnnotation.type );
+        
         Type docType = Types.checkType( jcas.getTypeSystem(), docTypeName );
-        coverIndex.putAll( CasUtil.indexCovered( jcas.getCas(), coverType, docType ) );
+        coverIndex.putAll( CasUtil.indexCovered( jcas.getCas(), cType, docType ) );
         
-        Collection<AnnotationFS> select = CasUtil.select( jcas.getCas(), coverType );
-        for( AnnotationFS ann :  select ) {
-            try {
-                String toString = ann.toString();
-            } catch ( Exception ex ) {
-                int i = 0;
-            }
-        }
-        
-        // All TCAS types.
         Type annType = Types.checkType( jcas.getTypeSystem(), CAS.TYPE_NAME_ANNOTATION );
         docIndex.putAll( CasUtil.indexCovered( jcas.getCas(), docType, annType ) );
         
@@ -385,21 +365,23 @@ public class TextDumper extends AbstractFileWriter {
         String  file = getFileNameForCas( jcas );
         boolean mkd  = getMakeDirs();
         boolean ow   = getOverwrite();
+        
+        CharacterRunAutomaton wind = new CharacterRunAutomaton( Automata.makeString( "wind" ) );
+        
         try( Writer wrtr = FileUtils.getWriter( dir, file, mkd, ow, cs, opts ) ) {
             
-            FSIterator<Annotation> cIt = jcas.getAnnotationIndex( coverType ).iterator();
+            FSIterator<Annotation> cIt = jcas.getAnnotationIndex( cType ).iterator();
             while( cIt.hasNext() ) {
                 AnnotationFS cover = cIt.next();
-                
                 if( filterCover( cover ) ) continue;
                 
                 for( AnnotationFS doc : coverIndex.get( cover ) ) {
 
-//                    if( dumpRaw ) { // KISS: dump sofaString and break.
-//                        wrtr.append( doc.getCoveredText() );
-//                        continue;
-//                    }
-//
+                    if( dumpRaw ) { // KISS: dump sofaString and break.
+                        wrtr.append( doc.getCoveredText() );
+                        continue;
+                    }
+                    
                     for( AnnotationFS ann : filterTypes( docIndex.get( doc ), typesToDump ) ) {
                         // TODO: this is here because Incite's document annotation has no extent, i.e.
                         // begin == end == 0, which implies that it gets sorted after all other
@@ -423,6 +405,9 @@ public class TextDumper extends AbstractFileWriter {
                         if( substCra.run( txt ) ) txt = applySubstitutions( txt );
                         if( txt.length() == 0 ) continue;
 
+                        // Stanford doesn't know the difference between wind and wound.
+                        if( wind.run( txt ) ) txt = "wound";
+                        
                         // If we survived, append and break.
                         wrtr.append( txt );
                         wrtr.append( TOKEN_SEP );
@@ -439,10 +424,17 @@ public class TextDumper extends AbstractFileWriter {
                 new Object[]{ getDocumentId(), ex.toString() }
             );
         }
-        
+    }
+    
+    @Override
+    public void postProcess( JCas jcas ) {
+        super.postProcess( jcas );
         this.coverIndex.clear();
         this.docIndex.clear();
         this.typesToDump.clear();
+        this.tType = null;
+        this.cType = null;
+        this.eType = null;
     }
 
     private String serialize( AnnotationFS ann ) {
@@ -451,6 +443,7 @@ public class TextDumper extends AbstractFileWriter {
         } else if( isEntity( ann ) ) {
             return getEntityCharTerm( ann );
         } else {
+            // This should never happen!
             return ann.getCoveredText();
         }
     }
@@ -461,12 +454,12 @@ public class TextDumper extends AbstractFileWriter {
 
     private String getTokenCharTerm( AnnotationFS token ) {
         Token t = (Token) token;
-        String nrml = Tokens.build( t );
         String out;
-        if( nlCra.run( nrml ) && !nlOverrideCra.run( nrml ) ) {
+        if( lexicalCra.run( Tokens.pos( t ) ) || overrideCra.run( Tokens.build( t ) ) ) {
+            out = lAction.apply( t );
+        } else {
             out = nlAction.apply( t );
-        } else out = lAction.apply( t );
-        if( normalize ) out = normalize( out );
+        }
         return out;
     }
 
@@ -480,8 +473,13 @@ public class TextDumper extends AbstractFileWriter {
     }
 
     private String applySubstitutions( String txt ) {
-        for( CharacterRunAutomaton cra : substs.keySet() ) {
-            if( cra.run( txt ) ) return substs.get( cra );
+        for( LSubst ls : substs ) {
+            if( ls.test( txt ) ) {
+                if( mSubsts.contains( ls ) ) {
+                    return ls.apply( txt );
+                }
+                else return "";
+            }
         }
         return txt;
     }

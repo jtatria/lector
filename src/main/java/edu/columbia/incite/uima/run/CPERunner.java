@@ -51,7 +51,6 @@ public class CPERunner implements Callable<Integer> {
             this.cons = makeCons( conf );
             this.full = makeAggr( aes, cons, conf );
             this.conf = conf;
-            if( conf.dumpMetaData() ) conf.dump( conf.metaDir() );
         } catch ( ResourceInitializationException ex ) {
             throw new RuntimeException( ex );
         }
@@ -65,6 +64,7 @@ public class CPERunner implements Callable<Integer> {
         bldr.setReader( crd );
         bldr.setAnalysisEngine( full );
         applyErrorActions( bldr );
+        if( conf.dumpMetaData() ) dumpConfigValues( bldr );
         
         this.cpe = bldr.createCpe( null );
         return this;
@@ -130,6 +130,14 @@ public class CPERunner implements Callable<Integer> {
         if( ccp == null ) return;
         for( CpeCasProcessor proc : ccp.getAllCpeCasProcessors() ) {
             proc.setActionOnMaxError( conf.actionOnError() );
+        }
+    }
+
+    private void dumpConfigValues( CpeBuilder bldr ) throws CpeDescriptorException {
+        CpeCasProcessors ccp = bldr.getCpeDescription().getCpeCasProcessors();
+        if( ccp == null ) return;
+        for( CpeCasProcessor proc : ccp.getAllCpeCasProcessors() ) {
+            ;
         }
     }
 }

@@ -84,7 +84,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
-
+        
         if( dmdBroker == null ) {
             if( dmdTypeName != null ) { // Custom metadata types. Use broker.
                 if( dmdIdFeatName == null ) {
@@ -105,12 +105,13 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     }
 
     @Override
-    public void process( JCas jcas ) throws AnalysisEngineProcessException {
+    public final void process( JCas jcas ) throws AnalysisEngineProcessException {
         preProcess( jcas );
         realProcess( jcas );
         postProcess( jcas );
     }
 
+    
     protected Datum getMetadata() throws AnalysisEngineProcessException {
         if( curCasData != null ) {
             try {
@@ -170,5 +171,4 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     protected void postProcess( JCas jcas ) {
         Resources.destroyFor( this );
     }
-
 }

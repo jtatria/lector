@@ -36,7 +36,7 @@ import edu.columbia.incite.uima.api.OLDSessionResource;
  * @param <D>
  */
 @Deprecated
-public interface DataExporter<D> extends OLDSessionResource<AnalysisComponent,Map<String,String>> {
+public interface DataExporter<D> extends OLDSessionResource<AnalysisComponent,Map<String,String>> { // URGENT
     
     /**
      * Export the given data object of type D for the given

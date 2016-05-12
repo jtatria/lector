@@ -39,7 +39,7 @@ import edu.columbia.incite.uima.util.Types;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public class SpeechFinder extends CasAnnotator_ImplBase {
+public class SpeechFinder extends CasAnnotator_ImplBase { // URGENT
 
     public final static String PARAM_SECTION_TYPENAME = "sectTypeName";
     @ConfigurationParameter( name = PARAM_SECTION_TYPENAME, mandatory = false,

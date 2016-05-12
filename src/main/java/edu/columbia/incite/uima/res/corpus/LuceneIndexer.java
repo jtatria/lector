@@ -119,7 +119,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     @Override
-    public Document createDocument( AnnotationFS ann ) throws DocumentCreationException {
+    public Document initDoc( AnnotationFS ann ) throws DocumentCreationException {
         // TODO: document instances should be reused.
         Document doc = new Document();
         Datum d = new Datum();
@@ -129,12 +129,12 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
             failures.incrementAndGet();
             throw new DocumentCreationException( ex );
         }
-        d.fields().stream().forEach( ( DataField t ) -> doc.add( fieldFactory.makeField( t, d ) ) );
+        d.fields().stream().forEach( ( t ) -> doc.add( fieldFactory.makeField( t, d ) ) );
         return doc;
     }
 
     @Override
-    public Document addMetadata( Document doc, Collection<AnnotationFS> data )
+    public Document covers( Document doc, Collection<AnnotationFS> data )
     throws DocumentMetadataException {
         if( data != null && data.size() > 0 ) {
             Datum d = new Datum();
@@ -158,7 +158,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     @Override
-    public Document makeTokens( Document doc, Map<String,List<AnnotationFS>> tokens, int offset )
+    public Document tokens( Document doc, Map<String,List<AnnotationFS>> tokens, int offset )
     throws TokenStreamException {
         for( Map.Entry<String,List<AnnotationFS>> e : tokens.entrySet() ) {
             String field = e.getKey();
@@ -179,10 +179,15 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     @Override
-    public void index( Document doc ) throws IOException {
+    public void writeToIndex( Document doc ) throws IOException {
         writerProvider.index( doc );
         successes.incrementAndGet();
     }
 
     protected void validateMetadata( Datum d ) {}
+
+    @Override
+    public Document text( Document doc, String text, int offset ) {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+    }
 }

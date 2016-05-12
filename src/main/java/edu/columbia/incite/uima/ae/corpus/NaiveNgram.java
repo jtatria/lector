@@ -160,9 +160,9 @@ public class NaiveNgram extends AbstractEngine {
         Datum d = new Datum();
         for( int i = 0; i < window.size(); i++ ) {
             String value = window.get( i ) != null ? window.get( i ).getCoveredText() : "NA";
-            d.set( fields[i], value );
+            d.put( fields[i], value );
         }
-        d.set( ct, 1 );
+        d.put( ct, 1 );
 //        data.getData().addRecord( d );
     }
 }

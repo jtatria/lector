@@ -46,7 +46,7 @@ import edu.columbia.incite.util.io.FileUtils;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
+public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase { // TODO: refactor as multiplier
 
     /**
      * Location of a file system directory containing collection files.
