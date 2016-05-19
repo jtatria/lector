@@ -52,7 +52,7 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
      * Location of a file system directory containing collection files.
      */
     public final static String PARAM_INPUT_DIR = "inputDir";
-    @ConfigurationParameter( name = PARAM_INPUT_DIR, mandatory = true
+    @ConfigurationParameter( name = PARAM_INPUT_DIR, mandatory = false, defaultValue = "data/input"
         , description = "Directory containing input files." )
     protected String inputDir;
 
@@ -86,14 +86,16 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
      * Attempt to add delta files.
      */
     public static final String PARAM_ADD_DELTAS = "addDeltas";
-    @ConfigurationParameter( name = PARAM_ADD_DELTAS, mandatory = false, defaultValue = "false" )
+    @ConfigurationParameter( name = PARAM_ADD_DELTAS, mandatory = false, defaultValue = "false"
+        , description = "Add delta files if found in the input directory" )
     protected Boolean addDeltas;
 
     /**
      * Pattern for delta file locations, relative to the input directory.
      */
     public static final String PARAM_DELTA_PATTERN = "deltaPattern";
-    @ConfigurationParameter( name = PARAM_DELTA_PATTERN, mandatory = false, defaultValue = "false" )
+    @ConfigurationParameter( name = PARAM_DELTA_PATTERN, mandatory = false, defaultValue = "../%i/%c.%e"
+        , description = "Filename pattern for delta files." )
     protected String deltaPattern;
 
     protected Path inputDirPath;

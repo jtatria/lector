@@ -72,11 +72,11 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
     }
 
     public String metaDir() {
-        return getString( META_DIR, System.getProperty( "user.dir" ) + "/meta" );
+        return getString( META_DIR, System.getProperty( "user.dir" ) + "/data/conf" );
     }
     
     public boolean dumpMetaData() {
-        return getBoolean( DUMP_METADATA, false );
+        return getBoolean( DUMP_METADATA, true );
     }
     
     public void dump( String dir ) {

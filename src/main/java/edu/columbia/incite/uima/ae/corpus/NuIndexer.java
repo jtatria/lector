@@ -20,12 +20,13 @@ import edu.columbia.incite.uima.api.corpus.Indexer;
 /**
  *
  * @author gorgonzola
+ * @param <D>
  */
 public class NuIndexer<D> extends StructuredReader {
 
     public static final String RES_INDEXER = "indexer";
     @ExternalResource( key = RES_INDEXER, mandatory = true,
-        description = "Index writing intrerface object" )
+        description = "Index writing interface object" )
     private Indexer<D> indexer;
     
     private final AtomicLong docCounter = new AtomicLong();

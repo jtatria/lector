@@ -6,9 +6,6 @@
 package edu.columbia.incite.uima.run;
 
 import java.io.IOException;
-import java.io.Writer;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -27,7 +24,6 @@ import org.apache.uima.util.InvalidXMLException;
 import org.xml.sax.SAXException;
 
 import edu.columbia.incite.uima.util.ComponentFactory;
-import edu.columbia.incite.util.io.FileUtils;
 
 /**
  *

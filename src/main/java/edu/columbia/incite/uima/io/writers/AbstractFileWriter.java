@@ -43,7 +43,7 @@ public abstract class AbstractFileWriter extends AbstractEngine {
      * Directory where CAS files will be saved.
      */
     public static final String PARAM_OUTPUT_DIR = "outputDir";
-    @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = true )
+    @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = false, defaultValue = "data/output" )
     protected String outputDir;
 
     /**
