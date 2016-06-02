@@ -17,7 +17,5 @@ import edu.columbia.incite.uima.api.ConfigurableResource;
  * @author gorgonzola
  */
 public interface CorpusReader extends ConfigurableResource<CAS> {
-    
     void read( AnnotationFS doc, Collection<AnnotationFS> covers, Collection<AnnotationFS> tokens );
-    
 }

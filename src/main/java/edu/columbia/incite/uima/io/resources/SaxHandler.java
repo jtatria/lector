@@ -16,10 +16,13 @@
  */
 package edu.columbia.incite.uima.io.resources;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.Resource;
 import org.apache.uima.resource.ResourceProcessException;
 import org.xml.sax.ContentHandler;
+
+import edu.columbia.incite.uima.api.ConfigurableResource;
 
 /**
  * UIMA resource wrapper for a SAX handler to be used in Incite's XML collection readers.
@@ -35,23 +38,7 @@ import org.xml.sax.ContentHandler;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public interface SaxHandler extends Resource, ContentHandler {
-
-    /**
-     * Pass a reference to an empty CAS to this SAX handler. This is typically done at the beginning
-     * of a reader's
-     * {@link org.apache.uima.collection.CollectionReader#getNext(org.apache.uima.cas.CAS)
-     * getNext(CAS)} method, before any SAX events are written to the handler.
-     * <br>
-     * If an implementation retains this reference after calls to this method, users of this
-     * resource must release it after processing a new CAS by calling {@link #reset()} on this
-     * resource.
-     *
-     * @param jcas
-     *
-     * @throws org.apache.uima.resource.ResourceProcessException
-     */
-    void configure( JCas jcas ) throws ResourceProcessException;
+public interface SaxHandler extends ConfigurableResource<CAS>, ContentHandler {
 
     /**
      * Release all references to the CAS.

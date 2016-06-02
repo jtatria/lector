@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -168,7 +169,7 @@ public class XmlReader extends AbstractFileReader {
             // example using (completely moronic and cumbersome) standard libraries
             
             // Pass CAS to handler. CAS must be released when done.
-            saxHandler.configure( jcas );
+            saxHandler.configure( jcas.getCas() );
 
             // Get a SAX writer.
             SAXWriter writer = new SAXWriter( saxHandler );
@@ -182,7 +183,7 @@ public class XmlReader extends AbstractFileReader {
             // TODO: review SAX spec to determine if this is appropriate when dealing with non-root nodes.
             saxHandler.endDocument();
 
-        } catch( SAXException | ResourceProcessException ex ) {
+        } catch( SAXException | ResourceConfigurationException ex ) {
             throw new CollectionException( ex );
         } finally {
             // CAS must be released on reset.

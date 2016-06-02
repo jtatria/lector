@@ -17,6 +17,7 @@
 package edu.columbia.incite.uima.api;
 
 import org.apache.uima.resource.Resource;
+import org.apache.uima.resource.ResourceConfigurationException;
 
 /**
  * A ConfigurableResource encapsulates a shared object that can modify its 
@@ -33,8 +34,7 @@ public interface ConfigurableResource<C> extends Resource {
      * Passes configuration data to this resource.
      *
      * @param conf An instance of C containing new configuration data.
-     *
-     * @throws Exception If configuration fails for any reason.
+     * @throws org.apache.uima.resource.ResourceConfigurationException
      */
-    void configure( C conf ) throws Exception;
+    void configure( C conf ) throws ResourceConfigurationException;
 }

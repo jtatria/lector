@@ -53,13 +53,12 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
     static final String PARAM_FORMAT_PATTERNS = "formatStrings";
     @ConfigurationParameter( name = PARAM_FORMAT_PATTERNS, mandatory = false )
     private String[] formatStrings = new String[]{
-        "(\\p{Punct})\\s+", "$1 ",
-        "\\n\\s+", " ",
-        "\\s+$", " ",
-        "^\\s+", " ",
-        "\\s+", " "
+        "\\s+", " ", // collapse
+//        "\\s+$", "", // trim tail
+//        "^\\s+", "", // trim head
+//        "(\\p{Alnum})\\s+(\\p{Punct})", "$1$2", // remove space before punctuation
     };
-    
+
     private List<Pattern> rules;
     private Map<Pattern,String> subst;
 
@@ -83,10 +82,11 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
     }
     
     @Override
-    public String filter( String chunk ) {
+    public String normalize( String chunk ) {
         if( rules == null || subst == null ) cookPatterns( formatStrings );
         
         for( Pattern rule : rules ) {
+            if( chunk.length() <= 0 ) break;
             chunk = rule.matcher( chunk ).replaceAll( subst.get( rule) );
         }
         
@@ -94,33 +94,34 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
     }
 
     @Override
-    public void filterAndAppend( StringBuffer target, String chunk ) {
-        chunk = filter( chunk );
-        
-        String last = target.length() > 0 ? String.valueOf( target.charAt( target.length() - 1 ) ) : "";
+    public void appendToBuffer( StringBuffer tgt, String chunk ) {
+        chunk = normalize( chunk );
+        if( chunk.length() <= 0 ) return;
+
+        String last = tgt.length() > 0 ? String.valueOf( tgt.charAt( tgt.length() - 1 ) ) : "";
         String inc = chunk.length() > 0 ? String.valueOf( chunk.charAt( 0 ) ) : "";
         
         if( inc.equals( "" ) ) return;
         
         if( alnumCollisions && last.matches( "\\p{Alnum}" ) && inc.matches( "\\p{Alnum}" ) )
-            target.append( " " );
+            tgt.append( " " );
         
         if( whitespace && ( last.matches( "\\s" ) || last.equals( "" ) ) && inc.matches( "\\s" ) )
             chunk = chunk.substring( 1 );
         
-        target.append( chunk );
+        tgt.append( chunk );
     }
 
     @Override
-    public void appendBreak( StringBuffer target ) {
+    public void breakLine( StringBuffer target ) {
         if( trailing ) {
             int i = target.length() - 1;
-            while( i >= 0 && Character.isWhitespace(target.charAt( i ) ) ) {
+            while( i >= 0 && Character.isWhitespace( target.charAt( i ) ) ) {
                 target.deleteCharAt( i );
                 i--;
             }
         }
-        target.append(eolMarker );
+        target.append( eolMarker );
     }
 
     private void cookPatterns( String[] formatStrings ) {
@@ -134,5 +135,4 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
             subst.put( rule, out );
         }
     }
-    
 }

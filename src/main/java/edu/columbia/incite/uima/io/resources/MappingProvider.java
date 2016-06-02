@@ -21,6 +21,7 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.jcas.JCas;
 
 import edu.columbia.incite.uima.api.ConfigurableResource;
 

@@ -11,6 +11,7 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.resource.ResourceConfigurationException;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.types.Document;
@@ -94,6 +95,7 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
     }
 
     @Override
-    public void configure( CAS conf ) throws Exception {
+    public void configure( CAS conf ) throws ResourceConfigurationException {
     }
+
 }

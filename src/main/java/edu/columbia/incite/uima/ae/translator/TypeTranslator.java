@@ -109,8 +109,8 @@ public class TypeTranslator extends CasAnnotator_ImplBase {
     }    
 
     private void cryMissing( String tgtTypeName, String missingFeatName ) {
-        if( !alreadyLogged(tgtTypeName, missingFeatName, missing ) ) {
-            getLogger().log(Level.WARNING, "Missing feature {0} in target type {1}",
+        if( !alreadyLogged( tgtTypeName, missingFeatName, missing ) ) {
+            getLogger().log( Level.WARNING, "Missing feature {0} in target type {1}",
                 new Object[]{ missingFeatName, tgtTypeName }
             );
         }

@@ -56,7 +56,7 @@ public class LuceneTSFactory extends Resource_ImplBase implements TokenFactory<T
     }
 
     @Override
-    public void configure( CAS conf ) throws Exception {
+    public void configure( CAS conf ) {
     }
 
     public class NaiveTokenStream extends UIMATokenStream {

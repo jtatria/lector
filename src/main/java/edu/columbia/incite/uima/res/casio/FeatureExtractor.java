@@ -19,6 +19,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.resource.ResourceConfigurationException;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.util.data.Datum;
@@ -216,7 +217,8 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
     }
 
     @Override
-    public void configure( CAS conf ) throws Exception {
+    public void configure( CAS conf ) throws ResourceConfigurationException {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

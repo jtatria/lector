@@ -16,6 +16,7 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ExternalResource;
+import org.apache.uima.resource.ResourceConfigurationException;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.util.data.Datum;
@@ -61,14 +62,19 @@ public class DecoratingBroker extends Resource_ImplBase implements FeatureBroker
         }
         return d;
     }
+//
+//    @Override
+//    public void configure( CAS conf ) throws CASException {
+//        try {
+//            delegate.configure( conf );
+//        } catch( Exception ex ) {
+//            throw new CASException( ex );
+//        }
+//    }
 
     @Override
-    public void configure( CAS conf ) throws CASException {
-        try {
-            delegate.configure( conf );
-        } catch( Exception ex ) {
-            throw new CASException( ex );
-        }
+    public void configure( CAS conf ) throws ResourceConfigurationException {
+        delegate.configure( conf );
     }
 
 }

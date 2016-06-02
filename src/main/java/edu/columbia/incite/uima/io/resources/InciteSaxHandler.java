@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.fit.component.Resource_ImplBase;
@@ -28,8 +29,8 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.ResourceProcessException;
 import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.util.Level;
 
@@ -54,9 +55,13 @@ import edu.columbia.incite.util.reflex.annotations.Resource;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
+    
+    // TODO move this somewhere.
+    public static final String NO_ID = "";
+    public static final String EOL = "\n";
 
     /**
-     * Filter text from XML character data before writing it to the CAS' SOFA. Requires a {@link TextFilter}.
+     * Filter text from XML character data before writing it to the CAS' SOFA string. Requires a {@link TextFilter}.
      */
     public static final String PARAM_FILTER_TEXT = "filterText";
     @ConfigurationParameter( name = PARAM_FILTER_TEXT, mandatory = false,
@@ -65,7 +70,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     private Boolean filterText;
 
     /**
-     * Create entity annotations from XML elements and attributes. Requires a {@link MappingProvider}.
+     * Create annotations from XML elements and attributes. Requires a {@link MappingProvider}.
      */
     public static final String PARAM_ANNOTATE = "annotate";
     @ConfigurationParameter( name = PARAM_ANNOTATE, mandatory = false,
@@ -74,13 +79,22 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     private Boolean annotate;
 
     /**
-     * Create paragraph segments over SOFA data. Requires a {@link MappingProvider}.
+     * Create paragraph segment annotations over SOFA data. Requires a {@link MappingProvider}.
      */
     public static final String PARAM_MAKE_PARAGRPAHS = "makeParagraphs";
     @ConfigurationParameter( name = PARAM_MAKE_PARAGRPAHS, mandatory = false,
         defaultValue = "true"
     )
     private Boolean makeParagraphs;
+    
+    /**
+     * Break paragraph segment annotations over SOFA data by adding new lines. This is independent of formatting done by a text filter.
+     */
+    public static final String PARAM_BREAK_PARAGRPAHS = "breakParagraphs";
+    @ConfigurationParameter( name = PARAM_BREAK_PARAGRPAHS, mandatory = false,
+        defaultValue = "true"
+    )
+    private Boolean breakParagraphs;
     
     // TODO: add line break options. This is tricky, because the specific behaviour that needs to 
     // be implemented will vary according to the values of makeParagraphs and filterText. For now, 
@@ -90,10 +104,11 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     // and makes a mapping provider necessary even if we are not creating annotations or paragraphs. 
     // Furthermore, the actual procedure for breaking lines will be different if text is being 
     // processed by a TextFilter. Now, if we are filtering, line breaks are appended to the output 
-    // character stream by calling the filter's appendBreak() method, which performs various snity
+    // character stream by calling the filter's appendBreak() method, which performs various sanity
     // checks before breaking. If we are not filtering, the HARDCODED VALUE \n is simply inserted 
     // into the output character stream without any ceremony. This causes a whole deal of trouble 
-    // if the the input character stream is less than perfect, i.e. always.
+    // if the the input character stream is not prefectly consistent in marking newlines with XML 
+    // tags, i.e. always.
     
     /**
      * Shared resource providing a mapping from XML data to a UIMA type system.
@@ -148,14 +163,18 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
 
         return out;
     }
+    
+    //============================= SAX events ===============================//
 
     @Override
     public void startDocument() throws SAXException {
         inBuffer = new StringBuffer();
         outBuffer = new StringBuffer();
+        
         if( annotate ) {
             annStack = new Stack<>();
         }
+        
         if( makeParagraphs ) {
             curPara = 0;
         }
@@ -181,14 +200,19 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     public void startElement( String uri, String lName, String qName, Attributes attrs )
         throws SAXException {
         this.curNode = curNode == null ? new XPathNode( docId ) : this.curNode.addChild( qName );
-
         updateCharBuffers();
-
+        
+        if( makeParagraphs ) {
+            if( paraAnn == null ) {
+                paraAnn = makePara( curPara++ );
+            } else if( mappingProvider.isParaBreak( qName ) ) {
+                finishAnnotation( paraAnn );
+                paraAnn = makePara( curPara++ );
+            }
+        }
+        
         if( annotate && mappingProvider.isData( qName ) ) {
             processData( uri, lName, qName, attrs );
-        }
-        if( makeParagraphs ) {
-            makePara();
         }
     }
 
@@ -196,16 +220,6 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     public void endElement( String uri, String lName, String qName ) throws SAXException {
         this.curNode = this.curNode.parent();
         updateCharBuffers();
-        
-        // TODO FIX THIS: remove the dependency on mapping provider if we arenot using one, offer 
-        // alternative methods for breaking lines, etc.
-        if( mappingProvider.isLineBreak( qName ) ) {
-            if( filterText ) {
-                textFilter.appendBreak( outBuffer );
-            } else {
-                outBuffer.append( "\n" );
-            }
-        }
         
         if( annotate && mappingProvider.isAnnotation( qName ) ) {
             if( !annStack.empty() ) {
@@ -218,23 +232,19 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
             paraAnn = null;
         }
     }
-
+    
+    //========================================================================//
+    
     @Override
-    public void configure( JCas jcas ) throws ResourceProcessException {
-        this.jcas = jcas;
+    public void configure( CAS conf ) throws ResourceConfigurationException {
         try {
-            this.mappingProvider.configure( jcas.getCas() );
-        } catch( Exception ex ) {
-            throw new ResourceProcessException( ex );
+            this.jcas = conf.getJCas();
+            this.mappingProvider.configure( conf );
+        } catch ( CASException ex ) {
+            throw new ResourceConfigurationException( ex );
         }
-
-        Document doc = (Document) jcas.getAnnotationIndex( Document.type ).iterator().next();
-        if( doc != null ) {
-            docId = doc.getId();
-        } else {
-            getLogger().log( Level.WARNING, "No doc id found. Using relative paths." );
-            docId = "";
-        }
+        Document doc = this.jcas.getAnnotationIndex( Document.class ).iterator().next();
+        this.docId = doc != null ? doc.getId() : NO_ID;
     }
 
     @Override
@@ -242,6 +252,8 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         Resources.destroyFor( this );
     }
 
+    //========================================================================//
+    
     private void updateCharBuffers() {
         if( inBuffer.length() <= 0 ) {
             return;
@@ -250,11 +262,24 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         inBuffer.delete( 0, inBuffer.length() );
         if( data.length() > 0 ) {
             if( filterText ) {
-                textFilter.filterAndAppend( outBuffer, data );
+                textFilter.appendToBuffer( outBuffer, data );
             } else {
                 outBuffer.append( data );
             }
         }
+    }
+    
+    private Paragraph makePara( int id ) {
+        int obl = outBuffer.length();
+        if( obl > 0 ) {
+            int pbl = EOL.length();
+            if( obl - pbl > 0 && !outBuffer.substring( obl - pbl, obl ).equals( EOL ) ) {
+                outBuffer.append(EOL );
+            }
+        }
+        Paragraph p = new Paragraph( jcas, outBuffer.length(), outBuffer.length() );
+        p.setId( Integer.toString( id ) );
+        return p;
     }
 
     private Map<String, String> extractAttributes( Attributes attrs ) {
@@ -377,13 +402,8 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
             processOtherData( start, qName, path, data );
         }
     }
-
-    private void makePara() {
-        if( paraAnn == null ) {
-            paraAnn = new Paragraph( jcas, outBuffer.length(), outBuffer.length() );
-            paraAnn.setId( Integer.toString( curPara++ ) );
-        }
-    }
+    
+    //================= Convenience methods for child classes ================//
 
     /**
      * Get whether this handler is currently configured to create UIMA annotations from XML data.
@@ -435,6 +455,8 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         this.textFilter = filter;
     }
 
+    //====================== ContentHandler's overrides ======================//
+    
     /**
      * @inheritDoc
      */
@@ -476,5 +498,4 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     @Override
     public void skippedEntity( String name ) throws SAXException {
     }
-
 }

@@ -8,6 +8,8 @@ package edu.columbia.incite.uima.res.casio;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +20,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.resource.ResourceConfigurationException;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.util.data.Datum;
@@ -46,7 +49,7 @@ public class FeaturePathBroker extends FeatureExtractor implements FeatureBroker
     }
     
     @Override
-    public void configure( CAS cas ) throws CASException {
+    public void configure( CAS cas ) throws ResourceConfigurationException {
         if( ts != null && ts.equals( cas.getTypeSystem() ) ) return;
 
         for( String path : featPaths ) {
@@ -57,7 +60,11 @@ public class FeaturePathBroker extends FeatureExtractor implements FeatureBroker
                 path = m.replaceAll( "" );
             }
             FeaturePath fp = cas.createFeaturePath();
-            fp.initialize( path );
+            try {
+                fp.initialize( path );
+            } catch ( CASException ex ) {
+                throw new ResourceConfigurationException( ex );
+            }
             if( !typeMap.containsKey( type ) ) typeMap.put( type, new ArrayList<>() );
             typeMap.get( type ).add( fp );
         }

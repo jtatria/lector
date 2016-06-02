@@ -72,7 +72,7 @@ public class Tokens {
     
     public enum LAction implements Function<Token,String> {
         /** Keep original text **/
-        ASIS(   ( Token token ) -> parse( token, true )[RAW] ),
+        ASIS(  ( Token token ) -> parse( token, true )[RAW] ),
         /** Keep lemmatized form **/
         LEMMA( ( Token token ) -> parse( token )[LMI] ),
         /** Keep POS tag group and lemmatized form **/
@@ -195,10 +195,10 @@ public class Tokens {
     }
     
     public enum LSubst implements Predicate<String>, Function<String,String> {
-        L_PUNCT( "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+" ),
-        L_SHORT( ".{0,2}" ),
-        L_MONEY( "[0-9]+-?[lds]\\.?" ),
-        L_ORD(   "[0-9]*(13th|[0456789]th|1st|2nd|3rd)" ),
+        L_PUNCT(  "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+" ),
+        L_SHORT(  ".{0,2}" ),
+        L_MONEY(  "[0-9]+-?[lds]\\.?" ),
+        L_ORD(    "[0-9]*(13th|[0456789]th|1st|2nd|3rd)" ),
         L_NUMBER( "[0-9,.]+" ),
         ;
         

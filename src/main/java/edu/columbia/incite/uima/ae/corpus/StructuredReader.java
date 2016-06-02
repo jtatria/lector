@@ -17,6 +17,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
@@ -31,13 +32,31 @@ import edu.columbia.incite.uima.util.Types;
  */
 public abstract class StructuredReader extends AbstractEngine {
     
+    public static final String PARAM_DOCUMENT_TYPES = "dTypeName";
     public static final String PARAM_COVER_TYPES    = "cTypeNames";
     public static final String PARAM_TOKEN_TYPES    = "tTypeNames";
-    public static final String PARAM_DOCUMENT_TYPES = "dTypeName";
-        
-    private String[] cTypeNames;
+    
+    @ConfigurationParameter(
+        name = PARAM_DOCUMENT_TYPES,
+        mandatory = true,
+        defaultValue = CAS.TYPE_NAME_ANNOTATION,
+        description = "Document type name"
+    )
     private String   dTypeName;
+    
+    @ConfigurationParameter(
+        name = PARAM_TOKEN_TYPES,
+        mandatory = false,
+        description = "Token type names"
+    )
     private String[] tTypeNames;
+
+    @ConfigurationParameter(
+        name = PARAM_COVER_TYPES,
+        mandatory = false,
+        description = "Cover type names"
+    )
+    private String[] cTypeNames;
     
     private Set<Type> cTypes;
     private Set<Type> tTypes;

@@ -20,11 +20,11 @@ import org.apache.uima.resource.Resource;
 
 /**
  * Resource to filter text from a data source before adding it to a CAS's document text.
- * The interface offers three methods: {@link #filter(String)} applies the replacement rules
+ * The interface offers three methods: {@link #normalize(String)} applies the replacement rules
  * passed as configuration parameters and returns the filtered string;
- * {@link #filterAndAppend(StringBuffer, String)} will apply the transformation rules to an incoming
+ * {@link #appendToBuffer(StringBuffer, String)} will apply the transformation rules to an incoming
  * chunk and resolve collisions between the filtered chunk and the string already contained in the 
- * buffer before appending the chunk to the buffer; {@link #appendBreak(StringBuffer)} will insert 
+ * buffer before appending the chunk to the buffer; {@link #breakLine(StringBuffer)} will insert 
  * whatever characters are used to mark a line break and optionally remove trailing spaces in the 
  * string already contained in the buffer.
  *
@@ -40,18 +40,18 @@ public interface TextFilter extends Resource {
      * @return The string corresponding to the incoming chunk after all substitution rules have
      *         been applied.
      */
-    String filter( String chunk );
+    String normalize( String chunk );
 
     /**
      * Append the given {@code chunk} to the given {@code target} buffer.
-     * By contract, this will first apply all substitution rules as if the {@link #filter(String)}
+     * By contract, this will first apply all substitution rules as if the {@link #normalize(String)}
      * method had been called on the {@code chunk}, then resolve collisions as defined in the
      * current configuration.
      *
      * @param target The chunk to be formatted.
      * @param chunk  The buffer to which the formatted string will be appended.
      */
-    void filterAndAppend( StringBuffer target, String chunk );
+    void appendToBuffer( StringBuffer target, String chunk );
 
     /**
      * Add new line-breaks to the target buffer.
@@ -60,6 +60,6 @@ public interface TextFilter extends Resource {
      *
      * @param target The buffer to which a new line string will be added.
      */
-    void appendBreak( StringBuffer target );
+    void breakLine( StringBuffer target );
 
 }

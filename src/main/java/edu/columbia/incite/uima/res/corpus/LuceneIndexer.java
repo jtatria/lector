@@ -23,6 +23,7 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ExternalResource;
+import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
@@ -112,7 +113,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     @Override
-    public void configure( CAS conf ) throws Exception {
+    public void configure( CAS conf ) throws ResourceConfigurationException {
         docBroker.configure( conf );
         coverBroker.configure( conf );
         tsFactory.configure( conf );
