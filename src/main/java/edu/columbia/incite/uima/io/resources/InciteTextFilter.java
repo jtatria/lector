@@ -33,11 +33,7 @@ import org.apache.uima.resource.ResourceSpecifier;
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
 public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
-        
-    static final String PARAM_NEWLINE_CHARS = "eolMarker";
-    @ConfigurationParameter( name = PARAM_NEWLINE_CHARS, mandatory = false )
-    private String eolMarker = "\n";
-    
+
     static final String PARAM_ALNUM_COLLISIONS = "alnumCollisions";
     @ConfigurationParameter( name = PARAM_ALNUM_COLLISIONS, mandatory = false )
     private Boolean alnumCollisions = true;
@@ -110,18 +106,6 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
             chunk = chunk.substring( 1 );
         
         tgt.append( chunk );
-    }
-
-    @Override
-    public void breakLine( StringBuffer target ) {
-        if( trailing ) {
-            int i = target.length() - 1;
-            while( i >= 0 && Character.isWhitespace( target.charAt( i ) ) ) {
-                target.deleteCharAt( i );
-                i--;
-            }
-        }
-        target.append( eolMarker );
     }
 
     private void cookPatterns( String[] formatStrings ) {

@@ -52,14 +52,4 @@ public interface TextFilter extends Resource {
      * @param chunk  The buffer to which the formatted string will be appended.
      */
     void appendToBuffer( StringBuffer target, String chunk );
-
-    /**
-     * Add new line-breaks to the target buffer.
-     * By contract, this method will check for and resolve trailing whitespace in the target
-     * buffer as per the current configuration and then append the configured EOL marker.
-     *
-     * @param target The buffer to which a new line string will be added.
-     */
-    void breakLine( StringBuffer target );
-
 }
