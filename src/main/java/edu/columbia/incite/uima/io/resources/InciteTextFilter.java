@@ -56,9 +56,12 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
 //        "^\\s+", "",  // trim head
 //        "(\\p{Alnum})\\s+(\\p{Punct})", "$1$2", // remove space before punctuation
     };
+    
+    private NGrams ngram;
 
     private List<Pattern> rules;
     private Map<Pattern,String> subst;
+    private boolean wordSplit = false;
 
     @Override
     public boolean initialize( ResourceSpecifier aSpecifier, Map<String, Object> aAdditionalParams )
@@ -97,7 +100,18 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
 
         String last = tgt.length() > 0 ? String.valueOf( tgt.charAt( tgt.length() - 1 ) ) : "";
         String inc  = chunk.length() > 0 ? String.valueOf( chunk.charAt( 0 ) ) : "";
-
+ 
+        if( wordSplit && inc.matches( "\\w" ) ) {
+            String pre = getLastWord( tgt );
+            String pos = chunk.substring( 0, chunk.indexOf( ' ' ) );
+            double preF = ngram.freq( pre );
+            double posF = ngram.freq( pos );
+            double jointF = ngram.freq( pre, pos );
+            
+            // decide.
+            
+        }
+        
         if( whitespace && inc.matches( "\\s" ) &&
             ( last.equals( "" ) || last.matches( "\\s" ) )
         ) {
@@ -116,6 +130,21 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
             Pattern rule = Pattern.compile( in );
             rules.add( rule );
             subst.put( rule, out );
+        }
+    }
+
+    @Override
+    public void wordSplit() {
+        wordSplit = true;
+    }
+
+    private String getLastWord( StringBuffer tgt ) {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public class NGrams {
+        public double freq( String... ngram ) {
+            return 1d;
         }
     }
 }

@@ -52,4 +52,10 @@ public interface TextFilter extends Resource {
      * @param chunk  The buffer to which the formatted string will be appended.
      */
     void appendToBuffer( StringBuffer target, String chunk );
+    
+    /**
+     * Communicate to this filter that the next buffer update may occur mid-word and needs to be 
+     * checked.
+     */
+    void wordSplit();
 }
