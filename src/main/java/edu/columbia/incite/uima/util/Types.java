@@ -55,7 +55,7 @@ public abstract class Types {
         for( String typeName : typeNames ) {
             types.add( checkType( ts, typeName ) );
         }
-        return (Type[]) types.toArray();
+        return types.toArray( new Type[types.size()] );
     }
     
     public static Type[] checkTypes( TypeSystem ts, int... typeCodes ) throws AnalysisEngineProcessException {
@@ -63,7 +63,7 @@ public abstract class Types {
         for( int typeCode : typeCodes ) {
             types.add( checkType( ts, typeCode ) );
         }
-        return (Type[]) types.toArray();
+        return types.toArray( new Type[types.size()] );
     }
 
     public static Type checkType( TypeSystem ts, String typeName ) throws AnalysisEngineProcessException {

@@ -140,7 +140,7 @@ public enum BinaryFormat {
         } else if( Arrays.equals( header, DKPRO1.header() ) ) {
             return DKPRO1;
         }
-        return null;
+        throw new IOException( "Unknown format for input stream" );
     }
 
 }

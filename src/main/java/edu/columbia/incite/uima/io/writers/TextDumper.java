@@ -427,7 +427,7 @@ public class TextDumper extends AbstractFileWriter {
     }
     
     @Override
-    public void postProcess( JCas jcas ) {
+    public void postProcess( JCas jcas ) throws AnalysisEngineProcessException {
         super.postProcess( jcas );
         this.coverIndex.clear();
         this.docIndex.clear();

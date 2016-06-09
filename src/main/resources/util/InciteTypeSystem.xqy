@@ -8,7 +8,7 @@ declare variable $vendor := "Incite - Columbia University";
 declare variable $ns := "edu.columbia.incite.uima.api.types";
 declare variable $root := "/home/gorgonzola/src/local";
 declare variable $outFile :=  $root 
-  || "/incite/incite-uima/incite-uima-api/src/main/resources/desc/type/" || $name || ".xml";
+  || "/incite/incite-uima/src/main/resources/desc/type/" || $name || ".xml";
 
 let $baseName := $ns || ".Span"
 
@@ -73,6 +73,7 @@ let $md := uima:type(
   $ns || ".Document"
   , "Document metadata annotation"
   , uima:fsName( $inciteBase )
+  (: , $uima:Annotation :)
   , (
     uima:feature( "id", "Document identifier within a collection", $uima:String )
     , uima:feature( "collection", "Collection identifier", $uima:String )

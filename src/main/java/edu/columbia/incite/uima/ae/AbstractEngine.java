@@ -168,7 +168,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
 
     protected abstract void realProcess( JCas jcas ) throws AnalysisEngineProcessException;
 
-    protected void postProcess( JCas jcas ) {
+    protected void postProcess( JCas jcas ) throws AnalysisEngineProcessException {
         Resources.destroyFor( this );
     }
 }

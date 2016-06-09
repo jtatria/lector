@@ -125,12 +125,11 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     private TextFilter textFilter;
 
     // Created internally
-    @Resource protected StringBuffer inBuffer;
-    @Resource protected StringBuffer outBuffer;
-    @Resource protected Stack<Annotation> annStack;
-    @Resource protected XPathNode curNode;
-    @Resource protected Integer curPara;
-    @Resource protected Paragraph paraAnn;
+    @Resource private StringBuffer inBuffer;
+    @Resource private StringBuffer outBuffer;
+    @Resource private Stack<Annotation> annStack;
+    @Resource private XPathNode curNode;
+    @Resource private Paragraph paraAnn;
 
     // Set on configure
     @Resource private String docId;
@@ -176,7 +175,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         }
         
         if( makeParagraphs ) {
-            curPara = 0;
+            breakPara();
         }
     }
 
@@ -202,13 +201,12 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         this.curNode = curNode == null ? new XPathNode( docId ) : this.curNode.addChild( qName );
         updateCharBuffers();
         
-        if( makeParagraphs ) {
-            if( paraAnn == null ) {
-                paraAnn = makePara( curPara++ );
-            } else if( mappingProvider.isParaBreak( qName ) ) {
-                finishAnnotation( paraAnn );
-                paraAnn = makePara( curPara++ );
-            }
+        if( filterText && mappingProvider.isInlineMark( qName ) ) {
+            processInline( qName );
+        }
+        
+        if( makeParagraphs && mappingProvider.isParaBreak( qName ) ) {
+            breakPara();
         }
         
         if( annotate && mappingProvider.isData( qName ) ) {
@@ -221,15 +219,14 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         this.curNode = this.curNode.parent();
         updateCharBuffers();
         
+        if( makeParagraphs && mappingProvider.isParaBreak( qName ) ) {
+            breakPara();
+        }
+
         if( annotate && mappingProvider.isAnnotation( qName ) ) {
             if( !annStack.empty() ) {
                 finishAnnotation( annStack.pop() );
             }
-        }
-
-        if( makeParagraphs && paraAnn != null && mappingProvider.isParaBreak( qName ) ) {
-            finishAnnotation( paraAnn );
-            paraAnn = null;
         }
     }
     
@@ -269,17 +266,17 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         }
     }
     
-    private Paragraph makePara( int id ) {
-        int obl = outBuffer.length();
-        if( obl > 0 ) {
-            int pbl = EOL.length();
-            if( obl - pbl > 0 && !outBuffer.substring( obl - pbl, obl ).equals( EOL ) ) {
-                outBuffer.append(EOL );
+    private int curPara = 0;
+    private void breakPara() {
+        if( paraAnn != null ) {
+            if( paraAnn.getBegin() == outBuffer.length() ) {
+                return;
             }
+            outBuffer.append( EOL );
+            finishAnnotation( paraAnn );
         }
-        Paragraph p = new Paragraph( jcas, outBuffer.length(), outBuffer.length() );
-        p.setId( Integer.toString( id ) );
-        return p;
+        paraAnn = new Paragraph( jcas, outBuffer.length(), outBuffer.length() );
+        paraAnn.setId( Integer.toString( curPara++ ) );
     }
 
     private Map<String, String> extractAttributes( Attributes attrs ) {
@@ -497,5 +494,9 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      */
     @Override
     public void skippedEntity( String name ) throws SAXException {
+    }
+
+    private void processInline( String qName ) {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
     }
 }

@@ -48,7 +48,7 @@
     </typeDescription>
     <typeDescription>
       <name>edu.columbia.incite.uima.api.types.Span</name>
-      <description>Abstract base for all Incite UIMA types</description>
+      <description>Base type for span annotations</description>
       <supertypeName>uima.tcas.Annotation</supertypeName>
       <features>
         <featureDescription>

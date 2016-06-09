@@ -49,16 +49,17 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
     static final String PARAM_FORMAT_PATTERNS = "formatStrings";
     @ConfigurationParameter( name = PARAM_FORMAT_PATTERNS, mandatory = false )
     private String[] formatStrings = new String[]{
-        "\\s+", " ", // collapse
-//        "\\s+$", "", // trim tail
-//        "^\\s+", "", // trim head
+//        "^\\s+$", "", // delete empty.
+        "\\n", " ",     // remove new lines.
+        "\\s+", " ",    // collapse whitespace
+//        "\\s+$", "",  // trim tail
+//        "^\\s+", "",  // trim head
 //        "(\\p{Alnum})\\s+(\\p{Punct})", "$1$2", // remove space before punctuation
     };
 
     private List<Pattern> rules;
     private Map<Pattern,String> subst;
 
-    
     @Override
     public boolean initialize( ResourceSpecifier aSpecifier, Map<String, Object> aAdditionalParams )
         throws ResourceInitializationException {
@@ -95,15 +96,13 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
         if( chunk.length() <= 0 ) return;
 
         String last = tgt.length() > 0 ? String.valueOf( tgt.charAt( tgt.length() - 1 ) ) : "";
-        String inc = chunk.length() > 0 ? String.valueOf( chunk.charAt( 0 ) ) : "";
-        
-        if( inc.equals( "" ) ) return;
-        
-        if( alnumCollisions && last.matches( "\\p{Alnum}" ) && inc.matches( "\\p{Alnum}" ) )
-            tgt.append( " " );
-        
-        if( whitespace && ( last.matches( "\\s" ) || last.equals( "" ) ) && inc.matches( "\\s" ) )
-            chunk = chunk.substring( 1 );
+        String inc  = chunk.length() > 0 ? String.valueOf( chunk.charAt( 0 ) ) : "";
+
+        if( whitespace && inc.matches( "\\s" ) &&
+            ( last.equals( "" ) || last.matches( "\\s" ) )
+        ) {
+            chunk = chunk.substring( 1 ); // TODO dubious.
+        }
         
         tgt.append( chunk );
     }

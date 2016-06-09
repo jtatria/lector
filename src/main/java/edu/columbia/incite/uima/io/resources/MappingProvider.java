@@ -74,12 +74,12 @@ public interface MappingProvider extends ConfigurableResource<CAS> {
     boolean isAnnotation( String key );    
 
     /**
-     * Return true if this key corresponds to a line-break to be inserted in the CAS document text.
+     * Return true if this key corresponds to an inline mark that may or may not split words.
      * 
      * @param key A string key, typically an XML element qName
-     * @return      {@code true} if this key is indicates a line-break.
+     * @return      {@code true} if this key indicates an inline mark.
      */
-    boolean isLineBreak( String key ); // TODO: get rid of this abomination.
+    boolean isInlineMark( String key ); // TODO: get rid of this abomination.
     
     /**
      * Return true if this key corresponds to a paragraph break in the CAS document text.

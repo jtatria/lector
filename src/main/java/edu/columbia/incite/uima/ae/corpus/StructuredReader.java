@@ -33,28 +33,26 @@ import edu.columbia.incite.uima.util.Types;
 public abstract class StructuredReader extends AbstractEngine {
     
     public static final String PARAM_DOCUMENT_TYPES = "dTypeName";
-    public static final String PARAM_COVER_TYPES    = "cTypeNames";
-    public static final String PARAM_TOKEN_TYPES    = "tTypeNames";
-    
     @ConfigurationParameter(
-        name = PARAM_DOCUMENT_TYPES,
-        mandatory = true,
-        defaultValue = CAS.TYPE_NAME_ANNOTATION,
-        description = "Document type name"
+        name = PARAM_DOCUMENT_TYPES, mandatory = true, description = "Document type name",
+        defaultValue = CAS.TYPE_NAME_ANNOTATION
     )
     private String   dTypeName;
     
+    public static final String PARAM_TOKEN_TYPES    = "tTypeNames";
     @ConfigurationParameter(
-        name = PARAM_TOKEN_TYPES,
-        mandatory = false,
-        description = "Token type names"
+        name = PARAM_TOKEN_TYPES, mandatory = false, description = "Token type names",
+        defaultValue = { 
+            "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
+            "edu.columbia.incite.uima.api.types.Span",
+        }
     )
     private String[] tTypeNames;
 
+    public static final String PARAM_COVER_TYPES    = "cTypeNames";
     @ConfigurationParameter(
-        name = PARAM_COVER_TYPES,
-        mandatory = false,
-        description = "Cover type names"
+        name = PARAM_COVER_TYPES, mandatory = false, description = "Cover type names",
+        defaultValue = { "edu.columbia.incite.uima.api.types.Span" }
     )
     private String[] cTypeNames;
     
@@ -62,8 +60,8 @@ public abstract class StructuredReader extends AbstractEngine {
     private Set<Type> tTypes;
     private Type dType;
     
-    private Map<AnnotationFS,Collection<AnnotationFS>> cMap;
-    private Map<AnnotationFS,Collection<AnnotationFS>> tMap;
+    private Map<AnnotationFS,Collection<AnnotationFS>> cIndex;
+    private Map<AnnotationFS,Collection<AnnotationFS>> tIndex;
     
     @Override
     public void initialize( UimaContext uCtx ) throws ResourceInitializationException {
@@ -83,20 +81,23 @@ public abstract class StructuredReader extends AbstractEngine {
         
         if( cTypeNames == null || cTypeNames.length == 0 ) {
             getLogger().info( "No cover types defined: Including all covering annotations." );
+            cTypeNames = new String[]{ CAS.TYPE_NAME_ANNOTATION };
         }
         if( tTypeNames == null || tTypeNames.length == 0 ) {
             getLogger().info( "No token types defined: Including all covered annotations." );
+            tTypeNames = new String[]{ CAS.TYPE_NAME_ANNOTATION };
         }
     }
     
     @Override
     protected void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
+        super.preProcess( jcas );
         this.dType  = Types.checkType( jcas.getTypeSystem(), dTypeName );
         this.cTypes = new HashSet<>( Arrays.asList( Types.checkTypes( jcas.getTypeSystem(), cTypeNames ) ) );
         this.tTypes = new HashSet<>( Arrays.asList( Types.checkTypes( jcas.getTypeSystem(), tTypeNames ) ) );
         Type base = Types.checkType( jcas.getTypeSystem(), CAS.TYPE_NAME_ANNOTATION );
-        this.cMap = CasUtil.indexCovering( jcas.getCas(), dType, base );
-        this.tMap = CasUtil.indexCovered( jcas.getCas(), dType, base );
+        this.cIndex = CasUtil.indexCovering( jcas.getCas(), dType, base );
+        this.tIndex = CasUtil.indexCovered( jcas.getCas(), dType, base );
     }
     
     @Override
@@ -104,10 +105,19 @@ public abstract class StructuredReader extends AbstractEngine {
         FSIterator<Annotation> dIt = jcas.getAnnotationIndex( dType ).iterator();
         while( dIt.hasNext() ) {
             Annotation doc = dIt.next();
-            Collection<AnnotationFS> covers = Types.filterTypes( cMap.get( doc ), cTypes );
-            Collection<AnnotationFS> tokens = Types.filterTypes( tMap.get( doc ), tTypes );
+            Collection<AnnotationFS> covers = Types.filterTypes( cIndex.get( doc ), cTypes );
+            Collection<AnnotationFS> tokens = Types.filterTypes( tIndex.get( doc ), tTypes );
             read( doc, covers, tokens );
         }
+    }
+    
+    @Override
+    protected void postProcess( JCas jcas ) throws AnalysisEngineProcessException {
+        super.postProcess( jcas );
+        cTypes = null;
+        tTypes = null;
+        cIndex = null;
+        tIndex = null;
     }
 
     protected abstract void read( Annotation doc, Collection<AnnotationFS> covers, Collection<AnnotationFS> tokens );
