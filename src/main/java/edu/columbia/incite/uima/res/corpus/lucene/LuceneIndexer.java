@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.res.corpus;
+package edu.columbia.incite.uima.res.corpus.lucene;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
@@ -22,6 +23,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -31,7 +33,7 @@ import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.corpus.Indexer;
 import edu.columbia.incite.uima.api.corpus.TokenFactory;
 import edu.columbia.incite.uima.res.casio.FeatureExtractor;
-import edu.columbia.incite.uima.res.corpus.token.LuceneTSFactory;
+import edu.columbia.incite.uima.res.corpus.lucene.LuceneTSFactory;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.Datum;
 
@@ -57,7 +59,8 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     @ExternalResource( key = RES_TOKEN_STREAM_FACTORY, api = LuceneTSFactory.class, mandatory = false )
     private TokenFactory<TokenStream> tsFactory;
 
-    public static final String PARAM_FAIL_OIN_EMPTY_MD = "failOnEmptyMD";
+    public static final String PARAM_FAIL_ON_EMPTY_MD = "failOnEmptyMD";
+    @ConfigurationParameter( name = PARAM_FAIL_ON_EMPTY_MD, mandatory = false, defaultValue = "false" )
     private Boolean failOnEmptyMD = false;
 
     public static final FieldType TEXT_FT = new FieldType();
@@ -71,10 +74,11 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     private FieldFactory fieldFactory = new FieldFactory();
-    private Set<Long> users = new HashSet<>();
     private final AtomicLong tokenProvider = new AtomicLong();
     private final AtomicLong successes = new AtomicLong();
     private final AtomicLong failures = new AtomicLong();
+    
+    private Set<Long> users = new HashSet<>();
 
     @Override
     public void afterResourcesInitialized() throws ResourceInitializationException {
@@ -159,25 +163,36 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     }
 
     @Override
-    public Document tokens( Document doc, Map<String,List<AnnotationFS>> tokens, int offset )
-    throws TokenStreamException {
-        for( Map.Entry<String,List<AnnotationFS>> e : tokens.entrySet() ) {
-            String field = e.getKey();
-            List<AnnotationFS> anns = e.getValue();
-
-            if( anns == null || anns.isEmpty() ) continue;
-
-            TokenStream ts;
-            try {
-                ts = tsFactory.makeTokens( field, anns, offset );
-            } catch( CASException ex ) {
-                failures.incrementAndGet();
-                throw new TokenStreamException( ex );
-            }
-            doc.add( new Field( field, ts, TEXT_FT ) );
-        }
-        return doc;
+    public Document text( Document doc, String text, int offset ) {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
     }
+
+    
+    @Override
+    public Document tokens( Document doc, Collection<AnnotationFS> tokens, int offset ) throws TokenStreamException {
+        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
+//    public Document tokens( Document doc, Map<String,List<AnnotationFS>> tokens, int offset )
+//    throws TokenStreamException {
+//        for( Map.Entry<String,List<AnnotationFS>> e : tokens.entrySet() ) {
+//            String field = e.getKey();
+//            List<AnnotationFS> anns = e.getValue();
+//
+//            if( anns == null || anns.isEmpty() ) continue;
+//
+//            TokenStream ts;
+//            try {
+//                ts = tsFactory.makeTokens( field, anns, offset );
+//            } catch( CASException ex ) {
+//                failures.incrementAndGet();
+//                throw new TokenStreamException( ex );
+//            }
+//            doc.add( new Field( field, ts, TEXT_FT ) );
+//        }
+//        return doc;
+//    }
 
     @Override
     public void writeToIndex( Document doc ) throws IOException {
@@ -187,8 +202,4 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
 
     protected void validateMetadata( Datum d ) {}
 
-    @Override
-    public Document text( Document doc, String text, int offset ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
-    }
 }

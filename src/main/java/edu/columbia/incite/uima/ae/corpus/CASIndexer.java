@@ -244,9 +244,14 @@ public class CASIndexer<D> extends AbstractEngine {
         return covers;
     }
 
-    private Map<String,List<AnnotationFS>> getTokens( AnnotationFS docAnn ) {
+//    private Map<String,List<AnnotationFS>> getTokens( AnnotationFS docAnn ) {
+//        if( tokenIndex == null ) return null;
+//        return sortTypes( filterTypes( tokenIndex.get( docAnn ), tokenTypes ), typeMap );
+//    }
+    
+    private Collection<AnnotationFS> getTokens( AnnotationFS docAnn ) {
         if( tokenIndex == null ) return null;
-        return sortTypes( filterTypes( tokenIndex.get( docAnn ), tokenTypes ), typeMap );
+        return filterTypes( tokenIndex.get( docAnn ), tokenTypes );
     }
 
     private Map<String,List<AnnotationFS>> sortTypes( Collection<AnnotationFS> anns, Map<String,String> typeMap ) {

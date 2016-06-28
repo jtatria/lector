@@ -18,8 +18,6 @@ package edu.columbia.incite.uima.io.resources;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.Resource;
-import org.apache.uima.resource.ResourceProcessException;
 import org.xml.sax.ContentHandler;
 
 import edu.columbia.incite.uima.api.ConfigurableResource;

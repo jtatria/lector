@@ -70,7 +70,7 @@ public class Tokens {
         return String.join( SEP, parse( token, addTxt ) );
     }
     
-    public enum LAction implements Function<Token,String> {
+    public enum LexAction implements Function<Token,String> {
         /** Keep original text **/
         ASIS(  ( Token token ) -> parse( token, true )[RAW] ),
         /** Keep lemmatized form **/
@@ -87,7 +87,7 @@ public class Tokens {
 
         private final Function<Token,String> func;
         
-        private LAction( Function<Token,String> func ) {
+        private LexAction( Function<Token,String> func ) {
             this.func = func;
         }
         
@@ -97,7 +97,7 @@ public class Tokens {
         }
     }
 
-    public enum NLAction implements Function<Token,String> {
+    public enum NonLexAction implements Function<Token,String> {
         DELETE( ( Token t ) -> "" ),
         MARK(   ( Token t ) -> Tokens.NL_MRKR ),
         POSG(   ( Token t ) -> parse( t )[PGI] ),
@@ -107,7 +107,7 @@ public class Tokens {
 
         private final Function<Token,String> func;
         
-        private NLAction( Function<Token,String> func ) {
+        private NonLexAction( Function<Token,String> func ) {
             this.func = func;
         }
         
@@ -117,7 +117,7 @@ public class Tokens {
         }
     }
     
-    public enum LClass implements Predicate<Token> {
+    public enum LexClass implements Predicate<Token> {
         /** Adjectives: JJ, JJS, JJR **/
         ADJ( "ADJ_JJ[SR]?", new String[]{ "JJ", "JJS", "JJR" } ),
         /** Adverbs: RB, RBR, RBS, WRB **/
@@ -144,10 +144,10 @@ public class Tokens {
         V( "V_(MD|VB[DGNPZ]?)", new String[]{ "MD", "VB", "VBD", "VBG", "VBN", "VBP", "VBZ" } ),
         ;
 
-        public final static Map<String,LClass> MEMBERS;
+        public final static Map<String,LexClass> MEMBERS;
         static {
-            Map<String,LClass> tmp = new HashMap<>();
-            for( LClass p : LClass.values() ) {
+            Map<String,LexClass> tmp = new HashMap<>();
+            for( LexClass p : LexClass.values() ) {
                 for( String m : p.members ) {
                     tmp.put( m, p );
                 }
@@ -163,7 +163,7 @@ public class Tokens {
         private final Automaton au;
         private final CharacterRunAutomaton cra;
 
-        private LClass( String regexp, String[] members ) {
+        private LexClass( String regexp, String[] members ) {
             this.rx = regexp;
             this.members = members;
 
@@ -185,34 +185,34 @@ public class Tokens {
             return cra.run( Tokens.pos( t ) );
         }
         
-        public static Automaton make( LClass... inc ) {
+        public static Automaton make( LexClass... inc ) {
             Automaton out = Automata.makeEmpty();
-            for( LClass lc : inc ) {
+            for( LexClass lc : inc ) {
                 out = Operations.union( out, lc.au );
             }
             return out;
         }
     }
     
-    public enum LSubst implements Predicate<String>, Function<String,String> {
+    public enum LemmaSet implements Predicate<String>, Function<String,String> {
         L_PUNCT(  "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+" ),
         L_SHORT(  ".{0,2}" ),
         L_MONEY(  "[0-9]+-?[lds]\\.?" ),
-        L_ORD(    "[0-9]*(13th|[0456789]th|1st|2nd|3rd)" ),
+        L_ORD( "[0-9]*((1[123]|[0456789])th|1st|2nd|3rd)" ),
         L_NUMBER( "[0-9,.]+" ),
         ;
         
         private Automaton au;
         private CharacterRunAutomaton cra;
         
-        private LSubst( String rx ) {
+        private LemmaSet( String rx ) {
             this.au = new RegExp( rx ).toAutomaton();
             this.cra = new CharacterRunAutomaton( au );
         }
         
-        public static Automaton make( LSubst... inc ) {
+        public static Automaton make( LemmaSet... inc ) {
             Automaton out = Automata.makeEmpty();
-            for( LSubst lc : inc ) {
+            for( LemmaSet lc : inc ) {
                 out = Operations.union( out, lc.au );
             }
             return out;

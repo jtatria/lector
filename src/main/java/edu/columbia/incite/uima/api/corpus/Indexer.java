@@ -96,7 +96,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      *
      * @throws edu.columbia.incite.uima.api.corpus.Indexer.TokenStreamException
      */
-    D tokens( D doc, Map<String,List<AnnotationFS>> tokens, int offset ) throws TokenStreamException;
+    D tokens( D doc, Collection<AnnotationFS> tokens, int offset ) throws TokenStreamException;
 
     /**
     * Adds the given document to a capable index.

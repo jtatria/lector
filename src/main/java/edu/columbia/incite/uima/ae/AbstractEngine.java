@@ -85,6 +85,8 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
         
+        // This is most certainly wrong but I don't have time to test it: i.e. what happens if 
+        // dmdBroker is _not_ null?
         if( dmdBroker == null ) {
             if( dmdTypeName != null ) { // Custom metadata types. Use broker.
                 if( dmdIdFeatName == null ) {
@@ -97,13 +99,27 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
                 if( dmdFeatPatterns != null ) {
                     dmdBroker = new FeaturePathBroker( dmdFeatPatterns, true );
                 }
-            } else {
+            } else { // Incite types, use internal broker.
+//                dmdTypeName = Document.class.getName();
                 dmdTypeName = InciteTypes.DOCUMENT_TYPE;
                 dmdBroker = new InciteFeatureBroker();
             }
         }
     }
 
+    /**
+     * UIMA's {@link JCasAnnotator_ImplBase#process(org.apache.uima.jcas.JCas)} method 
+     * implementation, that splits analysis logic in three distinct phases, executed in order: 
+     * {@link #preProcess(org.apache.uima.jcas.JCas)}, which executes all pre-analysis logic, 
+     * {@link #realProcess(org.apache.uima.jcas.JCas)}, which executes the actual analysis logic 
+     * and should be overriden by implementations (it does nothing by default), and 
+     * {@link #postProcess(org.apache.uima.jcas.JCas)}, which carries out all post-analysis actions.
+     * 
+     * See the documentation for each method for more details.
+     * 
+     * @param jcas
+     * @throws AnalysisEngineProcessException 
+     */
     @Override
     public final void process( JCas jcas ) throws AnalysisEngineProcessException {
         preProcess( jcas );
@@ -111,7 +127,12 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         postProcess( jcas );
     }
 
-    
+    /**
+     * Obtain a {@link Datum} instance containing all available metadata for the document currently 
+     * under analysis, as produced by the configured {@Link FeatureBroker}.
+     * @return  A {@link Datum} with the current document's metadata.
+     * @throws AnalysisEngineProcessException 
+     */
     protected Datum getMetadata() throws AnalysisEngineProcessException {
         if( curCasData != null ) {
             try {
@@ -123,6 +144,10 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         return null;
     }
 
+    /**
+     * Get a collection-wide unique identifier for the document contained in the current CAS.
+     * @return A string unambigously identifying the document currently under analysis.
+     */
     protected String getDocumentId() {
         if( curCasData != null ) {
             if( customDmd ) {
@@ -136,7 +161,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         }
     }
 
-    protected void initTypes( JCas jcas ) throws AnalysisEngineProcessException {
+    private void initTypes( JCas jcas ) throws AnalysisEngineProcessException {
         this.ts = jcas.getTypeSystem();
 
         if( customDmd ) {
@@ -160,14 +185,36 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         }
     }
 
+    /**
+     * Perform all pre-analysis actions on the current JCas. This typically include indexing 
+     * annotations, gathering metadata, configuring resources, opening I/O channels, etc.
+     * Overriding implementations must call this method if they want CAS metadata to be available 
+     * throught this class's methods.
+     * @param jcas
+     * @throws AnalysisEngineProcessException 
+     */
     protected void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
         curCasIndex++;
         if( ts == null || !ts.equals( jcas.getTypeSystem() ) ) initTypes( jcas );
         curCasData = jcas.getAnnotationIndex( dmdType ).iterator().next();
     }
 
+    /**
+     * Execute the actual analysis logic on the current JCas.
+     * @param jcas
+     * @throws AnalysisEngineProcessException 
+     */
     protected abstract void realProcess( JCas jcas ) throws AnalysisEngineProcessException;
 
+    /**
+     * Perform all post-analysis actions for the current JCas. This typically includes deleting 
+     * annotation indexes, clearing retained metadata, reseting resource configurations, close 
+     * per-document I/O channels, etc.
+     * Overriding implementations must call this method if they are using this class's metadata 
+     * access methods, i.e. if they called preProcess() from an overriding implementation.
+     * @param jcas
+     * @throws AnalysisEngineProcessException 
+     */
     protected void postProcess( JCas jcas ) throws AnalysisEngineProcessException {
         Resources.destroyFor( this );
     }

@@ -177,7 +177,7 @@ public abstract class ComponentFactory {
         String key = f.getAnnotation( ConfigurationParameter.class ).name();
         if( conf.getProperty( clz.getName() + "." + key ) != null ) {
             return parseArgument( f.getType(), conf.getProperty( clz.getName() + "." + key ) );
-        } else if( conf.getProperty(f.getDeclaringClass().getName() + "." + key ) != null ) {
+        } else if( conf.getProperty( f.getDeclaringClass().getName() + "." + key ) != null ) {
             return parseArgument( f.getType(), conf.getProperty( f.getDeclaringClass().getName() + "." + key ) );
         }
         else return null;

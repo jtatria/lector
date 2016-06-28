@@ -22,6 +22,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.ae.AbstractEngine;
 import edu.columbia.incite.uima.util.Types;
@@ -35,13 +36,14 @@ public abstract class StructuredReader extends AbstractEngine {
     public static final String PARAM_DOCUMENT_TYPES = "dTypeName";
     @ConfigurationParameter(
         name = PARAM_DOCUMENT_TYPES, mandatory = true, description = "Document type name",
-        defaultValue = CAS.TYPE_NAME_ANNOTATION
+        defaultValue = "edu.columbia.incite.uima.api.types.Paragraph"
     )
     private String   dTypeName;
     
     public static final String PARAM_TOKEN_TYPES    = "tTypeNames";
     @ConfigurationParameter(
         name = PARAM_TOKEN_TYPES, mandatory = false, description = "Token type names",
+//        defaultValue = { CAS.TYPE_NAME_ANNOTATION }
         defaultValue = { 
             "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
             "edu.columbia.incite.uima.api.types.Span",
@@ -60,8 +62,8 @@ public abstract class StructuredReader extends AbstractEngine {
     private Set<Type> tTypes;
     private Type dType;
     
-    private Map<AnnotationFS,Collection<AnnotationFS>> cIndex;
-    private Map<AnnotationFS,Collection<AnnotationFS>> tIndex;
+    protected Map<AnnotationFS,Collection<AnnotationFS>> cIndex;
+    protected Map<AnnotationFS,Collection<AnnotationFS>> tIndex;
     
     @Override
     public void initialize( UimaContext uCtx ) throws ResourceInitializationException {
@@ -103,12 +105,17 @@ public abstract class StructuredReader extends AbstractEngine {
     @Override
     protected void realProcess( JCas jcas ) throws AnalysisEngineProcessException {
         FSIterator<Annotation> dIt = jcas.getAnnotationIndex( dType ).iterator();
+        int ct = 0;
         while( dIt.hasNext() ) {
+            ct++;
             Annotation doc = dIt.next();
             Collection<AnnotationFS> covers = Types.filterTypes( cIndex.get( doc ), cTypes );
             Collection<AnnotationFS> tokens = Types.filterTypes( tIndex.get( doc ), tTypes );
             read( doc, covers, tokens );
         }
+        getLogger().log( Level.INFO, String.format( "%s read %d documents from CAS %s",
+            this.getClass().getSimpleName(), ct, getDocumentId() )
+        );
     }
     
     @Override

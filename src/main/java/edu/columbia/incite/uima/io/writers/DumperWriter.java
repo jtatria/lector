@@ -5,6 +5,7 @@
  */
 package edu.columbia.incite.uima.io.writers;
 
+import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.StandardOpenOption;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -39,12 +41,12 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.api.corpus.Entities;
-import edu.columbia.incite.uima.api.corpus.Entities.EAction;
+import edu.columbia.incite.uima.api.corpus.Entities.EntityAction;
 import edu.columbia.incite.uima.api.corpus.Tokens;
-import edu.columbia.incite.uima.api.corpus.Tokens.LAction;
-import edu.columbia.incite.uima.api.corpus.Tokens.LClass;
-import edu.columbia.incite.uima.api.corpus.Tokens.LSubst;
-import edu.columbia.incite.uima.api.corpus.Tokens.NLAction;
+import edu.columbia.incite.uima.api.corpus.Tokens.LexAction;
+import edu.columbia.incite.uima.api.corpus.Tokens.LexClass;
+import edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet;
+import edu.columbia.incite.uima.api.corpus.Tokens.NonLexAction;
 import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.Span;
 import edu.columbia.incite.uima.util.Types;
@@ -57,7 +59,8 @@ import static edu.columbia.incite.uima.util.Types.*;
  *
  * @author gorgonzola
  */
-public class TextDumper extends AbstractFileWriter {
+
+public class DumperWriter extends AbstractFileWriter {
     
     public static final String DOC_SEP   = "\n";
     public static final String TOKEN_SEP = " ";
@@ -112,7 +115,7 @@ public class TextDumper extends AbstractFileWriter {
 //        defaultValue = "TYPE_ID_COVERED_DUMP"
         
     )
-    private EAction eAction;
+    private EntityAction eAction;
     
     public static final String PARAM_ADD_TYPE_TO_TERM = "addType";
     @ConfigurationParameter( name = PARAM_ADD_TYPE_TO_TERM, mandatory = false,
@@ -184,7 +187,7 @@ public class TextDumper extends AbstractFileWriter {
 //        defaultValue = "POSF"
 //        defaultValue = "LEMMA"
     )
-    private NLAction nlAction;
+    private NonLexAction nlAction;
     
     public static final String PARAM_LEXICAL_ACTION = "lAction";
     @ConfigurationParameter( name = PARAM_LEXICAL_ACTION, mandatory = false,
@@ -196,7 +199,7 @@ public class TextDumper extends AbstractFileWriter {
 //        defaultValue = "POSF"
 //        defaultValue = "FULL"
     )
-    private LAction lAction;
+    private LexAction lAction;
     
     public static final String PARAM_LEMMA_SUBSTITUTIONS = "lemmaSubstitutions";
     @ConfigurationParameter( name = PARAM_LEMMA_SUBSTITUTIONS, mandatory = false,
@@ -247,8 +250,8 @@ public class TextDumper extends AbstractFileWriter {
     // Substitution candidates
     private CharacterRunAutomaton substCra;
     // Substitions.
-    private List<LSubst> substs;
-    private Set<LSubst> mSubsts;
+    private List<LemmaSet> substs;
+    private Set<LemmaSet> mSubsts;
     
     // NIO open options.
     private StandardOpenOption[] opts;
@@ -288,10 +291,10 @@ public class TextDumper extends AbstractFileWriter {
         this.opts = optsL.toArray( new StandardOpenOption[optsL.size()] );
         
         if( lexicalClasses != null && lexicalClasses.length != 0 ) {
-            List<LClass> lclasses = Arrays.stream( lexicalClasses )
-                .map( LClass::valueOf )
+            List<LexClass> lclasses = Arrays.stream( lexicalClasses )
+                .map(LexClass::valueOf )
                 .collect( Collectors.toList() );
-            Automaton au = LClass.make( lclasses.toArray( new LClass[lclasses.size()] ) );
+            Automaton au = LexClass.make(lclasses.toArray(new LexClass[lclasses.size()] ) );
             this.lexicalCra = new CharacterRunAutomaton( au );
         } else {
             this.lexicalCra = new CharacterRunAutomaton( Automata.makeAnyString() );
@@ -299,9 +302,9 @@ public class TextDumper extends AbstractFileWriter {
         
         if( lemmaSubstitutions != null && lemmaSubstitutions.length != 0 ) {
             this.substs = Arrays.stream( lemmaSubstitutions )
-                .map( LSubst::valueOf )
+                .map(LemmaSet::valueOf )
                 .collect( Collectors.toList() );
-            Automaton au = LSubst.make( substs.toArray( new LSubst[substs.size()] ) );
+            Automaton au = LemmaSet.make(substs.toArray(new LemmaSet[substs.size()] ) );
             this.substCra = new CharacterRunAutomaton( au );            
         } else {
             this.substCra = new CharacterRunAutomaton( Automata.makeEmpty() );
@@ -309,7 +312,7 @@ public class TextDumper extends AbstractFileWriter {
         
         if( markedSubstitutions != null && markedSubstitutions.length != 0 ) {
             this.mSubsts = Arrays.stream( markedSubstitutions )
-                .map( LSubst::valueOf )
+                .map(LemmaSet::valueOf )
                 .collect( Collectors.toSet() );
         }
         
@@ -329,9 +332,9 @@ public class TextDumper extends AbstractFileWriter {
         }
         
         // Validate entity actions.
-        if( addType && eAction.compareTo( EAction.TYPE ) < 0 ) eAction = EAction.TYPE;
-        if( addId   && eAction.compareTo( EAction.TYPE_ID   ) < 0 ) eAction = EAction.TYPE_ID;
-        if( addTxt  && eAction.compareTo( EAction.TYPE_ID_COVERED ) < 0 ) eAction = EAction.TYPE_ID_COVERED;
+        if( addType && eAction.compareTo(EntityAction.TYPE ) < 0 ) eAction = EntityAction.TYPE;
+        if( addId   && eAction.compareTo(EntityAction.TYPE_ID   ) < 0 ) eAction = EntityAction.TYPE_ID;
+        if( addTxt  && eAction.compareTo(EntityAction.TYPE_ID_COVERED ) < 0 ) eAction = EntityAction.TYPE_ID_COVERED;
     }
     
     @Override
@@ -419,7 +422,7 @@ public class TextDumper extends AbstractFileWriter {
             }
             wrtr.append( EOF );
             
-        } catch ( Exception ex ) {
+        } catch ( IOException ex ) {
             getLogger().log( Level.SEVERE, "Exception occurred when trying to process CAS {0}: {1}",
                 new Object[]{ getDocumentId(), ex.toString() }
             );
@@ -473,7 +476,7 @@ public class TextDumper extends AbstractFileWriter {
     }
 
     private String applySubstitutions( String txt ) {
-        for( LSubst ls : substs ) {
+        for( LemmaSet ls : substs ) {
             if( ls.test( txt ) ) {
                 if( mSubsts.contains( ls ) ) {
                     return ls.apply( txt );

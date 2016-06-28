@@ -218,7 +218,7 @@ public class FeatureExtractor extends Resource_ImplBase implements FeatureBroker
 
     @Override
     public void configure( CAS conf ) throws ResourceConfigurationException {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+        ;
     }
 
 }

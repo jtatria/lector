@@ -29,13 +29,12 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import edu.columbia.incite.uima.api.corpus.Entities;
-import edu.columbia.incite.uima.api.corpus.Entities.EAction;
+import edu.columbia.incite.uima.api.corpus.Entities.EntityAction;
 import edu.columbia.incite.uima.api.corpus.Tokens;
-import edu.columbia.incite.uima.api.corpus.Tokens.LAction;
-import edu.columbia.incite.uima.api.corpus.Tokens.LClass;
-import edu.columbia.incite.uima.api.corpus.Tokens.LSubst;
-import edu.columbia.incite.uima.api.corpus.Tokens.NLAction;
+import edu.columbia.incite.uima.api.corpus.Tokens.LexAction;
+import edu.columbia.incite.uima.api.corpus.Tokens.LexClass;
+import edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet;
+import edu.columbia.incite.uima.api.corpus.Tokens.NonLexAction;
 import edu.columbia.incite.uima.api.types.Span;
 import edu.columbia.incite.util.collection.CollectionTools;
 import edu.columbia.incite.util.io.FileUtils;
@@ -44,16 +43,21 @@ import edu.columbia.incite.util.io.FileUtils;
  *
  * @author gorgonzola
  */
-public class NuDumper extends StructuredReader {
+public class TextDumper extends StructuredReader {
     
     public static final String DOC_SEP   = "\n";
     public static final String TOKEN_SEP = " ";
     public static final String SEC_SEP   = DOC_SEP;
     public static final String EOF       = "[EOF]" + DOC_SEP;
+    public static final String EXT       = ".dump";
 
     public static final String PARAM_OUTPUT_DIR = "outputDir";
     @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = false, defaultValue = "data/corpusDump" )
     private String outputDir;
+    
+    public static final String PARAM_WIPE_EXISTING = "wipeExisting";
+    @ConfigurationParameter( name = PARAM_WIPE_EXISTING, mandatory = false, defaultValue = "true" )
+    private Boolean wipeExisting;
     
     public static final String PARAM_DUMP_RAW = "dumpRaw";
     @ConfigurationParameter( name = PARAM_DUMP_RAW, mandatory = false, defaultValue = "false" )
@@ -63,17 +67,17 @@ public class NuDumper extends StructuredReader {
     public static final String PARAM_ACTION_ENTITIES = "entityAction";
     @ConfigurationParameter( name = PARAM_ACTION_ENTITIES, mandatory = false,
         description = "Action to take on found entities. See EAction's documentation for values.",
-        defaultValue = "DELETE"
-//        defaultValue = "TYPE"
+//        defaultValue = "DELETE"
+        defaultValue = "TYPE"
 //        defaultValue = "TYPE_ID"
 //        defaultValue = "TYPE_ID_COVERED"
 //        defaultValue = "TYPE_ID_COVERED_DUMP"
         
     )
-    private EAction eAction;
+    private EntityAction eAction;
     
-    public static final String PARAM_ADD_TYPE_TO_TERM = "addType";
-    @ConfigurationParameter( name = PARAM_ADD_TYPE_TO_TERM, mandatory = false,
+    public static final String PARAM_ADD_ENTITY_TYPE = "addType";
+    @ConfigurationParameter( name = PARAM_ADD_ENTITY_TYPE, mandatory = false,
         description = "Include type names in dumped tokens. Setting this to true will force EAction"
             + " to be at least 'TYPE'",
         defaultValue = "false"
@@ -89,8 +93,8 @@ public class NuDumper extends StructuredReader {
     )
     private Boolean addId;
     
-    public static final String PARAM_ADD_TEXT = "addTxt";
-    @ConfigurationParameter( name = PARAM_ADD_TEXT, mandatory = false,
+    public static final String PARAM_ADD_ENTITY_TEXT = "addTxt";
+    @ConfigurationParameter( name = PARAM_ADD_ENTITY_TEXT, mandatory = false,
         description = "Include covered text for entity annotations. Setting this to true will force"
             + " EAction to be at least 'TYPE_ID_COVERED'",
         defaultValue = "false"
@@ -142,7 +146,7 @@ public class NuDumper extends StructuredReader {
 //        defaultValue = "POSF"
 //        defaultValue = "LEMMA"
     )
-    private NLAction nlAction;
+    private NonLexAction nlAction;
     
     public static final String PARAM_LEXICAL_ACTION = "lAction";
     @ConfigurationParameter( name = PARAM_LEXICAL_ACTION, mandatory = false,
@@ -154,7 +158,7 @@ public class NuDumper extends StructuredReader {
 //        defaultValue = "POSF"
 //        defaultValue = "FULL"
     )
-    private LAction lAction;
+    private LexAction lAction;
     
     public static final String PARAM_LEMMA_SUBSTITUTIONS = "lemmaSubstitutions";
     @ConfigurationParameter( name = PARAM_LEMMA_SUBSTITUTIONS, mandatory = false,
@@ -190,8 +194,8 @@ public class NuDumper extends StructuredReader {
     // Substitution candidates
     private CharacterRunAutomaton substCra;
     // Substitions.
-    private List<LSubst> substs;
-    private Set<LSubst> mSubsts;
+    private List<LemmaSet> substs;
+    private Set<LemmaSet> mSubsts;
     
     private Writer out;
     
@@ -200,10 +204,10 @@ public class NuDumper extends StructuredReader {
         super.initialize( ctx );
         
         if( lexicalClasses != null && lexicalClasses.length != 0 ) {
-            List<LClass> lclasses = Arrays.stream( lexicalClasses )
-                .map( LClass::valueOf )
+            List<LexClass> lclasses = Arrays.stream( lexicalClasses )
+                .map(LexClass::valueOf )
                 .collect( Collectors.toList() );
-            Automaton au = LClass.make( lclasses.toArray( new LClass[lclasses.size()] ) );
+            Automaton au = LexClass.make(lclasses.toArray(new LexClass[lclasses.size()] ) );
             this.lexicalCra = new CharacterRunAutomaton( au );
         } else {
             this.lexicalCra = new CharacterRunAutomaton( Automata.makeAnyString() );
@@ -211,9 +215,9 @@ public class NuDumper extends StructuredReader {
         
         if( lemmaSubstitutions != null && lemmaSubstitutions.length != 0 ) {
             this.substs = Arrays.stream( lemmaSubstitutions )
-                .map( LSubst::valueOf )
+                .map(LemmaSet::valueOf )
                 .collect( Collectors.toList() );
-            Automaton au = LSubst.make( substs.toArray( new LSubst[substs.size()] ) );
+            Automaton au = LemmaSet.make(substs.toArray(new LemmaSet[substs.size()] ) );
             this.substCra = new CharacterRunAutomaton( au );            
         } else {
             this.substCra = new CharacterRunAutomaton( Automata.makeEmpty() );
@@ -221,7 +225,7 @@ public class NuDumper extends StructuredReader {
         
         if( markedSubstitutions != null && markedSubstitutions.length != 0 ) {
             this.mSubsts = Arrays.stream( markedSubstitutions )
-                .map( LSubst::valueOf )
+                .map(LemmaSet::valueOf )
                 .collect( Collectors.toSet() );
         }
         
@@ -241,16 +245,16 @@ public class NuDumper extends StructuredReader {
         }
         
         // Validate entity actions.
-        if( addType && eAction.compareTo( EAction.TYPE ) < 0 ) eAction = EAction.TYPE;
-        if( addId   && eAction.compareTo( EAction.TYPE_ID   ) < 0 ) eAction = EAction.TYPE_ID;
-        if( addTxt  && eAction.compareTo( EAction.TYPE_ID_COVERED ) < 0 ) eAction = EAction.TYPE_ID_COVERED;
+        if( addType && eAction.compareTo(EntityAction.TYPE ) < 0 ) eAction = EntityAction.TYPE;
+        if( addId   && eAction.compareTo(EntityAction.TYPE_ID   ) < 0 ) eAction = EntityAction.TYPE_ID;
+        if( addTxt  && eAction.compareTo(EntityAction.TYPE_ID_COVERED ) < 0 ) eAction = EntityAction.TYPE_ID_COVERED;
     }
     
     @Override
     public void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
         super.preProcess( jcas );
         try {
-            out = FileUtils.getWriter( outputDir, getDocumentId() + ".dump", true, true );
+            out = FileUtils.getWriter( outputDir, getDocumentId() + EXT, true, true );
         } catch ( IOException ex ) {
             throw new AnalysisEngineProcessException( ex );
         }
@@ -260,7 +264,7 @@ public class NuDumper extends StructuredReader {
     protected void read( 
         Annotation doc, Collection<AnnotationFS> covers, Collection<AnnotationFS> tokens 
     ) {
-        if( checkCovers( covers ) ) {
+        if( checkDoc( doc ) && checkCovers( covers ) ) {
             try {
                 if( dumpRaw ) {
                         out.append( doc.getCoveredText() );
@@ -274,7 +278,7 @@ public class NuDumper extends StructuredReader {
                 }
                 out.append( DOC_SEP );
             } catch ( IOException ex ) {
-                Logger.getLogger( NuDumper.class.getName() ).log( Level.SEVERE, null, ex );
+                Logger.getLogger(TextDumper.class.getName() ).log( Level.SEVERE, null, ex );
             }
         }
     }
@@ -290,7 +294,11 @@ public class NuDumper extends StructuredReader {
         }
     }
 
-    private boolean checkCovers( Collection<AnnotationFS> covers ) {
+    protected boolean checkCovers( Collection<AnnotationFS> covers ) {
+        return true;
+    }
+    
+    protected boolean checkDoc( Annotation doc ) {
         return true;
     }
 
@@ -311,7 +319,7 @@ public class NuDumper extends StructuredReader {
         }
         
         if( txt.length() > 0 && substCra.run( txt ) ) {
-            for( LSubst ls : substs ) {
+            for( LemmaSet ls : substs ) {
                 if( ls.test( txt ) ) {
                     if( mSubsts.contains( ls ) ) {
                         txt = ls.apply( txt );
@@ -323,4 +331,6 @@ public class NuDumper extends StructuredReader {
         
         return txt;
     }    
+
+
 }

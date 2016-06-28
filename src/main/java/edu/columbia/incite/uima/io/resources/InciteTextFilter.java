@@ -24,8 +24,10 @@ import java.util.regex.Pattern;
 
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
+import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.ResourceSpecifier;
+
 
 
 /**
@@ -57,17 +59,20 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
 //        "(\\p{Alnum})\\s+(\\p{Punct})", "$1$2", // remove space before punctuation
     };
     
-    private NGrams ngram;
-
+    static final String RES_NGRAM_RESOLVER = "splitChker";
+    @ExternalResource( key = RES_NGRAM_RESOLVER, api = SplitCheck.class, mandatory = false )
+    private SplitCheck splitChker;
+    
     private List<Pattern> rules;
     private Map<Pattern,String> subst;
-    private boolean wordSplit = false;
+    private boolean splitFlag = false;
+    private String splitMark;
 
     @Override
     public boolean initialize( ResourceSpecifier aSpecifier, Map<String, Object> aAdditionalParams )
         throws ResourceInitializationException {
         super.initialize( aSpecifier, aAdditionalParams );
-        
+                
         //configurationData != null && configurationData.length % 2 != 0
         if( formatStrings != null && formatStrings.length % 2 != 0 ) {
             throw new ResourceInitializationException( new IllegalArgumentException(
@@ -98,19 +103,22 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
         chunk = normalize( chunk );
         if( chunk.length() <= 0 ) return;
 
+        if( splitFlag && splitChker != null ) {
+            String pre = getLastWord( tgt );
+            String pos = "";
+            String[] parts = chunk.split( "\\s" );
+            if( parts.length > 0 ) pos = parts[0];
+            if( !pre.isEmpty() && !pos.isEmpty() ) {
+//                System.out.printf( "@@@\t%s\t%s\t%s\n", pre, pos, splitMark );
+                boolean split = splitChker.split( pre, pos, splitMark );
+                if( split ) tgt.append( " " );
+            }
+            splitFlag = false;
+            splitMark = null;
+        }
+        
         String last = tgt.length() > 0 ? String.valueOf( tgt.charAt( tgt.length() - 1 ) ) : "";
         String inc  = chunk.length() > 0 ? String.valueOf( chunk.charAt( 0 ) ) : "";
- 
-        if( wordSplit && inc.matches( "\\w" ) ) {
-            String pre = getLastWord( tgt );
-            String pos = chunk.substring( 0, chunk.indexOf( ' ' ) );
-            double preF = ngram.freq( pre );
-            double posF = ngram.freq( pos );
-            double jointF = ngram.freq( pre, pos );
-            
-            // decide.
-            
-        }
         
         if( whitespace && inc.matches( "\\s" ) &&
             ( last.equals( "" ) || last.matches( "\\s" ) )
@@ -134,17 +142,17 @@ public class InciteTextFilter extends Resource_ImplBase implements TextFilter {
     }
 
     @Override
-    public void wordSplit() {
-        wordSplit = true;
+    public void mark( String mark ) {
+        splitMark = mark;
+        splitFlag = true;
     }
 
     private String getLastWord( StringBuffer tgt ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    public class NGrams {
-        public double freq( String... ngram ) {
-            return 1d;
+        StringBuilder out = new StringBuilder();
+        int at = tgt.length() - 1; char c;
+        while( at >= 0 && !Character.isWhitespace( c = tgt.charAt( at-- ) ) ) {
+            out.append( c );
         }
+        return out.reverse().toString();
     }
 }

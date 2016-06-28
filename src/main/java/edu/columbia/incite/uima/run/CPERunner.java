@@ -151,7 +151,7 @@ public class CPERunner implements Callable<Integer> {
         List<ResourceMetaData> rmds = new ArrayList<>();
         rmds.add( crd.getMetaData() );
         aes.stream().forEach( ( ae ) -> rmds.add( ae.getMetaData() ) );
-        rmds.add( cons.getMetaData() );
+        if( cons != null ) rmds.add( cons.getMetaData() );
 
         try( Writer w = FileUtils.getWriter( conf.metaDir(), CPS_FILENAME, true, true ) ) {
             for( ResourceMetaData rmd : rmds ) {

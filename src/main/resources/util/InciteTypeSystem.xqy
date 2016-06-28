@@ -36,15 +36,24 @@ let $tuple := uima:type(
 let $inciteBase := uima:type(
   $baseName
   , "Base type for span annotations"
-  , $uima:Annotation,
-  ( 
+  , $uima:Annotation
+  , ( 
     uima:feature( "attributes", "Annotation attributes", $uima:FSArray, uima:fsName( $attr ), true() )
     , uima:feature( "tuples", "Tuples that refer to this entity", $uima:FSArray, uima:fsName( $tuple ), true() )
     , uima:feature( "id", "Annotation id, unique within CAS and type", $uima:String )
   )
 )
 
-let $baseTypes := ( $inciteBase, $attr, $tuple )
+let $mark := uima:type(
+  $ns || ".Mark"
+  , "Inline mark for arbitrary annotations"
+  , $uima:Annotation
+  , (
+    uima:feature( "notes", "Notes at position", $uima:String )
+  )
+)
+
+let $baseTypes := ( $inciteBase, $attr, $tuple, $mark )
 
 (: Generic Annotation Types :)
 let $entity := uima:type(

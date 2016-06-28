@@ -55,7 +55,8 @@ public interface TypeProvider extends ConfigurableResource<CAS> {
 
     /**
      * Get the document id feature from the metadata annotation type.
-     * This should normally contain an ambiguous identifier for the specific analysis unit corresponding to a CAS's SOFA data e.g. a source file's URL, etc.
+     * This should normally contain an unambiguous identifier for the specific analysis unit 
+     * corresponding to a CAS's SOFA data e.g. a source file's URL, etc.
      *
      * @return A UIMA Feature capable of storing a document identifier that is unique within a
      *         given document collection.
@@ -63,7 +64,7 @@ public interface TypeProvider extends ConfigurableResource<CAS> {
     Feature getDocumentIdFeature();
 
     /**
-     * Get the root node for this application's type system from the global type system.
+     * Get the root node for this application's type system.
      * If this TypeProvider is providing access to a typesystem that lacks a unique root node, this
      * method should return the uima.cas.TOP type.
      *
@@ -76,7 +77,8 @@ public interface TypeProvider extends ConfigurableResource<CAS> {
      * Segmentation types are understood to be those types that define contiguous and
      * non-overlapping annotations over the entire CAS SOFA.
      *
-     * @return The root node of the subtree of this application's segmentation types from the type system.
+     * @return  The root node of the subtree of this application's segmentation types from the type 
+     *          system.
      */
     Type getSegmentType();
 

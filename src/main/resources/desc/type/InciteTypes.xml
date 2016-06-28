@@ -112,6 +112,18 @@
       </features>
     </typeDescription>
     <typeDescription>
+      <name>edu.columbia.incite.uima.api.types.Mark</name>
+      <description>Inline mark for arbitrary annotations</description>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>notes</name>
+          <description>Notes at position</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
       <name>edu.columbia.incite.uima.api.types.Entity</name>
       <description>Base type for arbitrary span annotations</description>
       <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>

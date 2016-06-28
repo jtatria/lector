@@ -53,9 +53,9 @@ public class NuIndexer<D> extends StructuredReader {
     protected void read( Annotation ctx, Collection<AnnotationFS> covers, Collection<AnnotationFS> tokens ) {
         try {
             D doc = indexer.initDoc( ctx );
-            indexer.covers( doc, processCovers( covers ) );
+            indexer.covers( doc, covers);
             indexer.text( doc, ctx.getCoveredText(), ctx.getBegin() );
-            indexer.tokens( doc, processTokens( tokens ), ctx.getBegin() );
+            indexer.tokens( doc, tokens, ctx.getBegin() );
             indexer.writeToIndex( doc );
         } catch( Indexer.DocumentCreationException ex ) {
             String msg = String.format( "Document creation failed for context %s in CAS %s: %s",
@@ -68,7 +68,7 @@ public class NuIndexer<D> extends StructuredReader {
             );
             getLogger().log( Level.WARNING, msg );
         } catch( Indexer.TokenStreamException ex ) {
-            String msg = String.format( "Token creation failed for context %s in CAS %s: %s",
+            String msg = String.format( "Token stream creation failed for context %s in CAS %s: %s",
                 docCounter.get(), getDocumentId(), ex.getMessage()
             );
             getLogger().log( Level.WARNING, msg );
@@ -87,14 +87,5 @@ public class NuIndexer<D> extends StructuredReader {
     @Override
     public void collectionProcessComplete() {
         indexer.closeSession( token );
-    }
-
-    private Collection<AnnotationFS> processCovers( Collection<AnnotationFS> covers ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    private Map<String,List<AnnotationFS>> processTokens( Collection<AnnotationFS> tokens ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
-    }
-    
+    }    
 }

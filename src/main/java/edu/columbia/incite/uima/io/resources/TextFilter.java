@@ -16,6 +16,7 @@
  */
 package edu.columbia.incite.uima.io.resources;
 
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.Resource;
 
 /**
@@ -56,6 +57,7 @@ public interface TextFilter extends Resource {
     /**
      * Communicate to this filter that the next buffer update may occur mid-word and needs to be 
      * checked.
+     * @param mark
      */
-    void wordSplit();
+    void mark( String mark );
 }

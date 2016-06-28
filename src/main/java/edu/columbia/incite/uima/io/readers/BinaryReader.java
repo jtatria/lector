@@ -107,7 +107,8 @@ public class BinaryReader extends AbstractFileReader {
                 }
                 
                 case DKPRO1: {
-                    break;
+                    // TODO: copy DKPro binary io code.
+                    throw new UnsupportedOperationException( "DKPro 6+ format not supported yet." );
                 }
                 
                 default: throw new AssertionError( format.name() );

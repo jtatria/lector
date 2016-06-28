@@ -29,7 +29,7 @@ public class CPEConf extends edu.columbia.incite.util.run.Conf {
     public static final String DUMP_METADATA   = "dumpMetadata";
     public static final String THREADS         = "threads";
     public static final String READER_CLASS    = "readerClass";
-    public static final String AE_CLASSES      = "aeCLasses";
+    public static final String AE_CLASSES      = "aeClasses";
     public static final String CONSUMER        = "consumer";
     
     public static final String NS = CPEConf.class.getPackage().getName();

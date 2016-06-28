@@ -59,9 +59,7 @@ public class TokenProcessor extends AbstractEngine {
                 Token pos = i + 1 >= tokens.size() ? null : tokens.get( i + 1 );
                 triples.add( new TokenTriple( pre, cur, pos ) );
             }
-        }
-        
-        
+        }        
     }
     
     private class TokenTriple {

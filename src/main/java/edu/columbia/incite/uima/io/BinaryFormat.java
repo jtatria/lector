@@ -114,7 +114,7 @@ public enum BinaryFormat {
      *
      * @return The BinaryFormat corresponding to the data contained in the given stream.
      *
-     * @throws IOException If data could not be read from the given stream.
+     * @throws IOException If data could not be read or the format is unknown.
      */
     public static BinaryFormat forStream( InputStream is ) throws IOException {
         BufferedInputStream bis = is instanceof BufferedInputStream ? (BufferedInputStream) is

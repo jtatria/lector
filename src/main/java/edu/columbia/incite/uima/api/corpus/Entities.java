@@ -18,8 +18,9 @@ public class Entities {
     
     // This class uses Span as base entity type. This is because it is easier to create entity 
     // types by extending Span rather than the simple Entity type (e.g. in OBO, OBOEntity extends 
-    // OBOSpan extends Span, so OBOEntities are not Entities). This should probabaly be revised
-    // in the TypeSystem.
+    // OBOSpan extends Span, so OBOEntities are not Entities), because Entity is a fallback type.
+    // This should probabaly be revised in the TypeSystem to rename Span to Entity and Entity to 
+    // GenericEntity or some such.
     public static final String BASE = "ENT";
     public static final String SEP = Tokens.SEP;
     
@@ -40,7 +41,7 @@ public class Entities {
         return new String[]{ type, id, text, dumps };
     }
         
-    public enum EAction implements Function<Span,String> {
+    public enum EntityAction implements Function<Span,String> {
         /** remove entities **/
         DELETE,
         /** change entities by their UIMA type **/

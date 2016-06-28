@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -37,7 +36,6 @@ import org.apache.uima.util.Level;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceProcessException;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -238,7 +236,7 @@ public class XmlReader extends AbstractFileReader {
                 elements = elts.listIterator();
 
             } catch( DocumentException | JaxenException | IOException ex ) {
-                getLogger().log( Level.SEVERE, "Error parsing XML document: " + ex.toString() );
+                getLogger().log( Level.SEVERE, String.format( "Error processing %s: %s", curPath.toString(), ex.toString() ) );
             }
         }
 
