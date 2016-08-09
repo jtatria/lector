@@ -55,9 +55,9 @@ public class WriterProvider extends Resource_ImplBase {
 
     public static final String PARAM_OUTPUT_DIR   = "outDir";
     @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = false,
-        description = "Index directory path."
+        description = "Index directory path.", defaultValue = "data/index"
     )
-    private String outDir = System.getProperty( "user.dir" ) + "/indexDir";
+    private String outDir = "data/index";
 
     public static final String PARAM_OPTIMIZE = "optimize";
     @ConfigurationParameter( name = PARAM_OPTIMIZE, mandatory = false,

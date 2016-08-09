@@ -7,18 +7,35 @@ package edu.columbia.incite.uima.res.corpus.lucene;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
+import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.FloatField;
+import org.apache.lucene.document.IntField;
+import org.apache.lucene.document.LongField;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.util.BytesRef;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -27,15 +44,19 @@ import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.corpus.Indexer;
-import edu.columbia.incite.uima.api.corpus.TokenFactory;
+import edu.columbia.incite.uima.api.corpus.Tokens;
+import edu.columbia.incite.uima.api.corpus.Tokens.LexClass;
 import edu.columbia.incite.uima.res.casio.FeatureExtractor;
-import edu.columbia.incite.uima.res.corpus.lucene.LuceneTSFactory;
+import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.Datum;
+
+import static edu.columbia.incite.uima.api.corpus.Tokens.LexClass.*;
 
 /**
  *
@@ -55,10 +76,6 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     @ExternalResource( key = RES_WRITER_PROVIDER, api = WriterProvider.class, mandatory = false )
     private WriterProvider writerProvider;
 
-    public static final String RES_TOKEN_STREAM_FACTORY = "tsFactory";
-    @ExternalResource( key = RES_TOKEN_STREAM_FACTORY, api = LuceneTSFactory.class, mandatory = false )
-    private TokenFactory<TokenStream> tsFactory;
-
     public static final String PARAM_FAIL_ON_EMPTY_MD = "failOnEmptyMD";
     @ConfigurationParameter( name = PARAM_FAIL_ON_EMPTY_MD, mandatory = false, defaultValue = "false" )
     private Boolean failOnEmptyMD = false;
@@ -73,19 +90,102 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         TEXT_FT.setTokenized( true );
     }
 
-    private FieldFactory fieldFactory = new FieldFactory();
-    private final AtomicLong tokenProvider = new AtomicLong();
-    private final AtomicLong successes = new AtomicLong();
-    private final AtomicLong failures = new AtomicLong();
-    
-    private Set<Long> users = new HashSet<>();
+    private final FieldFactory fieldFactory        = new FieldFactory();
+    private final AtomicLong successes             = new AtomicLong();
+    private final AtomicLong failures              = new AtomicLong();
 
+    private Map<String,ThreadLocal<UIMATokenStream>> tlStreams;
+    
+    private Set<Long> sessions = new HashSet<>();
+    private final AtomicLong sessionTokenProvider  = new AtomicLong();
+    
+    public LuceneIndexer( Map<String,TermNormal> fieldNormals ) {
+        Map<String,ThreadLocal<UIMATokenStream>> tmp = new HashMap<>();
+        for( Entry<String,TermNormal> e : fieldNormals.entrySet() ) {
+            tmp.put( e.getKey(), ThreadLocal.withInitial( () -> new UIMATokenStream( e.getValue() ) ) );
+        }
+        this.tlStreams = Collections.unmodifiableMap( tmp );
+    }
+
+    public LuceneIndexer() {
+        // stub for UIMAfit instantiation.
+    }
+    
+    public static final String POS_ALL_FIELD   = "pos_all";
+    public static final String NPOS_ALL_FIELD  = "npos_all";
+    public static final String POS_LEX_FIELD   = "pos_lex";
+    public static final String NPOS_LEX_FIELD  = "npos_lex";
+    
+    public static final LexClass[] ALL_CLASSES = new LexClass[]{
+            ADJ,
+            ADV,
+            ART,
+            CARD,
+            CONJ,
+            NN,
+            NP,
+            O,
+            PP,
+            PR,
+//            PUNC,
+            V
+        };
+    
+    public static final LexClass[] LEX_CLASSES = new LexClass[]{
+        ADJ,
+        ADV,
+//        ART,
+//        CARD,
+//        CONJ,
+        NN,
+        NP,
+//        O,
+//        PP,
+//        PR,
+//        PUNC,
+        V 
+    };
+    
+    @Override
+    public boolean initialize( ResourceSpecifier aSpecifier, Map<String,Object> aAdditionalParams )
+    throws ResourceInitializationException {
+        boolean ret = super.initialize( aSpecifier, aAdditionalParams );
+        
+        Map<String,ThreadLocal<UIMATokenStream>> tmp = new HashMap<>();
+        
+        // All POS, POS in term.
+        TermNormal.Conf posAll = new TermNormal.Conf();
+        posAll.setLexAction( Tokens.LexAction.POST );
+        posAll.setLexClasses( ALL_CLASSES );
+        tmp.put( POS_ALL_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( posAll ) ) );
+        
+        // All POS, No POS in term.
+        TermNormal.Conf nPosAll = new TermNormal.Conf();
+        nPosAll.setLexAction( Tokens.LexAction.LEMMA );
+        nPosAll.setLexClasses( ALL_CLASSES );
+        tmp.put( NPOS_ALL_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( nPosAll ) ) );
+        
+        // Lex POS only, POS in term.
+        TermNormal.Conf posLex = new TermNormal.Conf();
+        posLex.setLexAction( Tokens.LexAction.POST );
+        posLex.setLexClasses( LEX_CLASSES );
+        tmp.put( POS_LEX_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( posLex ) ) );
+        
+        // Lex POS only, No POS in term.
+        TermNormal.Conf nPosLex = new TermNormal.Conf();
+        nPosLex.setLexAction( Tokens.LexAction.LEMMA );
+        nPosLex.setLexClasses( LEX_CLASSES );
+        tmp.put( NPOS_LEX_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( nPosLex ) ) );
+                
+        tlStreams = Collections.unmodifiableMap( tmp );
+        return ret;
+    }
+    
     @Override
     public void afterResourcesInitialized() throws ResourceInitializationException {
         super.afterResourcesInitialized();
         if( docBroker == null ) docBroker = new FeatureExtractor();
         if( coverBroker == null ) coverBroker = docBroker;
-        if( tsFactory == null ) tsFactory = new LuceneTSFactory();
         if( writerProvider == null ) {
             writerProvider = new WriterProvider();
             writerProvider.initialize();
@@ -94,15 +194,15 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
 
     @Override
     public Long openSession() {
-        Long token = tokenProvider.getAndIncrement();
-        users.add( token );
+        Long token = sessionTokenProvider.getAndIncrement();
+        sessions.add( token );
         return token;
     }
 
     @Override
     public void closeSession( Long token ) {
-        users.remove( token );
-        if( users.isEmpty() ) {
+        sessions.remove( token );
+        if( sessions.isEmpty() ) {
             try {
                 writerProvider.close();
                 String msg = String.format(
@@ -120,7 +220,6 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     public void configure( CAS conf ) throws ResourceConfigurationException {
         docBroker.configure( conf );
         coverBroker.configure( conf );
-        tsFactory.configure( conf );
     }
 
     @Override
@@ -164,15 +263,20 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
 
     @Override
     public Document text( Document doc, String text, int offset ) {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+        // Override this method in order to allow native lucene analyzers.
+        return doc;
     }
 
     
     @Override
     public Document tokens( Document doc, Collection<AnnotationFS> tokens, int offset ) throws TokenStreamException {
-        throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+        for( String field : tlStreams.keySet() ) {
+            UIMATokenStream uts = tlStreams.get( field ).get();
+            uts.setInput( tokens, offset );
+            doc.add( new Field( field, uts, TEXT_FT ) );
+        }
+        return doc;
     }
-
     
 //    public Document tokens( Document doc, Map<String,List<AnnotationFS>> tokens, int offset )
 //    throws TokenStreamException {
@@ -200,6 +304,155 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         successes.incrementAndGet();
     }
 
-    protected void validateMetadata( Datum d ) {}
+    protected void validateMetadata( Datum d ) {
+    }
+    
+    protected static class FieldFactory {
 
+        private BiMap<DataField,Field> cache =
+            Maps.synchronizedBiMap( HashBiMap.<DataField,Field>create() );
+
+        public Set<Field> getFields() {
+            return cache.inverse().keySet();
+        }
+
+        public IndexableField makeField( DataField f, Datum d ) {
+            Field field = cache.computeIfAbsent( f, ( DataField fld ) -> buildField( fld ) );
+
+            switch( f.type() ) {
+                case STRING: case CHAR: case BOOLEAN: {
+                    String v = (String) f.get( d );
+                    field.setStringValue( v );
+                    break;
+                }
+                case BYTE: case INTEGER: {
+                    Integer v = (Integer) f.get( d );
+                    field.setIntValue( v );
+                    break;
+                }
+                case LONG: {
+                    Long v = (Long) f.get( d );
+                    field.setLongValue( v );
+                    break;
+                }
+                case FLOAT: {
+                    Float v = (Float) f.get( d );
+                    field.setFloatValue( v );
+                    break;
+                }
+                case DOUBLE: {
+                    Double v = (Double) f.get( d );
+                    field.setDoubleValue( v );
+                    break;
+                }
+                default: throw new AssertionError( f.type().name() );
+            }
+            return field;
+        }
+
+        private Field buildField( DataField f ) {
+            Field field = null;
+            switch( f.type() ) {
+                case STRING: case CHAR: case BOOLEAN:
+                    field = new StringField( f.name(), "", Field.Store.YES );
+                    break;
+                case BYTE: case INTEGER:
+                    field = new IntField( f.name(), 0, Field.Store.YES );
+                    break;
+                case LONG:
+                    field = new LongField( f.name(), 0l, Field.Store.YES );
+                    break;
+                case FLOAT:
+                    field = new FloatField( f.name(), 0f, Field.Store.YES );
+                    break;
+                case DOUBLE:
+                    field = new DoubleField( f.name(), 0d, Field.Store.YES );
+                    break;
+                default:
+                    throw new AssertionError( f.type().name() );
+            }
+            return field;
+        }
+    }
+        
+    protected static class UIMATokenStream extends TokenStream {
+        // Input data
+        private Collection<AnnotationFS> src;
+        private Integer offset;
+
+        // State data
+        private Iterator<AnnotationFS> annIt;
+        private AnnotationFS cur;
+        private Integer last = 0;
+
+        private final TermNormal termNormal;
+        
+        public UIMATokenStream( TermNormal.Conf conf ) {
+            this( new TermNormal( conf ) );
+        }
+        
+        public UIMATokenStream( TermNormal tn ) {
+            this.termNormal = tn;
+            addAttribute( OffsetAttribute.class );
+            addAttribute( CharTermAttribute.class );
+            addAttribute( PayloadAttribute.class );
+            addAttribute( TypeAttribute.class );
+        }
+
+        public UIMATokenStream setInput( Collection<AnnotationFS> tokens, int offset ) {
+            this.src = tokens;
+            this.offset = offset;
+            return this;
+        }
+
+        @Override
+        public void close() throws IOException {
+            super.close();
+            // Clear input.
+            this.src = null;
+            this.offset = null;
+        }
+
+        @Override
+        public void end() throws IOException {
+            super.end();
+            addAttribute( OffsetAttribute.class ).setOffset( last, last );
+            // Clear state.
+            this.annIt = null;
+            this.cur = null;
+        }
+
+        @Override
+        public void reset() throws IOException {
+            super.reset();
+            if( src == null ) {
+                throw new IllegalStateException( "Input not set" );
+            }
+            clearAttributes();
+            annIt = src.iterator();
+            last = 0;
+        }
+
+        @Override
+        public boolean incrementToken() throws IOException {
+            clearAttributes();
+            if( annIt.hasNext() ) {
+                cur = annIt.next();
+                last = last > cur.getEnd() ? last : cur.getEnd();
+                if( last > cur.getEnd() ) { // TODO This is naive and needs refactoring
+                    addAttribute( PositionIncrementAttribute.class ).setPositionIncrement( 0 );
+                }
+                int b = cur.getBegin() - offset;
+                int e = cur.getEnd() - offset;
+                getAttribute( OffsetAttribute.class ).setOffset( b, e );
+//                getAttribute( CharTermAttribute.class ).append( dump( cur ) );
+                getAttribute( CharTermAttribute.class ).append( termNormal.term( cur ) );
+//                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( getPayload( cur ) ) );
+                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( termNormal.data( cur ) ) );
+//                getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
+                getAttribute( TypeAttribute.class ).setType( termNormal.type( cur ) );
+                return true;
+            } else return false;
+        }
+    }
 }

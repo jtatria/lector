@@ -2,8 +2,6 @@ package edu.columbia.incite.uima.ae.corpus;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.uima.UimaContext;

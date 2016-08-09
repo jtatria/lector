@@ -18,8 +18,6 @@ package edu.columbia.incite.uima.api.corpus;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -29,7 +27,8 @@ import edu.columbia.incite.uima.api.ConfigurableResource;
 import edu.columbia.incite.uima.api.SessionResource;
 
 /**
- * A shared resource that provides an interface for indexing data from a CAS.
+ * A shared resource offering indexing services to analyses engines. Implementations should assume 
+ * multiple thread callers.
  *
  * This interface's design assumes that document's will be created from a UIMA annotation
  * corresponding to some SOFA segment, and that (1) document metadata will be added to the created
@@ -51,7 +50,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      * The {@code doc} parameter can be {@code null} in order to allow the mapping of entire
      * CASes to index documents for type systems that do not have a document-wide annotation.
      *
-     * @param doc A UIMA annotation
+     * @param doc A UIMA annotation or null
      *
      * @return An instance of D corresponding to an index document.
      *
@@ -84,7 +83,7 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      * The {@code offset} parameter controls the alignment of SOFA text offsets in the input
      * annotations to the correct indexed document's offsets. This is necessary if indexed
      * documents are created from annotations with a begin offset not equal to 0 (e.g. when using
-     * within-CAS segments).
+     * segments within a CAS as index documents).
      *
      * @param doc    An instance of D returned by {@link #initDoc(AnnotationFS)}.
      * @param tokens A collection of {@link org.apache.uima.cas.text.AnnotationFS annotations}

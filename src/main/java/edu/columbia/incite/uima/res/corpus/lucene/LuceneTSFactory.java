@@ -8,14 +8,13 @@ package edu.columbia.incite.uima.res.corpus.lucene;
 
 import java.io.IOException;
 
-import edu.columbia.incite.uima.api.corpus.TokenFactory;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multiset;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -24,55 +23,39 @@ import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.util.BytesRef;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.component.Resource_ImplBase;
-import org.apache.uima.fit.descriptor.ConfigurationParameter;
 
+import edu.columbia.incite.uima.res.corpus.TermNormal;
 
 /**
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public class LuceneTSFactory extends Resource_ImplBase implements TokenFactory<TokenStream> {
-
-    public static final String PARAM_TALLY = "tallying";
-    @ConfigurationParameter( name = PARAM_TALLY, mandatory = false )
-    protected Boolean tallying = false;
+@Deprecated
+public class LuceneTSFactory {
 
     protected Multiset<String> ctTally = ConcurrentHashMultiset.<String>create();
     protected Multiset<String> plTally = ConcurrentHashMultiset.<String>create();
 
     private final ThreadLocal<Map<String,UIMATokenStream>> streams = ThreadLocal.withInitial( () -> ( new HashMap<>() ) );
+    
+    private final Map<String,TermNormal> fieldMap;
+    
+    public LuceneTSFactory( Map<String,TermNormal> fields ) {
+        this.fieldMap = ImmutableMap.copyOf( fields );
+    }
 
-    @Override
-    public TokenStream makeTokens( String field, Collection<AnnotationFS> tokens, int offset ) throws CASException {
-        UIMATokenStream uts = streams.get().computeIfAbsent( field, s -> initStream() );
+    public TokenStream makeTokens( String field, Collection<AnnotationFS> tokens, int offset ) {
+        UIMATokenStream uts = streams.get().computeIfAbsent( field, s -> initStream( field ) );
         return uts.setInput( tokens, offset );
     }
 
-    protected UIMATokenStream initStream() {
-        return new UIMATokenStream(){
-            @Override
-            protected String dump( AnnotationFS cur ) {
-                String ct = cur.getCoveredText();
-                if( tallying ) ctTally.add( ct );
-                return ct;
-            }
-
-            @Override
-            protected byte[] getPayload( AnnotationFS cur ) {
-                return BytesRef.EMPTY_BYTES;
-            }
-        };
+    protected UIMATokenStream initStream( String field ) {
+        return new UIMATokenStream( fieldMap.get( field ) );
     }
 
-    @Override
-    public void configure( CAS conf ) {
-    }
-    
-    protected abstract class UIMATokenStream extends TokenStream {
+    protected class UIMATokenStream extends TokenStream {
         // Input data
         private Collection<AnnotationFS> src;
         private Integer offset;
@@ -82,7 +65,10 @@ public class LuceneTSFactory extends Resource_ImplBase implements TokenFactory<T
         private AnnotationFS cur;
         private Integer last = 0;
 
-        public UIMATokenStream() {
+        private final TermNormal termNormal;
+        
+        public UIMATokenStream( TermNormal tn ) {
+            this.termNormal = tn;
             addAttribute( OffsetAttribute.class );
             addAttribute( CharTermAttribute.class );
             addAttribute( PayloadAttribute.class );
@@ -135,16 +121,14 @@ public class LuceneTSFactory extends Resource_ImplBase implements TokenFactory<T
                 int b = cur.getBegin() - offset;
                 int e = cur.getEnd() - offset;
                 getAttribute( OffsetAttribute.class ).setOffset( b, e );
-                getAttribute( CharTermAttribute.class ).append( dump( cur ) );
-                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( getPayload( cur ) ) );
-                getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
+//                getAttribute( CharTermAttribute.class ).append( dump( cur ) );
+                getAttribute( CharTermAttribute.class ).append( termNormal.term( cur ) );
+//                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( getPayload( cur ) ) );
+                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( termNormal.data( cur ) ) );
+//                getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
+                getAttribute( TypeAttribute.class ).setType( termNormal.type( cur ) );
                 return true;
             } else return false;
         }
-
-        protected abstract String dump( AnnotationFS cur );
-
-        protected abstract byte[] getPayload( AnnotationFS cur );
-
     }
 }
