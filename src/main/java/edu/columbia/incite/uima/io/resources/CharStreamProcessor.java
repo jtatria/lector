@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.io.resources.neu;
+package edu.columbia.incite.uima.io.resources;
 
 import org.apache.uima.resource.Resource;
 

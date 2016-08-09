@@ -21,13 +21,12 @@ import java.util.Map;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
-import org.apache.uima.jcas.JCas;
 
 import edu.columbia.incite.uima.api.ConfigurableResource;
 
 /**
  * Resource implementing a mapping between string keys and UIMA annotation types and features.
- * This resource is designed to be used in order to implement a mapping between data keys in a 
+ * This resource is designed to be used to implement a mapping between data keys in a 
  * source document and members of a type system, e.g. between XML element and attribute names and 
  * UIMA types and features.
  * 
@@ -55,19 +54,21 @@ public interface MappingProvider extends ConfigurableResource<CAS> {
     Feature getFeature( Type type, String key );
 
     /**
-     * Return true if this key corresponds to non-annotation data.
+     * Return true if this key is relevant for analysis.
      * 
      * @param key   A string key, typically an XML element qName
-     * @return      {@code true} if this key corresponds to non-annotation data that should be processed 
+     * @return      {@code true} if this key indicates data that should be processed 
      *              further.
      */
     boolean isData( String key );
 
     /**
-     * Return true if this key corresponds to UIMA Annotation type.
+     * Return true if this key corresponds to a UIMA Annotation type.
      * 
      * By contract, keys that return {@code false} from this method should return {@code null} from 
-     * {@link #getType(String,Map)}
+     * {@link #getType(String,Map)} and keys that return {@code true} from this method should also 
+     * return {@code true} from {@link #isData(java.lang.String)}.
+     * 
      * @param key   A string key, typically an XML element qName
      * @return      {@code true} if this key maps to an annotation type.
      */
@@ -83,6 +84,7 @@ public interface MappingProvider extends ConfigurableResource<CAS> {
     
     /**
      * Return true if this key corresponds to a paragraph break in the CAS document text.
+     
      * @param key A string key, typically an element qName
      * @return      {@code true} if this key indicates a paragraph break.
      */

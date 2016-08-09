@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.columbia.incite.uima.ae.translator;
+package edu.columbia.incite.uima.ae.annotate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +57,7 @@ public class TypeTranslator extends CasAnnotator_ImplBase {
     
     public static final String PARAM_OVERWRITE = "overwrite";
     @ConfigurationParameter( name = PARAM_OVERWRITE, mandatory = false, defaultValue = "false"
-        , description = "Overwrite annotations of the target type. Ths will remove all existing "
+        , description = "Overwrite annotations of the target type. This will remove all existing "
             + "annotations of this type." )
     private Boolean overwrite;
     
@@ -138,4 +138,29 @@ public class TypeTranslator extends CasAnnotator_ImplBase {
         return false;
     }
 
+    public class FeatureMap {
+    
+        private Map<String,String> map = new HashMap<>();
+
+        public FeatureMap() {
+            map.put( "id", "documentId" );
+            map.put( "uri", "documentUri" );
+            map.put( "collection", "collectionId" );
+            map.put( "proc_isLast", "isLastSegment" );
+        }
+
+        public Feature getTargetFeature( Type tgtType, Feature srcFeat ) {
+            String tgtFeatName = getTargetFeatureName( srcFeat.getShortName() );
+            Feature tgt = tgtType.getFeatureByBaseName( tgtFeatName );
+            if( tgt != null ) return tgt;
+            return null;
+        }
+
+        private String getTargetFeatureName( String name ) {
+            if( map.containsKey( name ) ) return map.get( name );
+            else return name;
+        }
+
+    }
+    
 }

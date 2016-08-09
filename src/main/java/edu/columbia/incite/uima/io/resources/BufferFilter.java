@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.io.resources.neu;
+package edu.columbia.incite.uima.io.resources;
 
 import edu.columbia.incite.uima.io.resources.SplitCheck;
 
@@ -22,7 +22,7 @@ import org.apache.uima.resource.ResourceSpecifier;
  *
  * @author gorgonzola
  */
-public class NuTextFilter extends Resource_ImplBase implements CharStreamProcessor {
+public class BufferFilter extends Resource_ImplBase implements CharStreamProcessor {
         
     public static final String PARAM_FORMAT_PATTERNS = "formatStrings";
     @ConfigurationParameter( name = PARAM_FORMAT_PATTERNS, mandatory = false )

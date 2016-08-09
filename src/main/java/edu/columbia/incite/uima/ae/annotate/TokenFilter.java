@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.columbia.incite.uima.ae.filter;
+package edu.columbia.incite.uima.ae.annotate;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 

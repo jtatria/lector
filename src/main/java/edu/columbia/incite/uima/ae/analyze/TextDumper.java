@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.ae.corpus;
+package edu.columbia.incite.uima.ae.analyze;
 
 import java.io.IOException;
 import java.io.Writer;

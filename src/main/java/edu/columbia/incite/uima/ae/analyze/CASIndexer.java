@@ -1,4 +1,4 @@
-package edu.columbia.incite.uima.ae.corpus;
+package edu.columbia.incite.uima.ae.analyze;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -20,7 +20,7 @@ import edu.columbia.incite.uima.api.corpus.Indexer;
  * @author gorgonzola
  * @param <D>
  */
-public class NuIndexer<D> extends StructuredReader {
+public class CASIndexer<D> extends StructuredReader {
 
     public static final String RES_INDEXER = "indexer";
     @ExternalResource( key = RES_INDEXER, mandatory = true,

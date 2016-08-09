@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package edu.columbia.incite.uima.ae.annotator;
+package edu.columbia.incite.uima.ae.annotate;
 
 import com.google.common.collect.Range;
 

@@ -16,8 +16,6 @@
  */
 package edu.columbia.incite.uima.io.resources;
 
-import edu.columbia.incite.uima.io.resources.neu.CharStreamProcessor;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -26,7 +24,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.ExternalResource;
@@ -34,7 +31,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.util.Level;
 
 import org.xml.sax.Attributes;
@@ -44,6 +40,8 @@ import org.xml.sax.SAXException;
 import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.Paragraph;
 import edu.columbia.incite.uima.api.types.Mark;
+import edu.columbia.incite.uima.io.resources.MappingProvider;
+import edu.columbia.incite.uima.io.resources.SaxHandler;
 import edu.columbia.incite.util.reflex.Resources;
 import edu.columbia.incite.util.xml.XPathNode;
 import edu.columbia.incite.util.reflex.annotations.Resource;
@@ -52,7 +50,7 @@ import edu.columbia.incite.util.reflex.annotations.Resource;
  * Default implementation of Incite's SAX handler for reading CAS data from XML data.
  * This resource is capable of extracting SOFA data from an XML file's character data, as well as
  * populating the CAS with annotations created from XML elements and attributes.
- * Text normalization requires the instantiation and configuration of a {@link TextFilter}.
+ * Text normalization requires the instantiation and configuration of a {@link BufferFilter}.
  * Annotation and feature extraction require the instantiation and configuration of a
  * {@link MappingProvider}.
  *
@@ -62,17 +60,6 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     
     // TODO move this somewhere.
     public static final String NO_ID = "";
-    public static final String EOL = "\n";
-
-    /**
-     * Filter text from XML character data before writing it to the CAS' SOFA string. 
-     * Requires a {@link TextFilter} for {@link #RES_TEXT_FILTER}.
-     */
-    public static final String PARAM_FILTER_TEXT = "filterText";
-    @ConfigurationParameter( name = PARAM_FILTER_TEXT, mandatory = false,
-        defaultValue = "true"
-    )
-    private Boolean filterText;
 
     /**
      * Create annotations from XML elements and attributes. Requires a {@link MappingProvider} for 
@@ -82,7 +69,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     @ConfigurationParameter( name = PARAM_ANNOTATE, mandatory = false,
         defaultValue = "true"
     )
-    private Boolean annotate;
+    protected Boolean annotate;
     
     /**
      * Mark char stream processing warnings with 0-length annotations. Only valid if 
@@ -91,7 +78,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      */
     public static final String PARAM_MARK_WARNINGS = "markWarnings"; // TODO: check default
     @ConfigurationParameter( name = PARAM_MARK_WARNINGS, mandatory = false, defaultValue = "true" )
-    private Boolean markWarnings;
+    protected Boolean markWarnings;
 
     /**
      * Create paragraph segment annotations over SOFA data. Requires a {@link MappingProvider} for 
@@ -101,20 +88,18 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     @ConfigurationParameter( name = PARAM_MAKE_PARAGRPAHS, mandatory = false,
         defaultValue = "true"
     )
-    private Boolean makeParagraphs;
+    protected Boolean makeParagraphs;
     
     /**
      * Shared resource providing a mapping from XML data to a UIMA type system.
      */
     public static final String RES_MAPPING_PROVIDER = "mappingProvider";
     @ExternalResource( key = RES_MAPPING_PROVIDER, api = MappingProvider.class, mandatory = false )
-    private MappingProvider mappingProvider;
-    
-    public static final String RES_TEXT_FILTER = "textFilter";
-    @ExternalResource( key = RES_TEXT_FILTER, api = TextFilter.class, mandatory = false )
-    private TextFilter textFilter;
-    @Resource private StringBuffer inBuffer;
-    @Resource private StringBuffer outBuffer;
+    protected MappingProvider mappingProvider;
+
+    public static final String RES_CHAR_PROCESSOR = "charProcessor";
+    @ExternalResource( key = RES_CHAR_PROCESSOR, api = CharStreamProcessor.class, mandatory = false )
+    protected CharStreamProcessor charProcessor;
     
     // Created internally
     @Resource private Stack<Annotation> annStack;
@@ -125,34 +110,27 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     // Set on configure
     @Resource private String docId;
     @Resource private JCas jcas;
-
+    
     @Override
-    public boolean initialize( ResourceSpecifier spec, Map<String, Object> params )
-        throws ResourceInitializationException {
-        boolean out = super.initialize( spec, params );
-
-        if( filterText && textFilter == null ) {
-            textFilter = new InciteTextFilter();
-        }
+    public void afterResourcesInitialized() throws ResourceInitializationException {
+        super.afterResourcesInitialized();
         
         if( ( annotate || makeParagraphs ) && mappingProvider == null ) {
-            throw new ResourceInitializationException(
-                ResourceInitializationException.NO_RESOURCE_FOR_PARAMETERS,
+            throw new ResourceInitializationException( 
+                ResourceInitializationException.NO_RESOURCE_FOR_PARAMETERS, 
                 new Object[] { RES_MAPPING_PROVIDER }
             );
         }
-
-        return out;
-    }
+        
+        if( charProcessor == null ) {
+            this.charProcessor = new BufferFilter();
+        }
+    }    
     
     //============================= SAX events ===============================//
 
     @Override
     public void startDocument() throws SAXException {
-        // Init char buffers.
-        inBuffer = new StringBuffer();
-        outBuffer = new StringBuffer();
-        
         // If we are making annotations, init annotation stack.
         if( annotate ) {
             annStack = new Stack<>();
@@ -166,18 +144,14 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
 
     @Override
     public void endDocument() throws SAXException {
-        // If there is a pending paragprah annotation, finish it or delete it.
+        // If there is an open paragprah annotation, finish it.
         if( paraAnn != null ) {
-            if( paraAnn.getBegin() == outBuffer.length() ) {
-                paraAnn.removeFromIndexes();
-            } else {
-                finishAnnotation( paraAnn );
-            }
+            finishAnnotation( paraAnn );
             paraAnn = null;
         }
 
-        // Set document text.
-        this.jcas.setDocumentText( outBuffer.toString() );
+        // Set SOFA string data.
+        this.jcas.setDocumentText( charProcessor.result() );
         
         // Reset everything.
         reset();
@@ -185,8 +159,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
 
     @Override
     public void characters( char[] ch, int start, int length ) {
-        // Accumulate chardata in inBuffer.
-        this.inBuffer.append( ch, start, length );
+        this.charProcessor.consume( ch, start, length );
     }
 
     @Override
@@ -194,9 +167,6 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         throws SAXException {
         // Update XPath node.
         this.curNode = curNode == null ? new XPathNode( docId ) : this.curNode.addChild( qName );
-        
-        // Update char buffers.
-        updateCharBuffers();
         
         if( makeParagraphs && mappingProvider.isParaBreak( qName ) ) {
             breakPara();
@@ -212,10 +182,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         // Update XPath node.
         this.curNode = this.curNode.parent();
         
-        // Update char buffers.
-        updateCharBuffers();
-        
-        if( filterText && mappingProvider.isInlineMark( qName ) ) {
+        if( mappingProvider.isInlineMark( qName ) ) {
             processInline( qName );
         }
         
@@ -241,38 +208,25 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
             throw new ResourceConfigurationException( ex );
         }
         Document doc = this.jcas.getAnnotationIndex( Document.class ).iterator().next();
-        this.docId = doc != null ? doc.getId() : NO_ID;
+        this.docId = doc != null ? doc.getId() : "";
     }
 
     @Override
     public void reset() {
         Resources.destroyFor( this );
+        this.charProcessor.reset();
         this.curPara = 0;
     }
 
     //========================================================================//
-    
-    private void updateCharBuffers() {
-        if( inBuffer.length() <= 0 ) return;
-        
-        String data = inBuffer.toString();
-        inBuffer.delete( 0, inBuffer.length() );
-        if( data.length() > 0 ) {
-            if( filterText ) {
-                textFilter.appendToBuffer( outBuffer, data );
-            } else {
-                outBuffer.append( data );
-            }
-        }
-    }
 
     private void breakPara() {
         if( paraAnn != null ) {
-            if( paraAnn.getBegin() == outBuffer.length() ) return;
-            outBuffer.append( EOL );
+            if( paraAnn.getBegin() == charProcessor.curLength() ) return;
+            charProcessor.addBreak( CharStreamProcessor.EOL );
             finishAnnotation( paraAnn );
         }
-        paraAnn = new Paragraph( jcas, outBuffer.length(), outBuffer.length() );
+        paraAnn = new Paragraph( jcas, charProcessor.curLength(), charProcessor.curLength() );
         paraAnn.setId( Integer.toString( curPara++ ) );
     }
 
@@ -295,7 +249,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      * are <em>not</em> required to call this method.
      *
      * @param start Position of the processing element over the SOFA data, including modification
-     *              performed by a {@link TextFilter}, if any.
+     *              performed by a {@link BufferFilter}, if any.
      * @param qName Source element's QName.
      * @param path  Source element's unambiguous XPath expression.
      * @param data  Map containing the source element's XML attribute data.
@@ -314,7 +268,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      *
      * The returned annotation's begin and end offsets will both be set to the current
      * length of the SOFA data, taking into consideration any modifications to the character stream
-     * performed by a {@link TextFilter}, if configured. The end offset will be adjusted by the
+     * performed by a {@link BufferFilter}, if configured. The end offset will be adjusted by the
      * handler at the source element's
      * {@link #endElement(java.lang.String, java.lang.String, java.lang.String) endElement} call.
      *
@@ -370,7 +324,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      *
      * This method adjusts the end offset of the annotation corresponding to the currently
      * processing XMl element to the current length of the SOFA data, taking into consideration any
-     * modifications to the character stream performed by a {@link TextFilter} and adds the 
+     * modifications to the character stream performed by a {@link BufferFilter} and adds the 
      * finished annotation to the CAS indexes.
      *
      * Subclasses should override this method if they need to add additional finalization logic.
@@ -380,11 +334,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      * @param ann
      */
     protected void finishAnnotation( Annotation ann ) {
-        int pos = outBuffer.length();
-        if( ann.getBegin() == pos ) {
-            getLogger().log( Level.WARNING, "0-length {0} annotation at {1}", new Object[]{ ann.getType().getShortName(), curNode.getPath() } );
-        }
-        ann.setEnd( outBuffer.length() );
+        ann.setEnd( charProcessor.curLength() );
         jcas.addFsToIndexes( ann );
     }
     
@@ -399,25 +349,16 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
      * @param qName 
      */
     private void processInline( String qName ) {
-        if( outBuffer.length() <= 0 ) return;
-                
-        String end = new String( new char[]{ outBuffer.charAt( outBuffer.length() - 1 ) } ); 
-
-        if( end.matches( "\\S" ) ) {
-            AnnotationFS mark = null;
-            if( markWarnings ) {
-                Mark m = new Mark( jcas, outBuffer.length(), outBuffer.length() );
-                m.setNotes( qName );
-                mark = m;
-                jcas.addFsToIndexes( m );
-            }
-            textFilter.mark( qName );
+        this.charProcessor.addBreak( qName );
+        if( markWarnings ) {
+            Mark m = new Mark( jcas, charProcessor.curLength(), charProcessor.curLength() );
+            m.setNotes( qName );
+            jcas.addFsToIndexes( m );
         }
     }
 
     private void processData( String uri, String lName, String qName, Attributes attrs ) {
-//        int start = charProcessor.curLength();
-        int start = outBuffer.length();
+        int start = charProcessor.curLength();
         String path = curNode.getPath();
         Map<String,String> data = extractAttributes( attrs );
 
@@ -431,58 +372,12 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
         }
     }
     
-    //================= Convenience methods for child classes ================//
-
-    /**
-     * Get whether this handler is currently configured to create UIMA annotations from XML data.
-     *
-     * @return {@code true} if this handler is configured to create UIMA annotations from XML data.
-     */
-    protected boolean getAnnotate() {
-        return annotate;
-    }
-
-    /**
-     * Get whether this handler is currently configured to process text with a {@link TextFilter}.
-     *
-     * @return {@code true} if this handler is currently configured to process text with a
-     *         {@link TextFilter}.
-     */
-    protected boolean getFilterText() {
-        return filterText;
-    }
-
-    /**
-     * Get the JCas that is currently being populated by this handler.
-     *
-     * @return The JCas currently being populated.
-     */
+    //========================================================================//
+    
     protected JCas getJCas() {
-        return jcas;
+        return this.jcas;
     }
-
-    /**
-     * Set this handler's XML-UIMA mapping provider.
-     * This method is provided as a convenience for subclasses, as an alternative to the
-     * configuration of an additional UIMA resource.
-     *
-     * @param provider A reference to an implementation of {@link MappingProvider}
-     */
-    protected void setMappingProvider( MappingProvider provider ) {
-        this.mappingProvider = provider;
-    }
-
-    /**
-     * Set this handler's text filter.
-     * This method is provided as a convenience for subclasses, as an alternative to the
-     * configuration of an additional UIMA resource.
-     *
-     * @param filter A reference to an implementation of {@link TextFilter}
-     */
-    protected void setTextFilter( TextFilter filter ) {
-        this.textFilter = filter;
-    }
-
+    
     //====================== ContentHandler's overrides ======================//
     
     /**
