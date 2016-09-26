@@ -146,6 +146,8 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
     public void getNext( JCas jcas ) throws CollectionException {
         curPath = pathsIt.next();
 
+        getLogger().log( Level.INFO, "Reading CAS data from {0}", curPath.toString() );
+        
         try {
             addDataFromFile( jcas, new FileInputStream( curPath.toFile() ) );
         } catch( FileNotFoundException ex ) {

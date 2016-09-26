@@ -23,7 +23,6 @@ import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.util.BytesRef;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import edu.columbia.incite.uima.res.corpus.TermNormal;

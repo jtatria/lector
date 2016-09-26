@@ -15,6 +15,8 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 
+import static edu.columbia.incite.uima.api.corpus.Tokens.LexClass.*;
+
 /**
  *
  * @author gorgonzola
@@ -33,6 +35,38 @@ public class Tokens {
     public static final int LMI  = 2;
     /** Raw text index in canonical array **/
     public static final int RAW  = 3;
+    
+    public static final LexClass[] ALL_CLASSES = new LexClass[]{
+        ADJ,
+        ADV,
+        ART,
+        CARD,
+        CONJ,
+        NN,
+        NP,
+        O,
+        PP,
+        PR,
+//            PUNC,
+        V
+    };
+    
+    public static final LexClass[] LEX_CLASSES = new LexClass[]{
+        ADJ,
+        ADV,
+//        ART,
+//        CARD,
+//        CONJ,
+        NN,
+        NP,
+//        O,
+//        PP,
+//        PR,
+//        PUNC,
+        V 
+    };
+    
+    
     
     /**
      * Produce canonical String array for the given token.

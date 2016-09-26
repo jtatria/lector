@@ -116,7 +116,7 @@ public class TextDumper extends StructuredReader {
             + "'PR_PRP_i' to include the singular first person 'I' even if pronouns are "
             + "excluded",
         defaultValue = {
-//            "PR_PRP_i",
+            "PR_PRP_i",
         }
     )
     private String[] lexicalOverrides;
@@ -126,8 +126,8 @@ public class TextDumper extends StructuredReader {
     @ConfigurationParameter( name = PARAM_NON_LEXICAL_ACTION, mandatory = false,
         description = "Action to take when dealing with non-lexical tokens. See NLAction for "
             + "possible values.",
-        defaultValue = "DELETE"
-//        defaultValue = "MARK"
+//        defaultValue = "DELETE"
+        defaultValue = "MARK"
 //        defaultValue = "POSG"
 //        defaultValue = "POSF"
 //        defaultValue = "LEMMA"
@@ -146,32 +146,27 @@ public class TextDumper extends StructuredReader {
     )
     private Tokens.LexAction lAction;
     
-    public static final String PARAM_LEMMA_SUBSTITUTIONS = "lemmaSubstitutions";
-    @ConfigurationParameter( name = PARAM_LEMMA_SUBSTITUTIONS, mandatory = false,
-        description = "Map array with regular expressions and strings indicating substitutions"
-            + "(Map-arrays are even-numbered lists in ( key0, value0, ... , keyN, valueN ) format, "
-            + "a-la Perl)",
+    public static final String PARAM_LEMMA_MARKS = "lemmaMarks";
+    @ConfigurationParameter( name = PARAM_LEMMA_MARKS, mandatory = false,
+        description = "List of lemma sets that should be replaced with the set name: i.e. 450d -> MONEY",
         defaultValue = {
-//            "L_PUNCT",
-//            "L_NUMBER",
-//            "L_SHORT",
-//            "L_MONEY",
-//            "L_ORD",
+            "L_PUNCT",
+            "L_NUMBER",
+            "L_SHORT",
+            "L_MONEY",
+            "L_ORD",
         }
     )
-    private String[] lemmaSubstitutions;
+    private String[] lemmaMarks;
     
-    public static final String PARAM_MARKED_SUBSTITUTIONS = "markedSubstitutions";
-    @ConfigurationParameter( name = PARAM_MARKED_SUBSTITUTIONS, mandatory = false,
-        description = "List of substitutions to be marked instead of deleted. If empty, all are "
-            + "deleted. If it contains '*', all are marked.",
+    public static final String PARAM_LEMMA_DELETIONS = "lemmaDeletions";
+    @ConfigurationParameter( name = PARAM_LEMMA_DELETIONS, mandatory = false,
+        description = "List of lemma sets that should be deleted",
         defaultValue = {
-//            "L_NUMBER",
-//            "L_MONEY",
-//            "L_ORD",
+            "L_PUNCT"
         }
     )
-    private String[] markedSubstitutions;
+    private String[] lemmaDeletions;
 
     private TermNormal termNormal;
     private Writer out;
@@ -193,17 +188,17 @@ public class TextDumper extends StructuredReader {
             c.setLexOverrides( lexicalOverrides );
         }
         
-        if( lemmaSubstitutions != null && lemmaSubstitutions.length != 0 ) {
+        if( lemmaMarks != null && lemmaMarks.length != 0 ) {
             c.setLemmaSubstitutions(
-                Arrays.stream( lemmaSubstitutions ).map(
+                Arrays.stream( lemmaMarks ).map(
                     LemmaSet::valueOf
                 ).toArray( v -> new LemmaSet[v] )
             );
         }
         
-        if( markedSubstitutions != null && markedSubstitutions.length != 0 ) {
+        if( lemmaDeletions != null && lemmaDeletions.length != 0 ) {
             c.setLemmaDeletions( 
-                Arrays.stream( markedSubstitutions ).map(
+                Arrays.stream( lemmaDeletions ).map(
                     LemmaSet::valueOf
                 ).toArray( v -> new LemmaSet[v] )
             );

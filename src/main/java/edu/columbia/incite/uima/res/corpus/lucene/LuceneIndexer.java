@@ -273,6 +273,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         for( String field : tlStreams.keySet() ) {
             UIMATokenStream uts = tlStreams.get( field ).get();
             uts.setInput( tokens, offset );
+            // TODO: if docs reused, fields should be reset instead of recreated.
             doc.add( new Field( field, uts, TEXT_FT ) );
         }
         return doc;
