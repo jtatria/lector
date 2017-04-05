@@ -7,7 +7,6 @@ package edu.columbia.incite.uima.util;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,15 +31,29 @@ import org.apache.uima.resource.ResourceInitializationException;
 import static edu.columbia.incite.util.reflex.ReflectionUtils.getFields;
 
 /**
- *
+ * Utility methods to facilitate UIMA-FIT component configuration and instantiation.
  * @author Jose Tomas Atria <jtatria@gmail.com>
  */
 public abstract class ComponentFactory {
 
+    /**
+     * Extract all configuration parameters from UIMA-FIT annotations and build a 
+     * {@link Properties} object with its default values.
+     * @param clz A UIMA Component class
+     * @return A {@link Properties} instance with suitable key-value pairs.
+     */
     public static Properties makeDefaultProperties( Class clz ) {
         return makeDefaultProperties( clz, null );
     }
 
+    /**
+     * Extract all configuration parameters from UIMA-FIT annotations and fill the given 
+     * {@link Properties} instance with its default values.
+     * If props is null, a new empty instance will be created.
+     * @param clz A UIMA Component class
+     * @param props An existing Properties object
+     * @return The given {@link Properties} instance with suitable key-value pairs added.
+     */
     public static Properties makeDefaultProperties( Class clz, Properties props ) {
         props = props != null ? props : new Properties();
         
@@ -62,6 +75,14 @@ public abstract class ComponentFactory {
         return props;
     }
     
+    /**
+     * Parse the given Properties object to extract conf values for the given UIMA component class.
+     * Properties should be have the same names as the "name" entries in UIMA-FIT annotations, 
+     * fully qualified with the concrete class name, as such: a.uima.component.Class.parameter.
+     * @param clz A UIMA component class, annotated with UIMA-FIT annotations.
+     * @param conf  A Properties object.
+     * @return An even-numbered sorted list with "name,value" objects.
+     */
     public static List parseConfForClass( Class clz, Properties conf ) {
         List out = new ArrayList();
 
@@ -86,6 +107,14 @@ public abstract class ComponentFactory {
         return out;
     }
 
+    /**
+     * Create an external resource description from the given Properties instance for the given 
+     * component class.
+     * @param clz   A UIMA class implementing {@link Resource}
+     * @param props A {@link Properties} instance.
+     * @return A valid {@link ExternalResourceDescription} suitable for construction of the given 
+     * component class instances.
+     */
     public static ExternalResourceDescription makeResourceDescription(
         Class<? extends Resource> clz, Properties props
     ) {
@@ -93,6 +122,15 @@ public abstract class ComponentFactory {
         return ExternalResourceFactory.createExternalResourceDescription( clz, conf.toArray() );
     }
 
+    /**
+     * Create an analysis engine description from the given Properties instance for the given 
+     * component class.
+     * @param clz   A UIMA class implementing {@link AnalysisComponent}
+     * @param props A {@link Properties} instance.
+     * @return A valid {@link AnalysisEngineDescription} suitable for construction of the given 
+     * component class instances.
+     * @throws org.apache.uima.resource.ResourceInitializationException
+     */
     public static AnalysisEngineDescription makeEngineDescription(
         Class<? extends AnalysisComponent> clz, Properties props
     ) throws ResourceInitializationException {
@@ -100,7 +138,15 @@ public abstract class ComponentFactory {
         return AnalysisEngineFactory.createEngineDescription( clz, conf.toArray() );
     }
 
-
+    /**
+     * Create an aggregate analysis engine description from the given primitive analysis engine 
+     * descriptions.
+     * Note that this method only allows linear analysis pipelines that do not require a 
+     * FlowController.
+     * @param primitives A list of primitive analysis engine descriptions.
+     * @return A valid {@link AnalysisEngineDescription}
+     * @throws org.apache.uima.resource.ResourceInitializationException
+     */
     public static AnalysisEngineDescription makeAggregateDescription(
         List<AnalysisEngineDescription> primitives
     ) throws ResourceInitializationException {
@@ -108,6 +154,14 @@ public abstract class ComponentFactory {
         return AnalysisEngineFactory.createEngineDescription( primitives, aeNames, null, null, null );
     }
 
+    /**
+     * Create a collection reader description from the given Properties.
+     * @param clz     A class implementing {@link CollectionReader}
+     * @param props     A Properties object with suitable key-value pairs (see 
+     * {@link #makeDefaultProperties(java.lang.Class)} )
+     * @return A valid {@link AnalysisEngineDescription}
+     * @throws org.apache.uima.resource.ResourceInitializationException
+     */
     public static CollectionReaderDescription makeReaderDescription(
         Class<? extends CollectionReader> clz, Properties props
     ) throws ResourceInitializationException {

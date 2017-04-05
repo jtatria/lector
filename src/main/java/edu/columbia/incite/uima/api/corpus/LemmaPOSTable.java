@@ -151,8 +151,8 @@ public class LemmaPOSTable extends AbstractEngine {
         if( lexicalClasses != null && lexicalClasses.length != 0 ) {
             c.setLexClasses( 
                 Arrays.stream( lexicalClasses ).map(
-                    Tokens.LexClass::valueOf
-                ).toArray( v -> new Tokens.LexClass[v] )
+                    Tokens.POSClass::valueOf
+                ).toArray( v -> new Tokens.POSClass[v] )
             );
         }
         

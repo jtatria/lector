@@ -40,8 +40,6 @@ import org.xml.sax.SAXException;
 import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.Paragraph;
 import edu.columbia.incite.uima.api.types.Mark;
-import edu.columbia.incite.uima.io.resources.MappingProvider;
-import edu.columbia.incite.uima.io.resources.SaxHandler;
 import edu.columbia.incite.util.reflex.Resources;
 import edu.columbia.incite.util.xml.XPathNode;
 import edu.columbia.incite.util.reflex.annotations.Resource;

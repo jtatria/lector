@@ -8,8 +8,6 @@ package edu.columbia.incite.uima.res.casio;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;

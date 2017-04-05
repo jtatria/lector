@@ -15,7 +15,7 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 
-import static edu.columbia.incite.uima.api.corpus.Tokens.LexClass.*;
+import static edu.columbia.incite.uima.api.corpus.Tokens.POSClass.*;
 
 /**
  *
@@ -36,7 +36,7 @@ public class Tokens {
     /** Raw text index in canonical array **/
     public static final int RAW  = 3;
     
-    public static final LexClass[] ALL_CLASSES = new LexClass[]{
+    public static final POSClass[] ALL_CLASSES = new POSClass[]{
         ADJ,
         ADV,
         ART,
@@ -51,7 +51,7 @@ public class Tokens {
         V
     };
     
-    public static final LexClass[] LEX_CLASSES = new LexClass[]{
+    public static final POSClass[] LEX_CLASSES = new POSClass[]{
         ADJ,
         ADV,
 //        ART,
@@ -65,8 +65,6 @@ public class Tokens {
 //        PUNC,
         V 
     };
-    
-    
     
     /**
      * Produce canonical String array for the given token.
@@ -105,7 +103,7 @@ public class Tokens {
     /**
      * Get POS group for the given token.
      * This method calls {@link Tokens#parse(de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token)} internally.
-     * The returned String can be used to obtain a {@link LexClass} instance with {@link LexClass#valueOf(java.lang.String) }.
+     * The returned String can be used to obtain a {@link POSClass} instance with {@link POSClass#valueOf(java.lang.String) }.
      * @param token A {@link Token}.
      * @return The String representation of the POS group for the given token.
      */
@@ -168,7 +166,8 @@ public class Tokens {
     }
     
     /**
-     * Actions for string serialization of lexical tokens. See {@link LexClass} for details about lexicality.
+     * Actions for string serialization of lexical tokens. See {@link POSClass} for details 
+     * about lexicality determination.
      */
     public enum LexAction implements Function<Token,String> {
         /** Keep original text **/
@@ -199,7 +198,8 @@ public class Tokens {
     }
 
     /**
-     * Actions for string serialization of non-lexical tokens. See {@link LexClass for details about lexicality determination.
+     * Actions for string serialization of non-lexical tokens. See {@link POSClass} for details
+     * about lexicality determination.
      **/
     public enum NonLexAction implements Function<Token,String> {
         /** Delete everyhing **/
@@ -233,7 +233,7 @@ public class Tokens {
      * {@link #make(edu.columbia.incite.uima.api.corpus.Tokens.LexClass...) } 
      * to produce an {@link Automaton} instance that will be used in lexicality tests.
      */
-    public enum LexClass implements Predicate<Token> {
+    public enum POSClass implements Predicate<Token> {
         /** Adjectives: JJ, JJS, JJR **/
         ADJ( "ADJ" + SEP + "JJ[SR]?", new String[]{ "JJ", "JJS", "JJR" } ),
         /** Adverbs: RB, RBR, RBS, WRB **/
@@ -260,10 +260,40 @@ public class Tokens {
         V( "V" + SEP + "(MD|VB[DGNPZ]?)", new String[]{ "MD", "VB", "VBD", "VBG", "VBN", "VBP", "VBZ" } ),
         ;
 
-        public final static Map<String,LexClass> MEMBERS;
+        public static final POSClass[] ALL_CLASSES = new POSClass[]{
+            ADJ,
+            ADV,
+            ART,
+            CARD,
+            CONJ,
+            NN,
+            NP,
+            O,
+            PP,
+            PR,
+//            PUNC,
+            V
+        };
+
+        public static final POSClass[] LEX_CLASSES = new POSClass[]{
+            ADJ,
+            ADV,
+//            ART,
+//            CARD,
+//            CONJ,
+            NN,
+            NP,
+//            O,
+//            PP,
+//            PR,
+//            PUNC,
+            V 
+        };
+        
+        public final static Map<String,POSClass> MEMBERS;
         static {
-            Map<String,LexClass> tmp = new HashMap<>();
-            for( LexClass p : LexClass.values() ) {
+            Map<String,POSClass> tmp = new HashMap<>();
+            for( POSClass p : POSClass.values() ) {
                 for( String m : p.tags ) {
                     tmp.put( m, p );
                 }
@@ -273,13 +303,14 @@ public class Tokens {
 
         /** RegEx string for this class **/
         public final String rx;
+        
         /** POS tags in this class **/
         public final String[] tags;
 
         private final Automaton au;
         private final CharacterRunAutomaton cra;
 
-        private LexClass( String regexp, String[] tags ) {
+        private POSClass( String regexp, String[] tags ) {
             this.rx = regexp;
             this.tags = tags;
 
@@ -304,9 +335,10 @@ public class Tokens {
             return this.cra;
         }
 
-        /** Functional interface for use in lamdas.
+        /** Functional interface for use in lamda expressions.
          * @param t A {@link Token}.
-         * @return  {@code true} if the POS group for the given token is accepted by this class's automaton.
+         * @return  {@code true} if the POS group for the given token is accepted by this class's 
+         * automaton.
          */
         @Override
         public boolean test( Token t ) {
@@ -314,13 +346,15 @@ public class Tokens {
         }
         
         /**
-         * Combine the given {@link LexClass} instances to produce an automaton to test tokens for lexicality.
+         * Combine the given {@link POSClass} instances to produce an automaton to test tokens for 
+         * lexicality.
          * @param inc   An array of LexClass values that will be accepted by the returned automaton.
-         * @return  An {@link Automaton} that will accept tokens corresponding to any of the given classes.
+         * @return  An {@link Automaton} that will accept tokens corresponding to any of the given 
+         * classes.
          */
-        public static Automaton make( LexClass... inc ) {
+        public static Automaton make( POSClass... inc ) {
             Automaton out = Automata.makeEmpty();
-            for( LexClass lc : inc ) {
+            for( POSClass lc : inc ) {
                 out = Operations.union( out, lc.au );
             }
             return out;
@@ -330,12 +364,14 @@ public class Tokens {
     /**
      * A collection of regular patterns for common lemmas of dubious lexicality in all syntatic 
      * roles. e.g. cardinal numbers, even when the POS is not CARD.
-     * Automata in this enum assume they will be tested against Lemma strings, NOT canonical forms,
-     * i.e. "dog" instead of "N_NN_dog". Lemmas can be obtained by 
+     * Automata in this enum should be tested against Lemma strings, NOT canonical forms,
+     * i.e. the lemma "dog" instead of the raw text "dogs" or the canonical form "N_NN_dog".
+     * 
+     * Lemmas can be obtained by calling the static method
      * {@link Tokens#lemma(de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token)}
      */
     public enum LemmaSet implements Predicate<String>, Function<String,String> {
-        /** Aribtrary punctuation marks **/
+        /** Aribtrary punctuation marks: **/
         L_PUNCT(  "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+" ),
         /** Two-letter-or-less lemmas **/
         L_SHORT(  ".{0,2}" ),
@@ -356,7 +392,7 @@ public class Tokens {
         }
         
         /**
-         * Combine the given {@link LemmaSet} instances into an automaton equal to the union of 
+         * Combine the given {@link LemmaSet} values into an automaton equal to the union of 
          * all given sets.
          * @param inc   An array of LemmaSet values that will be accepted by the returned automaton.
          * @return  An {@link Automaton} that will accept tokens accepted by any of the given set's
@@ -371,7 +407,7 @@ public class Tokens {
         }
         
         /**
-         * Functional interface for use as predicates in lambda expressions.
+         * Functional interface for use as predicate in lambda expressions.
          * @param t A {@link Token}.
          * @return  {@code true} if the given token is accepted by this set's automaton.
          */

@@ -50,13 +50,12 @@ import org.apache.uima.util.Level;
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.corpus.Indexer;
 import edu.columbia.incite.uima.api.corpus.Tokens;
-import edu.columbia.incite.uima.api.corpus.Tokens.LexClass;
 import edu.columbia.incite.uima.res.casio.FeatureExtractor;
 import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.Datum;
 
-import static edu.columbia.incite.uima.api.corpus.Tokens.LexClass.*;
+import static edu.columbia.incite.uima.api.corpus.Tokens.POSClass.*;
 
 /**
  *
@@ -80,6 +79,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     @ConfigurationParameter( name = PARAM_FAIL_ON_EMPTY_MD, mandatory = false, defaultValue = "false" )
     private Boolean failOnEmptyMD = false;
 
+    /** Field type for indexing fields. Hardcoded to include full term vectors for now. **/
     public static final FieldType TEXT_FT = new FieldType();
     static {
         TEXT_FT.setIndexOptions( IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS );
@@ -90,15 +90,19 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         TEXT_FT.setTokenized( true );
     }
 
+    // Datum -> Field converter
     private final FieldFactory fieldFactory        = new FieldFactory();
     private final AtomicLong successes             = new AtomicLong();
     private final AtomicLong failures              = new AtomicLong();
 
+    // Per-thread token streams.
     private Map<String,ThreadLocal<UIMATokenStream>> tlStreams;
     
+    // Keep track of AE instances calling this indexer.
     private Set<Long> sessions = new HashSet<>();
     private final AtomicLong sessionTokenProvider  = new AtomicLong();
     
+    // Non-UIMA constructor.
     public LuceneIndexer( Map<String,TermNormal> fieldNormals ) {
         Map<String,ThreadLocal<UIMATokenStream>> tmp = new HashMap<>();
         for( Entry<String,TermNormal> e : fieldNormals.entrySet() ) {
@@ -107,44 +111,15 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         this.tlStreams = Collections.unmodifiableMap( tmp );
     }
 
+    // Stub for UIMAfit instantiation.
     public LuceneIndexer() {
-        // stub for UIMAfit instantiation.
     }
     
+    /** Field names. **/
     public static final String POS_ALL_FIELD   = "pos_all";
     public static final String NPOS_ALL_FIELD  = "npos_all";
     public static final String POS_LEX_FIELD   = "pos_lex";
     public static final String NPOS_LEX_FIELD  = "npos_lex";
-    
-    public static final LexClass[] ALL_CLASSES = new LexClass[]{
-            ADJ,
-            ADV,
-            ART,
-            CARD,
-            CONJ,
-            NN,
-            NP,
-            O,
-            PP,
-            PR,
-//            PUNC,
-            V
-        };
-    
-    public static final LexClass[] LEX_CLASSES = new LexClass[]{
-        ADJ,
-        ADV,
-//        ART,
-//        CARD,
-//        CONJ,
-        NN,
-        NP,
-//        O,
-//        PP,
-//        PR,
-//        PUNC,
-        V 
-    };
     
     @Override
     public boolean initialize( ResourceSpecifier aSpecifier, Map<String,Object> aAdditionalParams )
@@ -155,26 +130,26 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         
         // All POS, POS in term.
         TermNormal.Conf posAll = new TermNormal.Conf();
-        posAll.setLexAction( Tokens.LexAction.POST );
-        posAll.setLexClasses( ALL_CLASSES );
+        posAll.setLexAction( Tokens.LexAction.POST ); // add pos tag to term text.
+        posAll.setLexClasses( ALL_CLASSES );          // index all pos classes
         tmp.put( POS_ALL_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( posAll ) ) );
         
         // All POS, No POS in term.
         TermNormal.Conf nPosAll = new TermNormal.Conf();
-        nPosAll.setLexAction( Tokens.LexAction.LEMMA );
-        nPosAll.setLexClasses( ALL_CLASSES );
+        nPosAll.setLexAction( Tokens.LexAction.LEMMA ); // replace terms with lemmas.
+        nPosAll.setLexClasses( ALL_CLASSES );           // index all pos classes
         tmp.put( NPOS_ALL_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( nPosAll ) ) );
         
         // Lex POS only, POS in term.
         TermNormal.Conf posLex = new TermNormal.Conf();
-        posLex.setLexAction( Tokens.LexAction.POST );
-        posLex.setLexClasses( LEX_CLASSES );
+        posLex.setLexAction( Tokens.LexAction.POST ); // add pos tag to term text
+        posLex.setLexClasses( LEX_CLASSES );          // index lexical classes only
         tmp.put( POS_LEX_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( posLex ) ) );
         
         // Lex POS only, No POS in term.
         TermNormal.Conf nPosLex = new TermNormal.Conf();
-        nPosLex.setLexAction( Tokens.LexAction.LEMMA );
-        nPosLex.setLexClasses( LEX_CLASSES );
+        nPosLex.setLexAction( Tokens.LexAction.LEMMA ); // replace terms with lemmas
+        nPosLex.setLexClasses( LEX_CLASSES );           // index lexical classes only
         tmp.put( NPOS_LEX_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( nPosLex ) ) );
                 
         tlStreams = Collections.unmodifiableMap( tmp );
@@ -184,6 +159,8 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
     @Override
     public void afterResourcesInitialized() throws ResourceInitializationException {
         super.afterResourcesInitialized();
+        
+        // Use default resource implementations if none given
         if( docBroker == null ) docBroker = new FeatureExtractor();
         if( coverBroker == null ) coverBroker = docBroker;
         if( writerProvider == null ) {
@@ -269,7 +246,8 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
 
     
     @Override
-    public Document tokens( Document doc, Collection<AnnotationFS> tokens, int offset ) throws TokenStreamException {
+    public Document tokens( Document doc, Collection<AnnotationFS> tokens, int offset )
+    throws TokenStreamException {
         for( String field : tlStreams.keySet() ) {
             UIMATokenStream uts = tlStreams.get( field ).get();
             uts.setInput( tokens, offset );
@@ -427,7 +405,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         public void reset() throws IOException {
             super.reset();
             if( src == null ) {
-                throw new IllegalStateException( "Input not set" );
+                throw new IllegalStateException( "No input for token stream!" );
             }
             clearAttributes();
             annIt = src.iterator();
@@ -449,6 +427,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
 //                getAttribute( CharTermAttribute.class ).append( dump( cur ) );
                 getAttribute( CharTermAttribute.class ).append( termNormal.term( cur ) );
 //                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( getPayload( cur ) ) );
+                // TODO: resuse bytesref.
                 getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( termNormal.data( cur ) ) );
 //                getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
                 getAttribute( TypeAttribute.class ).setType( termNormal.type( cur ) );

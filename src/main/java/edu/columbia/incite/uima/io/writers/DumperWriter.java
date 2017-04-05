@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -44,7 +43,7 @@ import edu.columbia.incite.uima.api.corpus.Entities;
 import edu.columbia.incite.uima.api.corpus.Entities.EntityAction;
 import edu.columbia.incite.uima.api.corpus.Tokens;
 import edu.columbia.incite.uima.api.corpus.Tokens.LexAction;
-import edu.columbia.incite.uima.api.corpus.Tokens.LexClass;
+import edu.columbia.incite.uima.api.corpus.Tokens.POSClass;
 import edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet;
 import edu.columbia.incite.uima.api.corpus.Tokens.NonLexAction;
 import edu.columbia.incite.uima.api.types.Document;
@@ -291,10 +290,10 @@ public class DumperWriter extends AbstractFileWriter {
         this.opts = optsL.toArray( new StandardOpenOption[optsL.size()] );
         
         if( lexicalClasses != null && lexicalClasses.length != 0 ) {
-            List<LexClass> lclasses = Arrays.stream( lexicalClasses )
-                .map(LexClass::valueOf )
+            List<POSClass> lclasses = Arrays.stream( lexicalClasses )
+                .map(POSClass::valueOf )
                 .collect( Collectors.toList() );
-            Automaton au = LexClass.make(lclasses.toArray(new LexClass[lclasses.size()] ) );
+            Automaton au = POSClass.make(lclasses.toArray(new POSClass[lclasses.size()] ) );
             this.lexicalCra = new CharacterRunAutomaton( au );
         } else {
             this.lexicalCra = new CharacterRunAutomaton( Automata.makeAnyString() );
@@ -332,9 +331,9 @@ public class DumperWriter extends AbstractFileWriter {
         }
         
         // Validate entity actions.
-        if( addType && eAction.compareTo(EntityAction.TYPE ) < 0 ) eAction = EntityAction.TYPE;
-        if( addId   && eAction.compareTo(EntityAction.TYPE_ID   ) < 0 ) eAction = EntityAction.TYPE_ID;
-        if( addTxt  && eAction.compareTo(EntityAction.TYPE_ID_COVERED ) < 0 ) eAction = EntityAction.TYPE_ID_COVERED;
+        if( addType && eAction.compareTo( EntityAction.TYPE ) < 0 ) eAction = EntityAction.TYPE;
+        if( addId   && eAction.compareTo( EntityAction.TYPE_ID   ) < 0 ) eAction = EntityAction.TYPE_ID;
+        if( addTxt  && eAction.compareTo( EntityAction.TYPE_ID_COVERED ) < 0 ) eAction = EntityAction.TYPE_ID_COVERED;
     }
     
     @Override

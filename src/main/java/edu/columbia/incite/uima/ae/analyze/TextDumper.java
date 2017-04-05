@@ -21,10 +21,9 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import edu.columbia.incite.uima.api.corpus.Entities;
-import edu.columbia.incite.uima.api.corpus.Entities.EntityAction;
 import edu.columbia.incite.uima.api.corpus.Tokens;
 import edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet;
-import edu.columbia.incite.uima.api.corpus.Tokens.LexClass;
+import edu.columbia.incite.uima.api.corpus.Tokens.POSClass;
 import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.uima.res.corpus.TermNormal.Conf;
 import edu.columbia.incite.util.io.FileUtils;
@@ -42,16 +41,22 @@ public class TextDumper extends StructuredReader {
     public static final String EXT       = ".dump";
 
     public static final String PARAM_OUTPUT_DIR = "outputDir";
-    @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = false, defaultValue = "data/corpusDump" )
+    @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = false, defaultValue = "data/corpusDump",
+        description = "Output Directory"
+    )
     private String outputDir;
-    
+
     public static final String PARAM_DUMP_RAW = "dumpRaw";
-    @ConfigurationParameter( name = PARAM_DUMP_RAW, mandatory = false, defaultValue = "false" )
+    @ConfigurationParameter( name = PARAM_DUMP_RAW, mandatory = false, defaultValue = "false",
+        description = "Ignore all parameters and dump raw covered text (will produce duplications "
+            + "if token annotations are not a segmentation type or more than one type is included)" 
+    )
     private Boolean dumpRaw;
     
-     public static final String PARAM_ACTION_ENTITIES = "entityAction";
+    public static final String PARAM_ACTION_ENTITIES = "entityAction";
     @ConfigurationParameter( name = PARAM_ACTION_ENTITIES, mandatory = false,
-        description = "Action to take on found entities. See EntityAction's documentation for values.",
+        description = "Action to take on found entities. See EntityAction's documentation for "
+            + "legal values.",
 //        defaultValue = "DELETE"
         defaultValue = "TYPE"
 //        defaultValue = "TYPE_ID"
@@ -60,32 +65,7 @@ public class TextDumper extends StructuredReader {
         
     )
     private Entities.EntityAction eAction;
-    
-    public static final String PARAM_ADD_ENTITY_TYPE = "addType";
-    @ConfigurationParameter( name = PARAM_ADD_ENTITY_TYPE, mandatory = false,
-        description = "Include type names in dumped tokens. Setting this to true will force eAction"
-            + " to be at least 'TYPE'",
-        defaultValue = "false"
-    )
-    private Boolean addType;
-    
-    public static final String PARAM_ADD_ENTITY_ID = "addId";
-    @ConfigurationParameter( name = PARAM_ADD_ENTITY_ID, mandatory = false,
-        description = "Include entity id in entity tokens. This expects a feature named 'id' in "
-            + "entity types. See 'Span' type definition in Incite's type system. Setting this to "
-            + "true will force eAction to be at least 'TYPE_ID'",
-        defaultValue = "false"
-    )
-    private Boolean addId;
-    
-    public static final String PARAM_ADD_ENTITY_TEXT = "addTxt";
-    @ConfigurationParameter( name = PARAM_ADD_ENTITY_TEXT, mandatory = false,
-        description = "Include covered text for entity annotations. Setting this to true will force"
-            + " eAction to be at least 'TYPE_ID_COVERED'",
-        defaultValue = "false"
-    )
-    private Boolean addTxt;
-    
+        
     // Token class definitions.
     public static final String PARAM_LEXICAL_CLASSES = "lexicalClasses";
     public static final String[] DFLT = new String[]{};
@@ -177,13 +157,10 @@ public class TextDumper extends StructuredReader {
         
         Conf c = new Conf();
         if( lexicalClasses != null && lexicalClasses.length != 0 ) {
-            c.setLexClasses( 
-                Arrays.stream( lexicalClasses ).map(
-                    LexClass::valueOf
-                ).toArray( v -> new LexClass[v] )
-            );
+            c.setLexClasses( Arrays.stream( lexicalClasses ).map(
+                ( i ) -> POSClass.valueOf( i )
+            ).toArray( v -> new POSClass[v] ) );
         }
-        
         if( lexicalOverrides != null && lexicalOverrides.length != 0 ) {
             c.setLexOverrides( lexicalOverrides );
         }
@@ -204,10 +181,6 @@ public class TextDumper extends StructuredReader {
             );
         }
         
-        // Validate entity actions.
-        if( addType && eAction.compareTo( EntityAction.TYPE            ) < 0 ) eAction = EntityAction.TYPE;
-        if( addId   && eAction.compareTo( EntityAction.TYPE_ID         ) < 0 ) eAction = EntityAction.TYPE_ID;
-        if( addTxt  && eAction.compareTo( EntityAction.TYPE_ID_COVERED ) < 0 ) eAction = EntityAction.TYPE_ID_COVERED;
         c.setEntityAction( eAction  );
         c.setNonLexAction( nlAction );
         c.setLexAction(    lAction  );
@@ -265,10 +238,6 @@ public class TextDumper extends StructuredReader {
     
     protected boolean checkDoc( Annotation doc ) {
         return true;
-    }
-
-    private String dump( AnnotationFS ann ) {
-        return null;
     }
 
 }

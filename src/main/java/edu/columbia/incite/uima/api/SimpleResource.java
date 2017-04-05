@@ -10,6 +10,7 @@ import org.apache.uima.resource.Resource;
 /**
  *
  * @author gorgonzola
+ * @param <T>
  */
 public interface SimpleResource<T> {
     T get();

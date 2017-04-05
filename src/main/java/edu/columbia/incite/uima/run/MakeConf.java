@@ -1,3 +1,4 @@
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -5,11 +6,8 @@
  */
 package edu.columbia.incite.uima.run;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import edu.columbia.incite.uima.util.ComponentFactory;
 import edu.columbia.incite.util.collection.CollectionTools;

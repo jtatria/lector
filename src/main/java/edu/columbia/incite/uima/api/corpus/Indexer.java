@@ -75,6 +75,17 @@ public interface Indexer<D> extends ConfigurableResource<CAS>, SessionResource<L
      */
     D covers( D doc, Collection<AnnotationFS> data ) throws DocumentMetadataException;
 
+    /**
+     * Process the given document's annotation covered text directly. This method offers an entry 
+     * point for deploying custom analyzers that work on the raw text stream.
+     * 
+     * @param doc An instance of D as returned by 
+     * {@link #initDoc(org.apache.uima.cas.text.AnnotationFS)}.
+     * @param text A string containing the text covered by D's source annotation.
+     * @param offset    The begin offset of D's source annotation in the source SOFA.
+     * 
+     * @return The given instance of D with the appropriate modifications.
+     */
     D text( D doc, String text, int offset );
     
     /**

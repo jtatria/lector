@@ -19,7 +19,7 @@ import org.apache.uima.jcas.cas.StringArray;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public class JCasTools {
+public abstract class JCasTools {
 
     public static BooleanArray makeArray( JCas jcas, Boolean[] data ) {
         BooleanArray array = new BooleanArray( jcas, data.length );
