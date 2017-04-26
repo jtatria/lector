@@ -16,6 +16,7 @@
  */
 package edu.columbia.incite.uima.api.types;
 
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -34,6 +35,11 @@ public abstract class InciteTypes {
     public static final String SEGMENT_TYPE    = Segment.class.getName();
     /** Type name for the entity root type. **/
     public static final String ENTITY_TYPE     = Entity.class.getName();
+    /** Type name for paragraph type **/
+    public static final String PARAGRAPH_TYPE  = Paragraph.class.getName();
+    
+    public static final String TOKEN_TYPE      = Token.class.getName();
+    
     /** Feature name for document id's. **/
     public static final String DOC_ID_FEATURE  = "id";
     /** Feature name for document URI's. **/

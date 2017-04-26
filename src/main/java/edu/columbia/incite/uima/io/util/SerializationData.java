@@ -30,7 +30,8 @@ import edu.columbia.incite.uima.api.types.Document;
  * Simple container for serialization data.
  * Data should be saved by a Collection Reader, and should be used (and cleared!) by
  * implementations of AbstractFileWriter.
- * Not clearing saved data will eventually cause OutOfMemory errors.
+ * 
+ * WARNING: Not clearing saved data will eventually cause OutOfMemory errors.
  *
  * @author Jose Tomas Atria <jtatria@gmail.com>
  */

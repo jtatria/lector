@@ -1,7 +1,8 @@
-package edu.columbia.incite.uima.ae.analyze;
+package edu.columbia.incite.uima.ae.corpus;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.uima.UimaContext;
@@ -9,7 +10,6 @@ import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
@@ -20,7 +20,7 @@ import edu.columbia.incite.uima.api.corpus.Indexer;
  * @author gorgonzola
  * @param <D>
  */
-public class CASIndexer<D> extends StructuredReader {
+public class CorpusIndexer<D> extends SegmentedEngine {
 
     public static final String RES_INDEXER = "indexer";
     @ExternalResource( key = RES_INDEXER, mandatory = true,
@@ -48,7 +48,8 @@ public class CASIndexer<D> extends StructuredReader {
     }
     
     @Override
-    protected void read( Annotation ctx, Collection<AnnotationFS> covers, Collection<AnnotationFS> tokens ) {
+    protected void processSegment( AnnotationFS ctx, List<AnnotationFS> covers, List<AnnotationFS> tokens ) {
+        getContext();
         try {
             D doc = indexer.initDoc( ctx );
             indexer.covers( doc, covers);

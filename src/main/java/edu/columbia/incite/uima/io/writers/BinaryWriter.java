@@ -50,8 +50,9 @@ import static org.apache.uima.cas.impl.Serialization.serializeCASMgr;
 public class BinaryWriter extends AbstractFileWriter {
       
     public static final String PARAM_FORMAT = "format";
-    @ConfigurationParameter( name = PARAM_FORMAT, mandatory = false, defaultValue="4" )
-    private String format;
+    @ConfigurationParameter( name = PARAM_FORMAT, mandatory = false, defaultValue = "UIMA_4" )
+    private BinaryFormat bf;
+//    private String format;
     
     public static final String PARAM_DELTA = "delta";
     @ConfigurationParameter( name = PARAM_DELTA, mandatory = false, defaultValue = "false" )
@@ -65,13 +66,13 @@ public class BinaryWriter extends AbstractFileWriter {
 
     private Boolean needsTsWritten = true;
     
-    private BinaryFormat bf;
+//    private BinaryFormat bf;
     
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
         this.ext = ".bin";
-        this.bf = BinaryFormat.forString( format );
+//        this.bf = BinaryFormat.forString( format );
     }
     
     @Override

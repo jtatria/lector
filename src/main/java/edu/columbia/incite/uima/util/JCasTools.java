@@ -5,6 +5,22 @@
  */
 package edu.columbia.incite.uima.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedMap;
+
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.BooleanArray;
 import org.apache.uima.jcas.cas.ByteArray;
@@ -83,6 +99,30 @@ public abstract class JCasTools {
             array.set( i, data[i] );
         }
         return array;
+    }
+
+    public static Map<AnnotationFS,List<AnnotationFS>> multiTypeCoverIndex( JCas jcas, Type kType, Set<Type> eTypes  ) {
+        Type base = jcas.getCas().getTypeSystem().getType( CAS.TYPE_NAME_ANNOTATION );
+        Map<AnnotationFS,Collection<AnnotationFS>> index = CasUtil.indexCovering( jcas.getCas(), kType, base );
+        return filterIndex( index, eTypes );
+    }
+    
+    public static Map<AnnotationFS,List<AnnotationFS>> multiTypeMemberIndex( JCas jcas, Type kType, Set<Type> eTypes  ) {
+        Type base = jcas.getCas().getTypeSystem().getType( CAS.TYPE_NAME_ANNOTATION );
+        Map<AnnotationFS,Collection<AnnotationFS>> index = CasUtil.indexCovered( jcas.getCas(), kType, base );
+        return filterIndex( index, eTypes );
+    }
+
+    private static Map<AnnotationFS,List<AnnotationFS>> filterIndex( Map<AnnotationFS,Collection<AnnotationFS>> input, Set<Type> filter ) {
+        Map<AnnotationFS,List<AnnotationFS>> out = new HashMap<>();
+        for( Map.Entry<AnnotationFS,Collection<AnnotationFS>> e : input.entrySet() ) {
+            List<AnnotationFS> entry = new ArrayList<>();
+            for( AnnotationFS member : Types.filterTypes( e.getValue(), filter ) ) {
+                entry.add( member );
+            }
+            out.put( e.getKey(), Collections.unmodifiableList( entry ) );
+        }
+        return Collections.unmodifiableMap( out );
     }
     
 }

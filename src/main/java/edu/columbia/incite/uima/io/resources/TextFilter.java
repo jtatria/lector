@@ -16,7 +16,6 @@
  */
 package edu.columbia.incite.uima.io.resources;
 
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.Resource;
 
 /**

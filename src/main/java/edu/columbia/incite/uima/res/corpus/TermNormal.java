@@ -7,295 +7,183 @@ package edu.columbia.incite.uima.res.corpus;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import org.apache.lucene.util.automaton.Automata;
 import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.CharacterRunAutomaton;
 import org.apache.lucene.util.automaton.Operations;
-import org.apache.lucene.util.automaton.RegExp;
 import org.apache.uima.cas.text.AnnotationFS;
 
+import edu.columbia.incite.uima.api.corpus.Entities;
 import edu.columbia.incite.uima.api.corpus.Entities.EntityAction;
 import edu.columbia.incite.uima.api.corpus.Tokens;
+import edu.columbia.incite.uima.api.corpus.LemmaSet;
 import edu.columbia.incite.uima.api.corpus.Tokens.LexAction;
-import edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet;
-import edu.columbia.incite.uima.api.corpus.Tokens.POSClass;
 import edu.columbia.incite.uima.api.corpus.Tokens.NonLexAction;
-import edu.columbia.incite.uima.api.types.Span;
-import edu.columbia.incite.util.collection.CollectionTools;
+import edu.columbia.incite.uima.api.corpus.POSClass;
 
 /**
- * TermNormal objects normalize terms for printing or indexing. Instances of this class are built
- * against a given {@link Conf} instance, and define thre basic transformations:
- * {@link #term(org.apache.uima.cas.text.AnnotationFS) produces a string representation
- * corresponding to the term identity of the token represented by the given annotation.
- * {@link #type(org.apache.uima.cas.text.AnnotationFS) produces a string representation
- * corresponding to the class or category of the token represented by the given annotation.
- * {@link #data(org.apache.uima.cas.text.AnnotationFS) produces a byte array corresponding to the
- * binary payload associated to the token represented by the given annotation. Binary payloads
- * allow arbitrary data to be associated with each token.
+ *
  * @author gorgonzola
  */
 public class TermNormal {
-
-    /**
-     * Charset to use for output. Common-sense indicates UTF-8 *
-     */
+    
     public static final Charset CS = StandardCharsets.UTF_8;
-
-    private Conf conf;
-
-    /**
-     * Build TermNormal instance with default values. {
-     * @see TermNormal.Conf} for details. *
-     */
+    
+    private final Conf conf;
+    
     public TermNormal() {
         this( new Conf() );
     }
-
-    /**
-     * Build TermNormal instance against the given {@link TermNormal.Conf} object. {
-     * @see TermNormal.Conf} for options.
-     * @param conf A TermNormal.Conf instance holding configuration data.
-     *
-     */
+    
     public TermNormal( Conf conf ) {
-        this.conf = conf.commit();
+        this.conf = conf;
     }
-
-    /**
-     * Obtain normalized text from UIMA annotation following the rules and transformations defined
-     * in this TermNormal instance's TermNormal.Conf object.
-     * @param ann A UIMA annotation
-     * @return A string equal to the normalized representation of the given annotation
-     *
-     */
+    
     public String term( AnnotationFS ann ) {
         String txt;
-        if ( Token.class.isAssignableFrom( ann.getClass() ) ) {
-            Token t = (Token) ann;
-            txt = conf.isLexical( t ) ? conf.lexicalAction( t ) : conf.nonLexicalAction( t );
-        } else if ( Span.class.isAssignableFrom( ann.getClass() ) ) {
-            Span ent = (Span) ann;
-            txt = conf.entityAction( ent );
+        if( Tokens.isToken( ann ) ) {
+            txt = conf.isLexical( ann ) ? conf.lexicalAction( ann ) : conf.nonLexicalAction( ann );
+        } else if( Entities.isEntity( ann ) ) {
+            txt = conf.entityAction( ann );
         } else {
             txt = ann.getCoveredText();
         }
-
-        if ( txt.length() > 0 && conf.substitute( txt ) ) {
-            for ( LemmaSet ls : conf.lemmaSets() ) {
-                if ( ls.test( txt ) ) {
-                    txt = conf.delete( ls ) ? "" : ls.apply( txt );
-                }
-            }
-        }
-
-        return txt;
+        
+        if( conf.delete( txt ) ) return "";
+        
+        return conf.applySubstitutions( txt );
     }
-
-    /**
-     * Obtain normalized type from UIMA annotation
-     * @param ann A UIMA annotation
-     * @return A string equal to the normalized type identifier
-     */
+    
     public String type( AnnotationFS ann ) {
         return ann.getType().getShortName();
     }
-
-    /**
-     * Stub: hardcoded method to obtain bytearray payloads from DKPro's token API.
-     * @param ann
-     * @return Bytes equal to the pos tag of a DKPro token, or the string name of the ann's type
-     */
+    
     public byte[] data( AnnotationFS ann ) {
-        if ( Token.class.isAssignableFrom( ann.getClass() ) ) {
-            Token t = (Token) ann;
-            return t.getPos().getPosValue().getBytes( CS );
+        if( Tokens.isToken( ann ) ) {
+            return Tokens.posT( ann ).getBytes( CS );
         } else {
             return ann.getType().getShortName().getBytes( CS );
         }
     }
-
+    
     public static class Conf {
-
-        private CharacterRunAutomaton isLexical;
-        private CharacterRunAutomaton lexOverride;
-        private CharacterRunAutomaton isLemmaSet;
-        private CharacterRunAutomaton delete;
-
-        private EntityAction eAction;
+        
+        public static final LexAction DFLT_LEX_ACTION        = LexAction.LEMMATIZE;
+        public static final NonLexAction DFLT_NON_LEX_ACTION = NonLexAction.DELETE;
+        public static final EntityAction DFLT_ENTITY_ACTION  = EntityAction.TYPE;
+        
         private LexAction lAction;
         private NonLexAction nlAction;
-
-        private List<LemmaSet> lemmaSets = new ArrayList<>();
-        private Set<LemmaSet> deletions = new HashSet<>();
-
-        /**
-         * Configure POSClasses to be treated as "lexical" classes.
-         * Default: all tokens are lexical.
-         * @param classes POSClasses that will be considered lexical.
-         * @return This Conf object.
-         */
+        private EntityAction eAction;
+        
+        private CharacterRunAutomaton lexical;
+        private CharacterRunAutomaton override;
+        private CharacterRunAutomaton delete;
+        private CharacterRunAutomaton substitute;
+        
+        private POSClass[] lexClasses;
+        private String[] overrides;
+        private LemmaSet[] substitutions;
+        private LemmaSet[] deletions;
+        
         public Conf setLexClasses( POSClass... classes ) {
-            this.isLexical = new CharacterRunAutomaton( POSClass.make( classes ) );
+            this.lexClasses = classes;
             return this;
         }
-
-        /**
-         * Set regexp patterns that should always be considered as "lexical", independently of
-         * their POSClass.
-         * Patterns will be matched against the canonical string representation of Annotations.
-         * For {@link de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token} instances, this is
-         * equal to the the result of
-         * {@link edu.columbia.incite.uima.api.corpus.Tokens#build(
-         * de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token)
-         * }.
-         * Default: no strings are overrides.
-         * @param overrides Regexp patterns for terms that are always lexical
-         * @return This Conf object.
-         */
-        public Conf setLexOverrides( String... overrides ) {
-            List<String> lOverride = CollectionTools.toSortedList( overrides );
-            Automaton au = Automata.makeEmpty();
-            for ( String nlo : lOverride ) {
-                RegExp rx = new RegExp( nlo );
-                au = Operations.union( au, rx.toAutomaton() );
-            }
-            this.lexOverride = new CharacterRunAutomaton( au );
+        
+        public Conf setLexicalOverrides( String... overrides ) {
+            this.overrides = overrides;
             return this;
         }
-
-        /**
-         * Set the given {@link LexAction} for transforming lexical tokens.
-         * Default: {@link Tokens.LexAction#POST}.
-         * @param action A {@link LexAction} value.
-         * @return This Conf object.
-         */
-        public Conf setLexAction( LexAction action ) {
-            this.lAction = action;
+        
+        public Conf setLexicalAction( LexAction lAction ) {
+            this.lAction = lAction;
             return this;
         }
-
-        /**
-         * Set the given {@link NonLexAction} for transforming non lexical tokens.
-         * Degfault: {@link Tokens.NonLexAction#DELETE}.
-         * @param action A {@link NonLexAction} value.
-         * @return This Conf object.
-         */
-        public Conf setNonLexAction( NonLexAction action ) {
-            this.nlAction = action;
+        
+        public Conf setNonLexicalAction( NonLexAction nlAction ) {
+            this.nlAction = nlAction;
             return this;
         }
-
-        /**
-         * Set the given {@link EntityAction} for transforming entity annotations.
-         * Default: {@link EntityAction#TYPE}.
-         * @param action A {@link EntityAction} value.
-         * @return This Conf object.
-         */
-        public Conf setEntityAction( EntityAction action ) {
-            this.eAction = action;
+        
+        public Conf setEntityAction( EntityAction eAction ) {
+            this.eAction = eAction;
             return this;
         }
-
-        /**
-         * Configure the given {@link LemmaSet} for replacement with the corresponding marker.
-         * See {@link edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet} for values.
-         * Default: No lemma sets will be replaced.
-         * @param substitute {@link LemmaSet} values that will be marked.
-         * @return This Conf object.
-         */
-        public Conf setLemmaSubstitutions( LemmaSet... substitute ) {
-            this.isLemmaSet = new CharacterRunAutomaton( LemmaSet.make( substitute ) );
-            lemmaSets.addAll( Arrays.asList( substitute ) );
+        
+        public Conf setLemmaSubstitutions( LemmaSet... substs ) {
+            this.substitutions = substs;
             return this;
         }
-
-        /**
-         * Configure the given {@link LemmaSet} for deletion.
-         * See {@link edu.columbia.incite.uima.api.corpus.Tokens.LemmaSet} for values.
-         * Default: No lemma sets will be deleted.
-         * @param delete {@link LemmaSet} values that will be deleted.
-         * @return This Conf object.
-         */
-        public Conf setLemmaDeletions( LemmaSet... delete ) {
-            this.delete = new CharacterRunAutomaton( LemmaSet.make( delete ) );
-            deletions.addAll( Arrays.asList( delete ) );
+        
+        public Conf setLemmaDeletions( LemmaSet... deletions ) {
+            this.deletions = deletions;
             return this;
         }
-
-        /**
-         * Commit the values curently set in this Conf object.
-         * This method will replace all non-set values with their defaults, compile all the
-         * necessary automata for string texts and prepare this Conf for construction of a
-         * {@link TermNormal} instance.
-         * @return This Conf object.
-         */
+        
         public Conf commit() {
-            if ( this.isLexical == null ) {
-                this.isLexical = new CharacterRunAutomaton( Automata.makeAnyString() );
+            
+            this.lAction  = lAction == null   ? DFLT_LEX_ACTION     : lAction;
+            this.nlAction = nlAction == null  ? DFLT_NON_LEX_ACTION : nlAction;
+            this.eAction  = eAction == null   ? DFLT_ENTITY_ACTION  : eAction;
+            
+            this.lexClasses = ( lexClasses == null || lexClasses.length <= 0 ) ?
+                              POSClass.ALL_CLASSES :
+                              lexClasses;
+            
+            this.lexical = new CharacterRunAutomaton( POSClass.make( lexClasses ) );
+            
+            this.overrides = overrides == null ?
+                             new String[]{} :
+                             overrides;
+            
+            Automaton orAu = Automata.makeEmpty();
+            Arrays.sort( overrides );
+            for( String or : overrides ) {
+                Automaton i = Automata.makeString( or );
+                Operations.union( orAu, i );
             }
-            if ( this.lexOverride == null ) {
-                this.lexOverride = new CharacterRunAutomaton( Automata.makeEmpty() );
-            }
+            this.override = new CharacterRunAutomaton( orAu );
+            
+            
+            this.substitutions = substitutions == null ? new LemmaSet[]{} : substitutions;
+            this.substitute = new CharacterRunAutomaton( LemmaSet.make( substitutions ) );
 
-            if ( this.isLemmaSet == null ) {
-                this.isLemmaSet = new CharacterRunAutomaton( Automata.makeEmpty() );
-            }
-            this.lemmaSets = Collections.unmodifiableList( lemmaSets );
-
-            if ( this.delete == null ) {
-                this.delete = new CharacterRunAutomaton( Automata.makeEmpty() );
-            }
-            this.deletions = Collections.unmodifiableSet( deletions );
-
-            if ( this.eAction == null ) {
-                this.eAction = EntityAction.TYPE;
-            }
-            if ( this.lAction == null ) {
-                this.lAction = LexAction.POST;
-            }
-            if ( this.nlAction == null ) {
-                this.nlAction = NonLexAction.DELETE;
-            }
-
+            this.deletions = deletions == null ? new LemmaSet[]{} : deletions;
+            this.delete = new CharacterRunAutomaton( LemmaSet.make( deletions ) );
+            
             return this;
         }
 
-        private boolean isLexical( Token t ) {
-            return isLexical.run( Tokens.pos( t ) ) || lexOverride.run( Tokens.build( t ) );
+        private boolean isLexical( AnnotationFS ann ) {
+            return lexical.run( Tokens.pos( ann ) ) || override.run( Tokens.build( ann ) );
         }
 
-        private String lexicalAction( Token t ) {
-            return lAction.apply( t );
+        private String lexicalAction( AnnotationFS ann ) {
+            return lAction.apply( ann );
         }
 
-        private String entityAction( Span ent ) {
-            return eAction.apply( ent );
+        private String nonLexicalAction( AnnotationFS ann ) {
+            return nlAction.apply( ann );
         }
 
-        private String nonLexicalAction( Token t ) {
-            return nlAction.apply( t );
+        private String entityAction( AnnotationFS ann ) {
+            return eAction.apply( ann );
         }
-
-        private boolean substitute( String txt ) {
-            return isLemmaSet.run( txt );
+        
+        private boolean delete( String txt ) {
+            return this.delete.run( txt );
         }
-
-        private List<LemmaSet> lemmaSets() {
-            return lemmaSets;
+        
+        private String applySubstitutions( String txt ) {
+            if( !this.substitute.run( txt ) ) return txt;
+            String t = txt;
+            for( LemmaSet ls : this.substitutions ) {
+                t = ls.apply( t );
+            }
+            return t;
         }
-
-        private boolean delete( LemmaSet ls ) {
-            return deletions.contains( ls );
-        }
-
     }
 }

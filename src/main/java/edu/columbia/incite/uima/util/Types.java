@@ -21,8 +21,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 
 import org.apache.uima.cas.CASRuntimeException;
@@ -51,19 +52,19 @@ public abstract class Types {
     }
 
     public static Type[] checkTypes( TypeSystem ts, String... typeNames ) throws AnalysisEngineProcessException {
-        List<Type> types = new ArrayList<>();
-        for( String typeName : typeNames ) {
-            types.add( checkType( ts, typeName ) );
+        Type[] out = new Type[typeNames.length];
+        for( int i = 0; i < out.length; i++ ) {
+            out[i] = checkType( ts, typeNames[i] );
         }
-        return types.toArray( new Type[types.size()] );
+        return out;
     }
     
     public static Type[] checkTypes( TypeSystem ts, int... typeCodes ) throws AnalysisEngineProcessException {
-        List<Type> types = new ArrayList<>();
-        for( int typeCode : typeCodes ) {
-            types.add( checkType( ts, typeCode ) );
+        Type[] out = new Type[typeCodes.length];
+        for( int i = 0; i < out.length; i++ ) {
+            out[i] = checkType( ts, typeCodes[i] );
         }
-        return types.toArray( new Type[types.size()] );
+        return out;
     }
 
     public static Type checkType( TypeSystem ts, String typeName ) throws AnalysisEngineProcessException {
@@ -89,11 +90,11 @@ public abstract class Types {
     }
 
     public static Feature[] checkFeatures( Type type, String... featureNames ) throws CASRuntimeException {
-        List<Feature> features = new ArrayList<>();
-        for( String featureName : featureNames ) {
-            features.add( checkFeature( type, featureName) );
+        Feature[] out = new Feature[featureNames.length];
+        for( int i = 0; i < out.length; i++ ) {
+            out[i] = checkFeature( type, featureNames[i] );
         }
-        return (Feature[]) features.toArray();
+        return out;
     }
 
     public static Feature checkFeature( Type type, String featureName ) throws CASRuntimeException {
@@ -121,7 +122,8 @@ public abstract class Types {
     }
     
     public static String getShortName( String typeName ) {
-        return Pattern.compile( "(.*)\\.([A-Za-z]+)$" ).matcher( typeName ).replaceAll( "$2" );
+        // WTF this is insane.
+        return Iterables.getLast( Splitter.on( TypeSystem.NAMESPACE_SEPARATOR ).split( typeName ) );
     }
     
     public static Collection<AnnotationFS> filterTypes( Collection<AnnotationFS> input, Set<Type> types ) {

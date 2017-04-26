@@ -50,12 +50,12 @@ import org.apache.uima.util.Level;
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.corpus.Indexer;
 import edu.columbia.incite.uima.api.corpus.Tokens;
-import edu.columbia.incite.uima.res.casio.FeatureExtractor;
+import edu.columbia.incite.uima.res.casio.FeaturePathBroker;
 import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.Datum;
 
-import static edu.columbia.incite.uima.api.corpus.Tokens.POSClass.*;
+import static edu.columbia.incite.uima.api.corpus.POSClass.*;
 
 /**
  *
@@ -130,25 +130,25 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         
         // All POS, POS in term.
         TermNormal.Conf posAll = new TermNormal.Conf();
-        posAll.setLexAction( Tokens.LexAction.POST ); // add pos tag to term text.
+        posAll.setLexicalAction(Tokens.LexAction.ADD_POS_TAG ); // add pos tag to term text.
         posAll.setLexClasses( ALL_CLASSES );          // index all pos classes
         tmp.put( POS_ALL_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( posAll ) ) );
         
         // All POS, No POS in term.
         TermNormal.Conf nPosAll = new TermNormal.Conf();
-        nPosAll.setLexAction( Tokens.LexAction.LEMMA ); // replace terms with lemmas.
+        nPosAll.setLexicalAction(Tokens.LexAction.LEMMATIZE ); // replace terms with lemmas.
         nPosAll.setLexClasses( ALL_CLASSES );           // index all pos classes
         tmp.put( NPOS_ALL_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( nPosAll ) ) );
         
         // Lex POS only, POS in term.
         TermNormal.Conf posLex = new TermNormal.Conf();
-        posLex.setLexAction( Tokens.LexAction.POST ); // add pos tag to term text
+        posLex.setLexicalAction(Tokens.LexAction.ADD_POS_TAG ); // add pos tag to term text
         posLex.setLexClasses( LEX_CLASSES );          // index lexical classes only
         tmp.put( POS_LEX_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( posLex ) ) );
         
         // Lex POS only, No POS in term.
         TermNormal.Conf nPosLex = new TermNormal.Conf();
-        nPosLex.setLexAction( Tokens.LexAction.LEMMA ); // replace terms with lemmas
+        nPosLex.setLexicalAction(Tokens.LexAction.LEMMATIZE ); // replace terms with lemmas
         nPosLex.setLexClasses( LEX_CLASSES );           // index lexical classes only
         tmp.put( NPOS_LEX_FIELD, ThreadLocal.withInitial( () -> new UIMATokenStream( nPosLex ) ) );
                 
@@ -161,7 +161,7 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         super.afterResourcesInitialized();
         
         // Use default resource implementations if none given
-        if( docBroker == null ) docBroker = new FeatureExtractor();
+        if( docBroker == null ) docBroker = new FeaturePathBroker();
         if( coverBroker == null ) coverBroker = docBroker;
         if( writerProvider == null ) {
             writerProvider = new WriterProvider();
@@ -198,9 +198,9 @@ public class LuceneIndexer extends Resource_ImplBase implements Indexer<Document
         docBroker.configure( conf );
         coverBroker.configure( conf );
     }
-
+    
     @Override
-    public Document initDoc( AnnotationFS ann ) throws DocumentCreationException {
+    public Document initDoc( AnnotationFS ann ) throws DocumentCreationException {        
         // TODO: document instances should be reused.
         Document doc = new Document();
         Datum d = new Datum();

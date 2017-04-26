@@ -27,15 +27,28 @@ import edu.columbia.incite.util.data.DataFieldType;
  */
 public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBroker<Datum> {
 
-    public static final String ID_FIELD = "id";
-    public static final String COL_FIELD = "doc:Collection";
-    public static final String URI_FIELD = "doc:URI";
-    public static final String XPT_FIELD = "doc:XPath";
-    public static final String IND_FIELD = "doc:Index";
-    public static final String LAST_FIELD = "proc:IsLast";
-    public static final String SKIP_FIELD = "proc:Skip";
+    public static final String DOC_PREFIX = "doc";
+    public static final String PROC_PREFIX = "proc";
+    public static final String SEP = String.valueOf( TypeSystem.FEATURE_SEPARATOR );
+    
+    public static final String   ID_FIELD_NAME = "id";
+    public static final String  COL_FIELD_NAME = DOC_PREFIX  + SEP + "Collection";
+    public static final String  URI_FIELD_NAME = DOC_PREFIX  + SEP + "URI";
+    public static final String  XPT_FIELD_NAME = DOC_PREFIX  + SEP + "XPath";
+    public static final String  IND_FIELD_NAME = DOC_PREFIX  + SEP + "Index";
+    public static final String LAST_FIELD_NAME = PROC_PREFIX + SEP + "IsLast";
+    public static final String SKIP_FIELD_NAME = PROC_PREFIX + SEP + "Skip";
+
     public static final String SUB_SUFFIX = "_subject";
     public static final String OBJ_SUFFIX = "_object";
+
+    public static final DataField   ID_FIELD = new DataField(   ID_FIELD_NAME, DataFieldType.STRING );
+    public static final DataField  COL_FIELD = new DataField(  COL_FIELD_NAME, DataFieldType.STRING );
+    public static final DataField  URI_FIELD = new DataField(  URI_FIELD_NAME, DataFieldType.STRING );
+    public static final DataField  XPT_FIELD = new DataField(  XPT_FIELD_NAME, DataFieldType.STRING );
+    public static final DataField  IND_FIELD = new DataField(  IND_FIELD_NAME, DataFieldType.INTEGER );
+    public static final DataField LAST_FIELD = new DataField( LAST_FIELD_NAME, DataFieldType.BOOLEAN );
+    public static final DataField SKIP_FIELD = new DataField( SKIP_FIELD_NAME, DataFieldType.BOOLEAN);
 
     public static final String PARAM_ADD_PROC = "addProc";
     @ConfigurationParameter( name = PARAM_ADD_PROC, mandatory = false )
@@ -55,7 +68,7 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
         Span span = (Span) ann;
 
         if( span.getId() != null )
-            tgt.put( new DataField( ID_FIELD, DataFieldType.STRING ), span.getId() );
+            tgt.put( ID_FIELD, span.getId() );
         if( span.getAttributes() != null ) {
             for( int i = 0; i < span.getAttributes().size(); i++ ) {
                 DataField f = new DataField( span.getAttributes( i ).getK(), DataFieldType.STRING );
@@ -83,13 +96,13 @@ public class InciteFeatureBroker extends Resource_ImplBase implements FeatureBro
 
         if( ann instanceof Document ) {
             Document doc = (Document) ann;
-            tgt.put( new DataField( COL_FIELD, DataFieldType.STRING ), doc.getCollection() );
-            tgt.put( new DataField( URI_FIELD, DataFieldType.STRING ), doc.getUri() );
-            tgt.put( new DataField( XPT_FIELD, DataFieldType.STRING ), doc.getXpath() );
-            tgt.put( new DataField( IND_FIELD, DataFieldType.INTEGER ), doc.getIndex() );
+            tgt.put( COL_FIELD, doc.getCollection() );
+            tgt.put( URI_FIELD, doc.getUri() );
+            tgt.put( XPT_FIELD, doc.getXpath() );
+            tgt.put( IND_FIELD, doc.getIndex() );
             if( addProc ) {
-                tgt.put( new DataField( LAST_FIELD, DataFieldType.BOOLEAN ), doc.getProc_isLast() );
-                tgt.put( new DataField( SKIP_FIELD, DataFieldType.BOOLEAN ), doc.getProc_skip() );
+                tgt.put( LAST_FIELD, doc.getProc_isLast() );
+                tgt.put( SKIP_FIELD, doc.getProc_skip() );
             }
         }
     }

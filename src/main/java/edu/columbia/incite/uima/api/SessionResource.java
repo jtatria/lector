@@ -19,23 +19,26 @@ package edu.columbia.incite.uima.api;
 import org.apache.uima.resource.Resource;
 
 /**
- * A SessionResource provides means to control access to shared resources and maintain per-component processing data.
+ * A SessionResource provides means to control access to shared resources and maintain per-component
+ * processing data.
  * @author José Tomás Atria <ja2612@columbia.edu>
- * @param <S>   Type for an object that provides a component with access to its session data.
+ * @param <S> Type for an object that provides a component with access to its session data.
  */
 public interface SessionResource<S> extends Resource {
 
     /**
      * Open a new session and return an instance of S that provides access to session data.
-     * This interface's contract requires this method to be called before a component can access session resources.
-     * @return  An instance of S that provides a component with access to session data.
+     * This interface's contract requires this method to be called before a component can access
+     * session resources.
+     * @return An instance of S that provides a component with access to session data.
      */
     S openSession();
 
     /**
      * Close the given session and release all held resources.
-     * This interface's contract expects no further uses of any resources associated to the given session.
-     * @param session   An instance of S created by {@link openSession()}.
+     * This interface's contract expects no further uses of any resources associated to the given
+     * session.
+     * @param session An instance of S created by {@link openSession()}.
      */
     void closeSession( S session );
 }

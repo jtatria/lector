@@ -70,9 +70,9 @@ public enum BinaryFormat {
      * @return A String that can be used to represent this format in configuration parameter
      *         settings.
      */
-    public String key() {
-        return this.key;
-    }
+//    public String key() {
+//        return this.key;
+//    }
 
     /**
      * Return the four byte header associated to this format.
@@ -95,14 +95,14 @@ public enum BinaryFormat {
      *
      * @throws IllegalArgumentException
      */
-    public static BinaryFormat forString( String key ) throws IllegalArgumentException {
-        for( BinaryFormat bf : BinaryFormat.values() ) {
-            if( bf.key().equals( key ) ) {
-                return bf;
-            }
-        }
-        throw new IllegalArgumentException( "Unknown format requested: " + key );
-    }
+//    public static BinaryFormat forString( String key ) throws IllegalArgumentException {
+//        for( BinaryFormat bf : BinaryFormat.values() ) {
+//            if( bf.key().equals( key ) ) {
+//                return bf;
+//            }
+//        }
+//        throw new IllegalArgumentException( "Unknown format requested: " + key );
+//    }
 
     /**
      * Identify the binary format of data contained in the given stream.

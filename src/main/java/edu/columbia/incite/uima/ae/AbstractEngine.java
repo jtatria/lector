@@ -16,6 +16,8 @@
  */
 package edu.columbia.incite.uima.ae;
 
+import java.util.function.Supplier;
+
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CASException;
@@ -31,7 +33,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
-import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.InciteTypes;
 import edu.columbia.incite.uima.res.casio.FeaturePathBroker;
 import edu.columbia.incite.uima.res.casio.InciteFeatureBroker;
@@ -46,34 +47,38 @@ import edu.columbia.incite.util.reflex.annotations.Resource;
  */
 public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
 
+    public static final String DEFAULT_DOC_MD_TYPE_NAME = InciteTypes.DOCUMENT_TYPE;
+    public static final String DEFAULT_DOC_ID_FEAT_NAME = InciteTypes.DOC_ID_FEATURE;
+    public static final Supplier<FeatureBroker> DEFAULT_FEAT_BROKER = InciteFeatureBroker::new;
+    
     // CAS metadata parameters
-    public static final String PARAM_DOCUMENT_TYPE = "dmdTypeName";
-    @ConfigurationParameter( name = PARAM_DOCUMENT_TYPE, mandatory = false,
+    public static final String PARAM_CUSTOM_DOC_TYPE = "documentMetadataTypeName";
+    @ConfigurationParameter( name = PARAM_CUSTOM_DOC_TYPE, mandatory = false,
         description = "Typename for document metadata annotations"
         // Java sucks: this is impossible to achieve because java lacks macros, and a reference to 
         // a final static field is not constant enough for f*cking javac.
         // , defaultValue = PARAM_DOCUMENT_TYPE_DFLT
     )
-    protected String dmdTypeName;
+    protected String docMDTypeName;
 
-    public static final String PARAM_DOC_ID_FEATURE = "dmdIdFeatName";
-    @ConfigurationParameter( name = PARAM_DOC_ID_FEATURE, mandatory = false,
+    public static final String PARAM_CUSTOM_ID_FEATURE = "documentIdFeatureName";
+    @ConfigurationParameter( name = PARAM_CUSTOM_ID_FEATURE, mandatory = false,
         description = "Feature name for document id in document metadata annotations" )
-    protected String dmdIdFeatName;
+    protected String docIdFeatName;
 
-    public static final String PARAM_DOCUMENT_FEATURE_PATTERNS = "dmdFeatPatterns";
-    @ConfigurationParameter( name = PARAM_DOCUMENT_FEATURE_PATTERNS, mandatory = false,
+    public static final String PARAM_CUSTOM_METADATA_PATHS = "documentMetadataFeaturePaths";
+    @ConfigurationParameter( name = PARAM_CUSTOM_METADATA_PATHS, mandatory = false,
         description = "Feature name patterns for document metadata features" )
-    protected String[] dmdFeatPatterns;
+    protected String[] docMDFeatPaths;
 
-    public static final String RES_DMD_BROKER = "dmdFeatureBroker";
-    @ExternalResource( key = RES_DMD_BROKER, mandatory = false,
+    public static final String RES_CUSTOM_METADATA_BROKER = "documentMetadataFeatureBroker";
+    @ExternalResource( key = RES_CUSTOM_METADATA_BROKER, mandatory = false,
         description = "Feature broker for document metadata annotations" )
-    private FeatureBroker<Datum> dmdBroker;
+    private FeatureBroker<Datum> docMDFeatBroker;
 
     protected Type dmdType;
     protected Feature dmdIdF;
-    protected boolean customDmd = false;
+//    protected boolean customDmd = false;
 
     @Resource
     private Annotation curCasData;
@@ -84,25 +89,25 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
+                        
+        if( docMDTypeName == null ) {
+            getLogger().log( Level.CONFIG, "No type name specified for document metadata. Using Incite Types." );
+            docMDTypeName = DEFAULT_DOC_MD_TYPE_NAME;
+        }
         
-        // This is most certainly wrong but I don't have time to test it: i.e. what happens if 
-        // dmdBroker is _not_ null?
-        if( dmdBroker == null ) {
-            if( dmdTypeName != null ) { // Custom metadata types. Use broker.
-                if( dmdIdFeatName == null ) {
-                    throw new ResourceInitializationException(
-                        ResourceInitializationException.NO_RESOURCE_FOR_PARAMETERS,
-                        new Object[] { PARAM_DOC_ID_FEATURE }
-                    );
-                }
-                customDmd = true;
-                if( dmdFeatPatterns != null ) {
-                    dmdBroker = new FeaturePathBroker( dmdFeatPatterns, true );
-                }
-            } else { // Incite types, use internal broker.
-//                dmdTypeName = Document.class.getName();
-                dmdTypeName = InciteTypes.DOCUMENT_TYPE;
-                dmdBroker = new InciteFeatureBroker();
+        if( docIdFeatName == null ) {
+            getLogger().log( Level.CONFIG, "No feature name specified for document ids. Usinf Incite features." );
+            docIdFeatName = DEFAULT_DOC_ID_FEAT_NAME;
+        }
+        
+        if( docMDFeatBroker == null ) {
+            String msg = "No feature broker configured for document metadata";
+            if( docMDFeatPaths != null ) {
+                getLogger().log( Level.CONFIG, msg + ". Building from given feature paths.");
+                docMDFeatBroker = new FeaturePathBroker( docMDFeatPaths, true  );
+            } else {
+                getLogger().log( Level.CONFIG, msg + " and no feature paths given. Using default feature broker." );
+                docMDFeatBroker = DEFAULT_FEAT_BROKER.get();
             }
         }
     }
@@ -136,7 +141,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     protected Datum getMetadata() throws AnalysisEngineProcessException {
         if( curCasData != null ) {
             try {
-                return dmdBroker.values( curCasData );
+                return docMDFeatBroker.values( curCasData );
             } catch( CASException ex ) {
                 throw new AnalysisEngineProcessException( ex );
             }
@@ -150,11 +155,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
      */
     protected String getDocumentId() {
         if( curCasData != null ) {
-            if( customDmd ) {
-                return curCasData.getFeatureValueAsString( dmdIdF );
-            } else {
-                return ( (Document) curCasData ).getId();
-            }
+            return curCasData.getFeatureValueAsString( dmdIdF );
         } else {
             getLogger().log( Level.WARNING, "No metadata for CAS. Using naive ids." );
             return "doc-" + Integer.toString( curCasIndex );
@@ -164,32 +165,28 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     private void initTypes( JCas jcas ) throws AnalysisEngineProcessException {
         this.ts = jcas.getTypeSystem();
 
-        if( customDmd ) {
-            dmdType = Types.checkType( ts, dmdTypeName );
-            dmdIdF = Types.checkFeature( dmdType, dmdIdFeatName );
-            if( !dmdIdF.getRange().isPrimitive() ) {
-                throw new AnalysisEngineProcessException(
-                    new Exception(
-                        "The requested feature for document ids has a non-primitive range."
-                    )
-                );
-            }
-        } else {
-            dmdType = jcas.getCasType( Document.type );
+        dmdType = Types.checkType( ts, docMDTypeName );
+        dmdIdF = Types.checkFeature( dmdType, docIdFeatName );
+        if( !dmdIdF.getRange().isPrimitive() ) {
+            throw new AnalysisEngineProcessException(
+                new Exception( "Non-primitive range for document id feature." )
+            );
         }
-
-        if( dmdBroker != null ) try {
-            dmdBroker.configure( jcas.getCas() );
+        
+        if( docMDFeatBroker != null ) try {
+            docMDFeatBroker.configure( jcas.getCas() );
         } catch( Exception ex ) {
             throw new AnalysisEngineProcessException( ex );
         }
     }
 
     /**
-     * Perform all pre-analysis actions on the current JCas. This typically include indexing 
+     * Perform all pre-analysis actions on the current JCas. These typically include indexing 
      * annotations, gathering metadata, configuring resources, opening I/O channels, etc.
+     * 
      * Overriding implementations must call this method if they want CAS metadata to be available 
-     * throught this class's methods.
+     * through this class's methods.
+     * 
      * @param jcas
      * @throws AnalysisEngineProcessException 
      */
@@ -201,6 +198,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
 
     /**
      * Execute the actual analysis logic on the current JCas.
+     * 
      * @param jcas
      * @throws AnalysisEngineProcessException 
      */
@@ -208,10 +206,12 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
 
     /**
      * Perform all post-analysis actions for the current JCas. This typically includes deleting 
-     * annotation indexes, clearing retained metadata, reseting resource configurations, close 
+     * annotation indexes, clearing retained metadata, resetting resource configurations, close 
      * per-document I/O channels, etc.
+     * 
      * Overriding implementations must call this method if they are using this class's metadata 
      * access methods, i.e. if they called preProcess() from an overriding implementation.
+     * 
      * @param jcas
      * @throws AnalysisEngineProcessException 
      */

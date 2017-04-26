@@ -8,7 +8,9 @@ package edu.columbia.incite.uima.api.corpus;
 import java.util.Locale;
 import java.util.function.Function;
 
-import edu.columbia.incite.uima.api.types.Span;
+import org.apache.uima.cas.text.AnnotationFS;
+
+//import edu.columbia.incite.uima.api.types.Span;
 
 /**
  *
@@ -29,19 +31,19 @@ public class Entities {
     public static final int TEXT = 2;
     public static final int DUMP = 3;
     
-    public static String[] parse( Span span ) {
+    public static String[] parse( AnnotationFS span ) {
         return parse( span, false );
     }
     
-    public static String[] parse( Span span, boolean dump ) {
-        String type = span.getType().getShortName();
-        String id = span.getId();
-        String text = span.getCoveredText();
-        String dumps = dump ? span.toString() : "";
-        return new String[]{ type, id, text, dumps };
+    public static String[] parse( AnnotationFS span, boolean dump ) {
+        return InciteEntities.parse( span, dump );
     }
         
-    public enum EntityAction implements Function<Span,String> {
+    public static boolean isEntity( AnnotationFS span ) {
+        return InciteEntities.isEntity( span );
+    }
+    
+    public enum EntityAction implements Function<AnnotationFS,String> {
         /** remove entities **/
         DELETE,
         /** change entities by their UIMA type **/
@@ -55,7 +57,7 @@ public class Entities {
         ;
         
         @Override
-        public String apply( Span t ) {
+        public String apply( AnnotationFS t ) {
             String[] parse = parse( t );
             String[] parts = new String[this.ordinal()];
             System.arraycopy( parse, 0, parts, 0, this.ordinal() );
