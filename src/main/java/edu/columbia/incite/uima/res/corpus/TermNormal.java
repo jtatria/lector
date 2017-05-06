@@ -32,6 +32,7 @@ public class TermNormal {
     public static final Charset CS = StandardCharsets.UTF_8;
     
     private final Conf conf;
+
     
     public TermNormal() {
         this( new Conf() );
@@ -53,7 +54,9 @@ public class TermNormal {
         
         if( conf.delete( txt ) ) return "";
         
-        return conf.applySubstitutions( txt );
+        txt = conf.applySubstitutions( txt );
+
+        return txt;
     }
     
     public String type( AnnotationFS ann ) {
@@ -67,10 +70,15 @@ public class TermNormal {
             return ann.getType().getShortName().getBytes( CS );
         }
     }
+   
+    @Override
+    public String toString() {
+        return this.conf.toString();
+    }
     
     public static class Conf {
         
-        public static final LexAction DFLT_LEX_ACTION        = LexAction.LEMMATIZE;
+        public static final LexAction    DFLT_LEX_ACTION     = LexAction.LEMMATIZE;
         public static final NonLexAction DFLT_NON_LEX_ACTION = NonLexAction.DELETE;
         public static final EntityAction DFLT_ENTITY_ACTION  = EntityAction.TYPE;
         
@@ -87,7 +95,21 @@ public class TermNormal {
         private String[] overrides;
         private LemmaSet[] substitutions;
         private LemmaSet[] deletions;
-        
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append( String.format( "Lexical Classes:\t%s\n", Arrays.toString( lexClasses ) ) );
+            sb.append( String.format( "Lexical Action:\t%s\n", lAction.name() ) );
+            sb.append( String.format( "Non-Lexical Action:\t%s\n", nlAction.name() ) );
+            sb.append( String.format( "Entity Action:\t%s\n", eAction.name() ) );
+            sb.append( String.format( "Overrides:\t%s\n", Arrays.toString( overrides ) ) );
+            sb.append( String.format( "Substitutions:\t%s\n", Arrays.toString( substitutions ) ) );
+            sb.append( String.format( "Deletions:\t%s\n", Arrays.toString( deletions ) ) );
+            
+            return sb.toString();
+        }
+                
         public Conf setLexClasses( POSClass... classes ) {
             this.lexClasses = classes;
             return this;

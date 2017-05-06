@@ -1,7 +1,6 @@
 package edu.columbia.incite.uima.ae.corpus;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,12 +28,13 @@ public class CorpusIndexer<D> extends SegmentedEngine {
     
     private final AtomicLong docCounter = new AtomicLong();
     
-    private long token;
+    private long indexerSssn;
     
     @Override
     public void initialize( UimaContext uCtx ) throws ResourceInitializationException {
         super.initialize( uCtx );
-        token = indexer.openSession();
+        indexerSssn = indexer.openSession();
+        
     }
     
     @Override
@@ -85,6 +85,6 @@ public class CorpusIndexer<D> extends SegmentedEngine {
     
     @Override
     public void collectionProcessComplete() {
-        indexer.closeSession( token );
+        indexer.closeSession( indexerSssn );
     }    
 }

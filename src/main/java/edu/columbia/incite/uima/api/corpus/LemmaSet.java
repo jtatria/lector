@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 import org.apache.lucene.util.automaton.Automata;
 import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.CharacterRunAutomaton;
+import org.apache.lucene.util.automaton.MinimizationOperations;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 
@@ -58,10 +59,11 @@ public class LemmaSet implements Predicate<String>, Function<String, String> {
      */
     public static Automaton make( LemmaSet... inc ) {
         Automaton out = Automata.makeEmpty();
-        Arrays.sort( inc );
+//        Arrays.sort( inc ); // TODO: LemmaSet is not comparable, but we should still attempt to optimize automata for unions.
         for ( LemmaSet lc : inc ) {
             out = Operations.union( out, lc.au );
         }
+//        MinimizationOperations.minimize( out, Operations.DEFAULT_MAX_DETERMINIZED_STATES );
         return out;
     }
 
@@ -89,9 +91,15 @@ public class LemmaSet implements Predicate<String>, Function<String, String> {
     public static Automaton au( LemmaSet... lss ) {
         Automaton out = Automata.makeEmpty();
         for ( LemmaSet ls : lss ) {
-            Operations.union( out, ls.au );
+            out = Operations.union( out, ls.au );
         }
+//        MinimizationOperations.minimize( out, Operations.DEFAULT_MAX_DETERMINIZED_STATES );
         return out;
+    }
+    
+    @Override
+    public String toString() {
+        return String.format( "%s : %s", this.label, this.rx );
     }
     
 }

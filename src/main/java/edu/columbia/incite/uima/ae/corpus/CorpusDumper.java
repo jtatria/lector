@@ -7,19 +7,17 @@ package edu.columbia.incite.uima.ae.corpus;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.util.Level;
 
-import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.util.data.Datum;
 import edu.columbia.incite.util.io.FileUtils;
-
 
 /**
  *
@@ -38,7 +36,7 @@ public class CorpusDumper extends CorpusProcessor {
         description = "Output Directory"
     )
     private String outputDir;
-
+    
     public static final String PARAM_DUMP_RAW = "dumpRaw";
     @ConfigurationParameter( name = PARAM_DUMP_RAW, mandatory = false, defaultValue = "false",
         description = "Ignore all parameters and dump raw covered text (will produce duplications "
@@ -46,17 +44,13 @@ public class CorpusDumper extends CorpusProcessor {
     )
     private Boolean dumpRaw;
     
-    private Long lptSssn;
-    private Long vocabSssn;
-    
-    private TermNormal termNormal;
     private Writer out;
-        
+    
     @Override
     protected void preProcess( JCas jcas ) throws AnalysisEngineProcessException {
         super.preProcess( jcas );
         try {
-            out = FileUtils.getWriter( outputDir, getDocumentId() + EXT, true, true );
+            this.out = FileUtils.getWriter( outputDir, getDocumentId() + EXT, true, true );
         } catch ( IOException ex ) {
             throw new AnalysisEngineProcessException( ex );
         }
@@ -74,40 +68,22 @@ public class CorpusDumper extends CorpusProcessor {
     }
 
     @Override
-    protected void processSegment( 
-        AnnotationFS doc, List<AnnotationFS> covers, List<AnnotationFS> tokens 
-    ) throws AnalysisEngineProcessException {
-        if( checkDoc( doc ) && checkCovers( covers ) ) {
-            try {
-                if( dumpRaw ) {
-                        out.append( doc.getCoveredText() );
-                } else {
-                    for( AnnotationFS t : tokens ) {
-                        
-                        String txt = termNormal.term( t );
-                        if( txt.length() <= 0 ) continue;
-                        out.append( txt );
-                        out.append( TOKEN_SEP );
-                        
-                    }
+    protected void processSegment( AnnotationFS segment, List<AnnotationFS> covers, List<AnnotationFS> members ) throws AnalysisEngineProcessException {
+        Datum md = getMetadata();
+        try {
+            if( dumpRaw ) out.append( segment.getCoveredText() );
+            else {
+                for( AnnotationFS ann : members ) {
+                    String txt = termNormal.term( ann );
+                    if( txt.length() <= 0 ) continue;
+                    out.append( txt );
+                    out.append( TOKEN_SEP );
+                    updateCounts( ann, txt, md );;
                 }
-                out.append( DOC_SEP );
-            } catch ( IOException ex ) {
-                getLogger().log( Level.SEVERE, "I/O error when trying to write", ex );
             }
+        } catch ( IOException ex ) {
+            Logger.getLogger(CorpusDumper.class.getName() ).log( Level.SEVERE, null, ex );
         }
     }
     
-    protected boolean checkCovers( Collection<AnnotationFS> covers ) {
-        return true;
-    }
-    
-    protected boolean checkDoc( AnnotationFS doc ) {
-        return true;
-    }
-
-    private void updateCounts( String txt, Datum md ) {
-        int i = 0;
-    }
-
 }

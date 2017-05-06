@@ -21,7 +21,6 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Tables;
 
 import org.apache.uima.UimaContext;
-import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
@@ -39,13 +38,14 @@ import edu.columbia.incite.uima.api.corpus.LemmaSet;
 import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.DataFieldType;
+import edu.columbia.incite.util.data.Datum;
 import edu.columbia.incite.util.string.CSVWriter;
 
 /**
  *
  * @author gorgonzola
  */
-public class CorpusProcessor extends SegmentedEngine {
+public abstract class CorpusProcessor extends SegmentedEngine {
     
     // Transformations
     public static final String PARAM_INCLUDE_PUNC = "includePunc";
@@ -97,16 +97,16 @@ public class CorpusProcessor extends SegmentedEngine {
     
     public static final String RES_LPT_TABLE = "lpTable";
     @ExternalResource( key = RES_LPT_TABLE, mandatory = false )
-    private CorpusDumper.DataTable lpTable;
+    private DataTable lpTable;
     
     public static final String RES_VOCAB_TABLE = "vocabTable";
     @ExternalResource( key = RES_VOCAB_TABLE, mandatory = false )
-    private CorpusDumper.DataTable vocabTable;
+    private DataTable vocabTable;
     
     private Long lptSssn;
     private Long vocabSssn;
     
-    private TermNormal termNormal;
+    protected TermNormal termNormal;
     private DataField<String> split;
     
     @Override
@@ -174,58 +174,42 @@ public class CorpusProcessor extends SegmentedEngine {
         }
     }
 
-    @Override
-    protected void processSegment( 
-        AnnotationFS segment, List<AnnotationFS> covers, List<AnnotationFS> members 
-    ) throws AnalysisEngineProcessException {
-        if( buildVocabulary || buildPosTable ) {
-            updateCounts( members );
-        }
-    }
-
     public static final String VOCAB_TOTAL = "total";
-
-    private void updateCounts( List<AnnotationFS> members ) throws AnalysisEngineProcessException {
+    
+    protected void updateCounts( AnnotationFS ann, String out, Datum md ) {
+        if( !Tokens.isToken( ann ) ) return;
         Table<String,String,AtomicLong> pos = lpTable.get();
         Table<String,String,AtomicLong> voc = vocabTable.get();
+        String col = ( split != null && md != null ) ? md.get( split ) : null;
         
-        String col = ( buildVocabulary && split != null ) ? getMetadata().get( split ) : null;
-        
-        for( AnnotationFS ann : members ) {
-            if( !Tokens.isToken(  ann ) ) continue;
-            String term = termNormal.term( ann );
-            if( term.equals( "" ) ) continue;
-            
-            if( term.equals( "—" ) ) {
-                int i = 0;
-                termNormal.term( ann );
-            }
-            
-            if( buildPosTable ) {
-                String posT = Tokens.posT( ann );
-                if( !pos.contains( term, posT ) ) {
+        if( buildPosTable ) {
+            String posT = Tokens.posT( ann );
+            if( !pos.contains( out, posT ) ) {
 //                    synchronized( pos ) { // Needed for Guava < 22
-                        pos.put( term, posT, new AtomicLong() );
+                        pos.put( out, posT, new AtomicLong() );
 //                    }
                 }
-                pos.get( term, posT ).incrementAndGet();
+            pos.get( out, posT ).incrementAndGet();
+        }
+        
+        if( buildVocabulary ) {
+            if( !voc.contains( out, VOCAB_TOTAL ) ) {
+//                synchronized( voc ) { // Needed for Guava < 22
+                voc.put( out, VOCAB_TOTAL, new AtomicLong() );
+//                }
             }
-            
-            if( buildVocabulary ) {
-                if( !voc.contains( term, VOCAB_TOTAL ) ) voc.put( term, VOCAB_TOTAL, new AtomicLong() );
-                voc.get( term, VOCAB_TOTAL ).incrementAndGet();
-                if( col != null ) {
-                    if( !voc.contains( term, col ) ) {
+            voc.get( out, VOCAB_TOTAL ).incrementAndGet();
+            if( col != null ) {
+                if( !voc.contains( out, col ) ) {
 //                        synchronized( voc ) { // Needed for Guava < 22
-                            voc.put( term, col, new AtomicLong() );
+                        voc.put( out, col, new AtomicLong() );
 //                        }
-                    }
-                    voc.get( term, col ).incrementAndGet();
                 }
+                voc.get( out, col ).incrementAndGet();
             }
         }
     }
-    
+
     public static class DataTable extends Resource_ImplBase implements 
         SimpleResource<Table<String,String,AtomicLong>>,
         ConfigurableResource<File>, SessionResource<Long> {

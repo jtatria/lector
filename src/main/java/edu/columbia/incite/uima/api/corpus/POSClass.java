@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.lucene.util.automaton.Automata;
 import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.CharacterRunAutomaton;
+import org.apache.lucene.util.automaton.MinimizationOperations;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -25,7 +26,7 @@ import org.apache.uima.cas.text.AnnotationFS;
  * {@link #make(POSClass...) }
  * to produce an {@link Automaton} instance that will be used in lexicality tests.
  */
-public enum POSClass implements Predicate<AnnotationFS> {
+public enum POSClass implements Predicate<String> {
     /** Adjectives: JJ, JJS, JJR **/
     ADJ( "ADJ" + Tokens.SEP + "JJ[SR]?", new String[ ]{ "JJ", "JJS", "JJR" } ),
     /** Adverbs: RB, RBR, RBS, WRB **/
@@ -126,8 +127,8 @@ public enum POSClass implements Predicate<AnnotationFS> {
      * automaton.
      */
     @Override
-    public boolean test( AnnotationFS t ) {
-        return cra.run( Tokens.pos( t ) );
+    public boolean test( String t ) {
+        return cra.run( t );
     }
 
     /**
@@ -142,6 +143,7 @@ public enum POSClass implements Predicate<AnnotationFS> {
         for ( POSClass lc : inc ) {
             out = Operations.union( out, lc.au );
         }
+//        MinimizationOperations.minimize( out, Operations.DEFAULT_MAX_DETERMINIZED_STATES );
         return out;
     }
 
@@ -150,6 +152,7 @@ public enum POSClass implements Predicate<AnnotationFS> {
         for ( POSClass lc : inc ) {
             out = Operations.union( out, lc.au );
         }
+//        MinimizationOperations.minimize( out, Operations.DEFAULT_MAX_DETERMINIZED_STATES );
         return out;
     }
     

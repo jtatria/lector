@@ -54,8 +54,8 @@ public class CPERunner implements Callable<Integer> {
     
     public CPERunner( CPEConf conf ) {
         try {
-            this.crd = makeReader( conf );
-            this.aes = makeAes( conf );
+            this.crd  = makeReader( conf );
+            this.aes  = makeAes( conf );
             this.cons = makeCons( conf );
             this.full = buildAe( aes, cons );
             this.conf = conf;
