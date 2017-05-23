@@ -32,9 +32,10 @@ import edu.columbia.incite.uima.api.SessionResource;
  *
  * @author José Tomás Atria <ja2612@columbia.edu>
  */
-public class WriterProvider extends Resource_ImplBase implements SessionResource<Long> {
+public class IndexWriterProvider extends Resource_ImplBase implements SessionResource<Long> {
 
     public static final String DFLT_OUTPUT_DIR = "data/index";
+    
     public static final String PARAM_OUTPUT_DIR   = "outDir";
     @ConfigurationParameter( name = PARAM_OUTPUT_DIR, mandatory = false,
         description = "Index directory path.", defaultValue = DFLT_OUTPUT_DIR
@@ -67,7 +68,7 @@ public class WriterProvider extends Resource_ImplBase implements SessionResource
 
     public static final String PARAM_OPTIMIZE = "optimize";
     @ConfigurationParameter( name = PARAM_OPTIMIZE, mandatory = false, defaultValue = "true",
-        description = "OPtimize index on close"
+        description = "Optimize index on close"
     )
     private Boolean optimize;
 

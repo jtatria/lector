@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.io.resources;
+package edu.columbia.incite.uima.io.chars;
 
 import org.apache.uima.resource.Resource;
 

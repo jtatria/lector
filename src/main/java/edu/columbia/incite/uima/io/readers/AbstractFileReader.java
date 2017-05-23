@@ -125,7 +125,7 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
         }
 
         try {
-            paths = FileUtils.getPaths( inputDirPath, fileGlob, recursive );
+            paths = FileUtils.listPaths( inputDirPath, fileGlob, recursive );
         } catch( IOException ex ) {
             throw new ResourceInitializationException( ex );
         }

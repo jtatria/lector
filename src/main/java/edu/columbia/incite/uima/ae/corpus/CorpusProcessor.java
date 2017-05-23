@@ -5,6 +5,7 @@
  */
 package edu.columbia.incite.uima.ae.corpus;
 
+import edu.columbia.incite.uima.ae.SegmentedEngine;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -32,9 +33,10 @@ import org.apache.uima.util.Level;
 import edu.columbia.incite.uima.api.ConfigurableResource;
 import edu.columbia.incite.uima.api.SessionResource;
 import edu.columbia.incite.uima.api.SimpleResource;
-import edu.columbia.incite.uima.api.corpus.POSClass;
-import edu.columbia.incite.uima.api.corpus.Tokens;
-import edu.columbia.incite.uima.api.corpus.LemmaSet;
+//import edu.columbia.incite.uima.api.corpus.POSClass;
+import edu.columbia.incite.corpus.POSClass;
+import edu.columbia.incite.uima.api.types.Tokens;
+import edu.columbia.incite.corpus.LemmaSet;
 import edu.columbia.incite.uima.res.corpus.TermNormal;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.DataFieldType;
@@ -117,8 +119,8 @@ public abstract class CorpusProcessor extends SegmentedEngine {
 
         List<POSClass> pos = new ArrayList<>();
         
-        if( excludeNonLex ) pos.addAll(Arrays.asList(POSClass.LEX_CLASSES ) );
-        else pos.addAll(Arrays.asList(POSClass.ALL_CLASSES ) );
+        if( excludeNonLex ) pos.addAll(Arrays.asList( Tokens.LEX_CLASSES ) );
+        else pos.addAll(Arrays.asList( Tokens.ALL_CLASSES ) );
         
         if( includePunc ) pos.add(POSClass.PUNC );
         c.setLexClasses(pos.toArray(new POSClass[pos.size()] ) );

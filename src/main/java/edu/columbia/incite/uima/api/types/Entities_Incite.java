@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.api.corpus;
+package edu.columbia.incite.uima.api.types;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -13,7 +13,7 @@ import edu.columbia.incite.uima.api.types.Span;
  *
  * @author gorgonzola
  */
-public class InciteEntities {
+public class Entities_Incite {
     
     public static String[] parse( AnnotationFS ann, boolean dump ) {
         if( !isEntity( ann ) ) throw new IllegalArgumentException();

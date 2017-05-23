@@ -16,6 +16,8 @@
  */
 package edu.columbia.incite.uima.io.resources;
 
+import edu.columbia.incite.uima.io.chars.CharStreamProcessor;
+import edu.columbia.incite.uima.io.chars.BufferFilter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;

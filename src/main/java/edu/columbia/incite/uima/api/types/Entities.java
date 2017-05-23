@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.api.corpus;
+package edu.columbia.incite.uima.api.types;
 
 import java.util.Locale;
 import java.util.function.Function;
@@ -36,11 +36,11 @@ public class Entities {
     }
     
     public static String[] parse( AnnotationFS span, boolean dump ) {
-        return InciteEntities.parse( span, dump );
+        return Entities_Incite.parse( span, dump );
     }
         
     public static boolean isEntity( AnnotationFS span ) {
-        return InciteEntities.isEntity( span );
+        return Entities_Incite.isEntity( span );
     }
     
     public enum EntityAction implements Function<AnnotationFS,String> {

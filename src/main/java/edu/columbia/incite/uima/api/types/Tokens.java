@@ -1,10 +1,11 @@
-package edu.columbia.incite.uima.api.corpus;
+package edu.columbia.incite.uima.api.types;
 
+import edu.columbia.incite.corpus.POSClass;
 import java.util.function.Function;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
-import static edu.columbia.incite.uima.api.corpus.POSClass.*;
+import static edu.columbia.incite.corpus.POSClass.*;
 
 /**
  *
@@ -62,11 +63,11 @@ public class Tokens {
      * @return A String[] containing the parts of the canonical form of the given token.
      */
     public static String[] parse( AnnotationFS token ) {
-        return DKProTokens.parse( token );
+        return Tokens_DKPro.parse( token );
     }
     
     public static boolean isToken( AnnotationFS token ) {
-        return DKProTokens.isToken( token );
+        return Tokens_DKPro.isToken( token );
     }
     
     /**
@@ -205,6 +206,5 @@ public class Tokens {
             return func.apply( t );
         }
     }
-    
     
 }

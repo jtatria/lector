@@ -15,13 +15,14 @@ import org.apache.lucene.util.automaton.CharacterRunAutomaton;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import edu.columbia.incite.uima.api.corpus.Entities;
-import edu.columbia.incite.uima.api.corpus.Entities.EntityAction;
-import edu.columbia.incite.uima.api.corpus.Tokens;
-import edu.columbia.incite.uima.api.corpus.LemmaSet;
-import edu.columbia.incite.uima.api.corpus.Tokens.LexAction;
-import edu.columbia.incite.uima.api.corpus.Tokens.NonLexAction;
-import edu.columbia.incite.uima.api.corpus.POSClass;
+import edu.columbia.incite.uima.api.types.Entities;
+import edu.columbia.incite.uima.api.types.Entities.EntityAction;
+import edu.columbia.incite.uima.api.types.Tokens;
+import edu.columbia.incite.corpus.LemmaSet;
+import edu.columbia.incite.uima.api.types.Tokens.LexAction;
+import edu.columbia.incite.uima.api.types.Tokens.NonLexAction;
+//import edu.columbia.incite.uima.api.corpus.POSClass;
+import edu.columbia.incite.corpus.POSClass;
 
 /**
  *
@@ -152,7 +153,7 @@ public class TermNormal {
             this.eAction  = eAction == null   ? DFLT_ENTITY_ACTION  : eAction;
             
             this.lexClasses = ( lexClasses == null || lexClasses.length <= 0 ) ?
-                              POSClass.ALL_CLASSES :
+                              Tokens.ALL_CLASSES :
                               lexClasses;
             
             this.lexical = new CharacterRunAutomaton( POSClass.make( lexClasses ) );
@@ -180,7 +181,7 @@ public class TermNormal {
         }
 
         private boolean isLexical( AnnotationFS ann ) {
-            return lexical.run( Tokens.pos( ann ) ) || override.run( Tokens.build( ann ) );
+            return lexical.run( Tokens.posT( ann ) ) || override.run( Tokens.build( ann ) );
         }
 
         private String lexicalAction( AnnotationFS ann ) {

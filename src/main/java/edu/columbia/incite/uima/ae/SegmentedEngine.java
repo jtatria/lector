@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.ae.corpus;
+package edu.columbia.incite.uima.ae;
 
 import java.util.Collection;
 import java.util.Collections;

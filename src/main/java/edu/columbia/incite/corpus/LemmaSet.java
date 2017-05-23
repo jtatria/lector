@@ -3,16 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.api.corpus;
+package edu.columbia.incite.corpus;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.apache.lucene.util.automaton.Automata;
 import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.CharacterRunAutomaton;
-import org.apache.lucene.util.automaton.MinimizationOperations;
 import org.apache.lucene.util.automaton.Operations;
 import org.apache.lucene.util.automaton.RegExp;
 
@@ -26,22 +26,43 @@ import org.apache.lucene.util.automaton.RegExp;
  * {@link Tokens#lemma(de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token)}
  */
 public class LemmaSet implements Predicate<String>, Function<String, String> {
+    
+//    TODO Add numbers, refactor automata.
 
-    /** Aribtrary punctuation marks: **/
-    public static final LemmaSet L_PUNCT = new LemmaSet( "[!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+", "L_PUNCT" );
+    /** Aribtrary punctuation marks (missed by POS tagger) **/
+    public static final LemmaSet L_PUNCT = new LemmaSet( "[`!\"#$%&()*+,-./:;<=>?@|—\\\\~{}_^'¡£¥¦§«°±³·»¼½¾¿–—‘’‚“”„†•…₤™✗]+", "L_PUNCT" );
     /** Two-letter-or-less lemmas **/
     public static final LemmaSet L_SHORT = new LemmaSet( ".{0,2}", "L_SHORT" );
     /** British money amounts **/
-    public static final LemmaSet L_MONEY = new LemmaSet( "[0-9]+-?[lds]\\.?", "L_MONEY" );
+    public static final LemmaSet L_MONEY = new LemmaSet( "[0-9]+-?[lds]\\.?(-note)?", "L_MONEY" );
     /** Ordinal numbers **/
     public static final LemmaSet L_ORD = new LemmaSet( "[0-9]*((1[123]|[0456789])th|1st|2nd|3rd)", "L_ORD" );
     /** Any number **/
-    public static final LemmaSet L_NUMBER = new LemmaSet( "[0-9,.]+", "L_NUMBER" );
+//    public static final LemmaSet L_NUMBER = new LemmaSet( "[0-9,.]+", "L_NUMBER" );
+    public static final LemmaSet L_NUMBER;
+    static {
+        Automaton integers = new RegExp( "[0-9]+" ).toAutomaton();
+        Automaton fraction = new RegExp( "([0-9]+ )?[0-9]+/[0-9]+" ).toAutomaton();
+        Automaton decimals = new RegExp( "([0-9]+)?[.,][0-9]+" ).toAutomaton();
+        Automaton numerics = Operations.union( Arrays.asList( new Automaton[]{ integers, fraction, decimals } ) );
+        L_NUMBER = new LemmaSet( numerics, "L_NUMBER" );
+    }
+    /** Weights **/
+    public static final LemmaSet L_WEIGHT = new LemmaSet( "[0-9]+(lb|oz)s?\\.?", "L_WEIGHT" );
+    /** Lengths **/
+    public static final LemmaSet L_LENGTH = new LemmaSet( "[0-9]+(in|-inch|ft|m)s?\\.?", "L_LENGTH" );
     
     private final String rx;
     private final String label;
     private final Automaton au;
     private final CharacterRunAutomaton cra;
+    
+    private LemmaSet( Automaton au, String label ) {
+        this.rx = null;
+        this.label = label;
+        this.au = au;
+        this.cra = new CharacterRunAutomaton( au );
+    }
 
     private LemmaSet( String rx, String label ) {
         this.rx = rx;
@@ -69,7 +90,7 @@ public class LemmaSet implements Predicate<String>, Function<String, String> {
 
     /**
      * Functional interface for use as predicate in lambda expressions.
-     * @param t A {@link Token}.
+     * @param t A lemma String
      * @return  {@code true} if the given token is accepted by this set's automaton.
      */
     @Override
@@ -80,7 +101,7 @@ public class LemmaSet implements Predicate<String>, Function<String, String> {
     /**
      * Functional interface for use as function in lambda expressions to replace lemmas in this
      * set by the set's name.
-     * @param t A {@link Token}
+     * @param t A lemma String.
      * @return A string corresponding to this class's name if the token is a member of this class.
      */
     @Override
