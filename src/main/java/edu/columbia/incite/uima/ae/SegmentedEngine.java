@@ -26,7 +26,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
-import edu.columbia.incite.uima.ae.AbstractEngine;
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.types.InciteTypes;
 import edu.columbia.incite.uima.res.casio.FeaturePathBroker;
@@ -217,6 +216,8 @@ public abstract class SegmentedEngine extends AbstractEngine {
         return md;
     }
 
-    protected abstract void processSegment( AnnotationFS segment, List<AnnotationFS> covers, List<AnnotationFS> members ) throws AnalysisEngineProcessException;
+    protected abstract void processSegment(
+        AnnotationFS segment, List<AnnotationFS> covers, List<AnnotationFS> members
+    ) throws AnalysisEngineProcessException;
 
 }

@@ -18,12 +18,17 @@ package edu.columbia.incite.uima.run.debug;
 
 import edu.columbia.incite.uima.ae.AbstractEngine;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.FSIterator;
+import org.apache.uima.cas.TypeSystem;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.util.Level;
@@ -35,33 +40,56 @@ import org.apache.uima.util.Level;
  */
 public class Marker extends AbstractEngine {
 
-    private static int global = 0;
+    private static final AtomicInteger ct = new AtomicInteger();
     private int local;
 
+    public static final Pattern P = Pattern.compile( "(.*)\\.([A-Za-z]+)$" );
+    
+    public static final String PARAM_PRINT_ANNOTATION_COUNTS = "printAnnCounts";
+    @ConfigurationParameter( name = PARAM_PRINT_ANNOTATION_COUNTS, mandatory = false, defaultValue = "false" )
+    Boolean printAnnCounts;
+    
+    public static final String PARAM_QUIET = "quiet";
+    @ConfigurationParameter( name = PARAM_QUIET, mandatory = false, defaultValue = "false" )
+    Boolean quiet;
+    
     @Override
     public void realProcess( JCas jcas ) throws AnalysisEngineProcessException {
+        if( quiet ) return;
         String id = getDocumentId();
         getLogger().log( Level.INFO, "Marker engine running on cas {0}. {1} CASes seen, {2} total CASes.",
-            new Object[]{ id, Integer.toString( local++ ), Integer.toString( global++ ) }
+            new Object[]{ id, Integer.toString( local++ ), Integer.toString( ct.incrementAndGet() ) }
         );
 
-        Map<String,Long> anns = new HashMap<>();
-        FSIterator<Annotation> it = jcas.getAnnotationIndex().iterator();
-        while( it.hasNext() ) {
-            Annotation ann = it.next();
-            String k = ann.getType().getShortName();
-            if( !anns.containsKey( k ) ) anns.put( k, 0l );
-            anns.put( k, anns.get( k ) + 1 );
-        }
+        if( printAnnCounts ) {
+            Map<String,Long> anns = new TreeMap<>();
+            FSIterator<Annotation> it = jcas.getAnnotationIndex().iterator();
+            while( it.hasNext() ) {
+                Annotation ann = it.next();
+                String k = ann.getType().getName();
+                if( !anns.containsKey( k ) ) anns.put( k, 0l );
+                anns.put( k, anns.get( k ) + 1 );
+            }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append( "Document: " );
-        sb.append( id );
-        sb.append( ". Annotations:\n" );
-        for( Entry<String,Long> e : anns.entrySet() ) {
-            String msg = String.format( "\t\t\t%s: %d\n", e.getKey(), e.getValue() );
-            sb.append( msg );
+            StringBuilder sb = new StringBuilder();
+            sb.append( "\nDocument: " );
+            sb.append( id );
+            sb.append( ". Annotations:" );
+
+            String curPkg = "";
+            for( Entry<String,Long> e : anns.entrySet() ) {
+                String fqtn = e.getKey();
+                int sep = fqtn.lastIndexOf( TypeSystem.NAMESPACE_SEPARATOR );
+                String pkg = fqtn.substring( 0, sep );
+                String type = fqtn.substring( sep + 1, fqtn.length() );
+                if( !curPkg.equals( pkg ) ) {
+                    sb.append( String.format( "\n%s: ", pkg ) );
+                    curPkg = pkg;
+                }
+                sb.append( String.format( "%s:%d ", type, e.getValue() ) );
+            }
+            sb.append( "\n" );
+            getLogger().log( Level.INFO, String.format( sb.toString() ) );
         }
-        getLogger().log( Level.INFO, String.format( sb.toString() ) );
     }
 }

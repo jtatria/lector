@@ -55,9 +55,6 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
     public static final String PARAM_CUSTOM_DOC_TYPE = "documentMetadataTypeName";
     @ConfigurationParameter( name = PARAM_CUSTOM_DOC_TYPE, mandatory = false,
         description = "Typename for document metadata annotations"
-        // Java sucks: this is impossible to achieve because java lacks macros, and a reference to 
-        // a final static field is not constant enough for f*cking javac.
-        // , defaultValue = PARAM_DOCUMENT_TYPE_DFLT
     )
     protected String docMDTypeName;
 
@@ -96,7 +93,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
         }
         
         if( docIdFeatName == null ) {
-            getLogger().log( Level.CONFIG, "No feature name specified for document ids. Usinf Incite features." );
+            getLogger().log( Level.CONFIG, "No feature name specified for document ids. Using Incite features." );
             docIdFeatName = DEFAULT_DOC_ID_FEAT_NAME;
         }
         

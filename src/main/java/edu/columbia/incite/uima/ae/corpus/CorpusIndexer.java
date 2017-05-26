@@ -5,6 +5,7 @@
  */
 package edu.columbia.incite.uima.ae.corpus;
 
+import edu.columbia.incite.uima.api.index.FieldFactory;
 import edu.columbia.incite.uima.ae.SegmentedEngine;
 
 import java.io.IOException;
@@ -16,11 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
@@ -28,13 +25,8 @@ import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
-import org.apache.lucene.document.FloatField;
-import org.apache.lucene.document.IntField;
-import org.apache.lucene.document.LongField;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.util.BytesRef;
@@ -48,15 +40,11 @@ import org.apache.uima.resource.ResourceSpecifier;
 import org.apache.uima.util.Level;
 
 import edu.columbia.incite.corpus.LemmaSet;
-//import edu.columbia.incite.uima.api.corpus.POSClass;
 import edu.columbia.incite.corpus.POSClass;
 import edu.columbia.incite.uima.api.types.Tokens;
-import edu.columbia.incite.uima.res.corpus.TermNormal;
-import edu.columbia.incite.uima.res.corpus.lucene.IndexWriterProvider;
-import edu.columbia.incite.util.data.DataField;
-import edu.columbia.incite.util.data.Datum;
-
-import java.util.HashSet;
+import edu.columbia.incite.corpus.TermNormal;
+import edu.columbia.incite.uima.res.index.InciteFieldFactory;
+import edu.columbia.incite.uima.res.index.IndexWriterProvider;
 
 /**
  *
@@ -69,18 +57,16 @@ public class CorpusIndexer extends SegmentedEngine {
     private IndexWriterProvider indexWriter;
     
     public static final String RES_FIELD_NORMALS = "fieldNormals";
-//    @ExternalResource( key = RES_FIELD_NORMALS, mandatory = true )
     @ExternalResource( key = RES_FIELD_NORMALS, mandatory = false )
     protected FieldNormals fieldNormals;
     
     public static final String RES_FIELD_TYPES = "fieldTypes";
-//    @ExternalResource( key = RES_FIELD_TYPES, mandatory = true )
     @ExternalResource( key = RES_FIELD_TYPES, mandatory = false )
     protected FieldTypes fieldTypes;
     
+    private FieldFactory fieldFactory = iniDocFieldFactory();
+    
     private final Map<IndexableField,UIMATokenStream> tokenFields = new HashMap<>();
-    private final Set<IndexableField> docFields = new HashSet<>();
-    private FieldFactory fieldFactory = new FieldFactory();
     private Document docInstance;
     private Long wrtrSssn;
     
@@ -90,7 +76,7 @@ public class CorpusIndexer extends SegmentedEngine {
         
         if( !fieldNormals.normals.keySet().equals( fieldTypes.types.keySet() ) ) {
             throw new ResourceInitializationException( new IllegalArgumentException(
-                "Inconsistent specifications in field maps"
+                "Inconsistent specifications in indexed field maps"
             ) );
         }
         
@@ -99,15 +85,12 @@ public class CorpusIndexer extends SegmentedEngine {
         for( String key : fieldNormals.normals.keySet() ) {
             TermNormal tn = fieldNormals.normals.get( key );
             FieldType ft = fieldTypes.types.get( key );
-            
             UIMATokenStream uts = new UIMATokenStream( tn );
-            
             IndexableField field = new Field( key, uts, ft );
             tokenFields.put( field, uts );
             docInstance.add( field );
         }
-        
-        
+                
         getLogger().log( Level.CONFIG, fieldTypes.toString() );
                 
         this.wrtrSssn = indexWriter.openSession();
@@ -117,23 +100,10 @@ public class CorpusIndexer extends SegmentedEngine {
     protected void processSegment( 
         AnnotationFS seg, List<AnnotationFS> covers, List<AnnotationFS> t 
     ) throws AnalysisEngineProcessException {
-//        Datum md = getMetadata();
-//        
-//        List<IndexableField> docFields = docInstance.getFields().stream().filter(
-//            f -> !tokenFields.keySet().contains( f ) 
-//        ).collect( Collectors.toList() );
-//        
-//        for( DataField df : md.fields() ) {
-//            IndexableField field = fieldFactory.updateField( df, md );
-//            if( !docFields.contains( field ) ) docInstance.add( field );
-//            docFields.remove( field );
-//        }
-//        if( docFields.size() > 0 ) {
-//            docFields.stream().forEach( f -> docInstance.removeFields( f.name() ) );
-//        }
-//        
-        for( UIMATokenStream uts : tokenFields.values() ) uts.setInput( t, seg.getBegin() );
-        
+        // update segment metadata
+        fieldFactory.updateFields( docInstance, getMetadata() );
+        // update tokenstreams
+        tokenFields.values().forEach( ( uts ) -> uts.setInput( t, seg.getBegin() ) );
         try {
             this.indexWriter.index( docInstance );
         } catch ( IOException ex ) {
@@ -146,72 +116,9 @@ public class CorpusIndexer extends SegmentedEngine {
         super.collectionProcessComplete();
         indexWriter.closeSession( wrtrSssn );
     }
-                
-    protected static class FieldFactory {
 
-        private BiMap<DataField,Field> cache =
-            Maps.synchronizedBiMap( HashBiMap.<DataField,Field>create() );
-
-        public Set<Field> getFields() {
-            return cache.inverse().keySet();
-        }
-
-        public IndexableField updateField( DataField f, Datum d ) {
-            Field field = cache.computeIfAbsent( f, ( DataField fld ) -> buildField( fld ) );
-
-            switch( f.type() ) {
-                case STRING: case CHAR: case BOOLEAN: {
-                    String v = (String) f.get( d );
-                    field.setStringValue( v );
-                    break;
-                }
-                case BYTE: case INTEGER: {
-                    Integer v = (Integer) f.get( d );
-                    field.setIntValue( v );
-                    break;
-                }
-                case LONG: {
-                    Long v = (Long) f.get( d );
-                    field.setLongValue( v );
-                    break;
-                }
-                case FLOAT: {
-                    Float v = (Float) f.get( d );
-                    field.setFloatValue( v );
-                    break;
-                }
-                case DOUBLE: {
-                    Double v = (Double) f.get( d );
-                    field.setDoubleValue( v );
-                    break;
-                }
-                default: throw new AssertionError( f.type().name() );
-            }
-            return field;
-        }
-
-        private Field buildField( DataField f ) {
-            Field field = null;
-            switch( f.type() ) {
-                case STRING: case CHAR: case BOOLEAN:
-                    field = new StringField( f.name(), "", Field.Store.YES );
-                    break;
-                case BYTE: case INTEGER:
-                    field = new IntField( f.name(), 0, Field.Store.YES );
-                    break;
-                case LONG:
-                    field = new LongField( f.name(), 0l, Field.Store.YES );
-                    break;
-                case FLOAT:
-                    field = new FloatField( f.name(), 0f, Field.Store.YES );
-                    break;
-                case DOUBLE:
-                    field = new DoubleField( f.name(), 0d, Field.Store.YES );
-                    break;
-                default: throw new AssertionError( f.type().name() );
-            }
-            return field;
-        }
+    protected FieldFactory iniDocFieldFactory() {
+        return new InciteFieldFactory();
     }
     
     protected static class UIMATokenStream extends TokenStream {
@@ -299,40 +206,9 @@ public class CorpusIndexer extends SegmentedEngine {
                     plAttr.setPayload( new BytesRef( termNormal.data( cur ) ) );
                     tyAttr.setType( termNormal.type( cur ) );
                     
-//                    int b = cur.getBegin() + offset;
-//                    int e = cur.getEnd() + offset;
-//                    getAttribute( OffsetAttribute.class ).setOffset( b, e );
-//
-//                    getAttribute( CharTermAttribute.class ).append( termNormal.term( cur ) );
-//
-//                    // TODO: resuse bytesref.
-//                    getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( termNormal.data( cur ) ) );
-//                    
-//                    getAttribute( TypeAttribute.class ).setType( termNormal.type( cur ) );
-
                     return true;
                 }
             } return false;
-            
-            // Original impl indexed blank terms. New one skips them.
-//            if( annIt.hasNext() ) {
-//                cur = annIt.next();
-//                last = last > cur.getEnd() ? last : cur.getEnd();
-//                if( last > cur.getEnd() ) { // TODO This is naive and needs refactoring
-//                    addAttribute( PositionIncrementAttribute.class ).setPositionIncrement( 0 );
-//                }
-//                int b = cur.getBegin() - offset;
-//                int e = cur.getEnd() - offset;
-//                getAttribute( OffsetAttribute.class ).setOffset( b, e );
-////                getAttribute( CharTermAttribute.class ).append( dump( cur ) );
-//                getAttribute( CharTermAttribute.class ).append( termNormal.term( cur ) );
-////                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( getPayload( cur ) ) );
-//                // TODO: resuse bytesref.
-//                getAttribute( PayloadAttribute.class ).setPayload( new BytesRef( termNormal.data( cur ) ) );
-////                getAttribute( TypeAttribute.class ).setType( cur.getType().getName() );
-//                getAttribute( TypeAttribute.class ).setType( termNormal.type( cur ) );
-//                return true;
-//            } else return false;
         }
     }
     

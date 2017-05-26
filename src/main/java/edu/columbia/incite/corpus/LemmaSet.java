@@ -6,7 +6,6 @@
 package edu.columbia.incite.corpus;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -19,7 +18,8 @@ import org.apache.lucene.util.automaton.RegExp;
 /**
  * A collection of regular patterns for common lemmas of dubious lexicality in all syntatic
  * roles. e.g. cardinal numbers, even when the POS is not CARD.
- * Automata in this class should be tested against Lemma strings, NOT canonical forms,
+ * 
+ * Automata in this class should be tested against lemma strings, NOT canonical forms,
  * i.e. the lemma "dog" instead of the raw text "dogs" or the canonical form "N_NN_dog".
  *
  * Lemmas can be obtained by calling the static method

@@ -37,11 +37,16 @@ import edu.columbia.incite.uima.api.SimpleResource;
 import edu.columbia.incite.corpus.POSClass;
 import edu.columbia.incite.uima.api.types.Tokens;
 import edu.columbia.incite.corpus.LemmaSet;
-import edu.columbia.incite.uima.res.corpus.TermNormal;
+import edu.columbia.incite.corpus.TermNormal;
 import edu.columbia.incite.util.data.DataField;
 import edu.columbia.incite.util.data.DataFieldType;
 import edu.columbia.incite.util.data.Datum;
+import edu.columbia.incite.util.io.FileUtils;
 import edu.columbia.incite.util.string.CSVWriter;
+import edu.columbia.incite.util.string.CSVWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.logging.Logger;
 
 /**
  *
@@ -91,11 +96,11 @@ public abstract class CorpusProcessor extends SegmentedEngine {
     
     public static final String PARAM_LEMMA_POS_TABLE_OUTFILE = "lptOUtFile";
     @ConfigurationParameter( name = PARAM_LEMMA_POS_TABLE_OUTFILE, mandatory = false, defaultValue = "lpt.csv" )
-    private File lptOutFile;
+    private String lptOutFile;
 
     public static final String PARAM_VOCAB_TABLE_OUTFILE = "vocabOUtFile";
     @ConfigurationParameter( name = PARAM_VOCAB_TABLE_OUTFILE, mandatory = false, defaultValue = "vocab.csv" )
-    private File vocabOutFile;
+    private String vocabOutFile;
     
     public static final String RES_LPT_TABLE = "lpTable";
     @ExternalResource( key = RES_LPT_TABLE, mandatory = false )
@@ -214,11 +219,11 @@ public abstract class CorpusProcessor extends SegmentedEngine {
 
     public static class DataTable extends Resource_ImplBase implements 
         SimpleResource<Table<String,String,AtomicLong>>,
-        ConfigurableResource<File>, SessionResource<Long> {
+        ConfigurableResource<String>, SessionResource<Long> {
         
         public static final String PARAM_DATA_FILE = "dataFile";
         @ConfigurationParameter( name = PARAM_DATA_FILE, mandatory = true )
-        private File dataFile;
+        private String dataFile;
 
         private final Table<String,String,AtomicLong> table = Tables.synchronizedTable(
             HashBasedTable.create()
@@ -248,16 +253,16 @@ public abstract class CorpusProcessor extends SegmentedEngine {
                     Level.INFO, String.format( "DataTable closing: dumping data to %s", dataFile ) 
                 );
                 
-                try ( PrintStream ps = new PrintStream( dataFile ) ) {
-                    CSVWriter.write( ps, table );
-                } catch ( FileNotFoundException ex ) {
+                try( Writer w = FileUtils.getWriter( System.getProperty( "user.dir") , dataFile ) ) {
+                    CSVWriter.write( w, table );
+                } catch( IOException ex ) {
                     getLogger().log( Level.SEVERE, "I/O error when trying to write data to disk", ex );
                 }
             }
         }
 
         @Override
-        public void configure( File out ) throws ResourceConfigurationException {
+        public void configure( String out ) throws ResourceConfigurationException {
             if( dataFile == null || !dataFile.equals( out ) ) {
                 this.dataFile = out;
             }

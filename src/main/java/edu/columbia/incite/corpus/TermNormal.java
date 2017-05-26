@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package edu.columbia.incite.uima.res.corpus;
+package edu.columbia.incite.corpus;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -18,11 +18,8 @@ import org.apache.uima.cas.text.AnnotationFS;
 import edu.columbia.incite.uima.api.types.Entities;
 import edu.columbia.incite.uima.api.types.Entities.EntityAction;
 import edu.columbia.incite.uima.api.types.Tokens;
-import edu.columbia.incite.corpus.LemmaSet;
 import edu.columbia.incite.uima.api.types.Tokens.LexAction;
 import edu.columbia.incite.uima.api.types.Tokens.NonLexAction;
-//import edu.columbia.incite.uima.api.corpus.POSClass;
-import edu.columbia.incite.corpus.POSClass;
 
 /**
  *
@@ -34,7 +31,6 @@ public class TermNormal {
     
     private final Conf conf;
 
-    
     public TermNormal() {
         this( new Conf() );
     }

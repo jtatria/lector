@@ -5,10 +5,12 @@
  */
 package edu.columbia.incite.corpus;
 
+import com.google.common.collect.ImmutableMap;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -37,18 +39,29 @@ public enum POSClass implements Predicate<String> {
     NN( new String[ ]{ "NN", "NNS" } ),
     /** Proper nouns: NNP, NNPS **/
     NP( new String[ ]{ "NNP", "NNPS" } ),
-    /** Catch-all for non Penn treebank tags **/
+    /** Catch-all for non PTB tags **/
     O( new String[ ]{ "", "#", "$", "''", "-LRB-", "-RRB-", "FW", "LS", "POS", "UH", "``" } ),
-    /** Prepositions and particleds: IN, RP, TO **/
+    /** Prepositions and particles: IN, RP, TO **/
     PP( new String[ ]{ "IN", "RP", "TO" } ),
     /** Pronouns: PR, PRP, WP, WP$ **/
     PR( new String[ ]{ "PRP", "PRP$", "WP", "WP$" } ),
-    /** Punctuation: commas, colons, periods and SYM **/
-    PUNC( new String[ ]{ ",", ".", ":", "SYM" } ),
     /** Verbs: MD, VB, VBD, VBG, VBN, VBP, VBZ **/
     V( new String[ ]{ "MD", "VB", "VBD", "VBG", "VBN", "VBP", "VBZ" } ),
+    /** Punctuation: commas, colons, periods and SYM **/
+    PUNC( new String[ ]{ ",", ".", ":", "SYM" } ),
     ;
-        
+    
+    private final static Map<BytesRef,POSClass> map;
+    static {
+        Map<BytesRef,POSClass> tmp = new HashMap<>();
+        for( POSClass pc : POSClass.values() ) {
+            for( String tag : pc.members ) {
+                tmp.put( new BytesRef( tag ), pc );
+            }
+        }
+        map = ImmutableMap.copyOf( tmp );
+    }
+    
     public final String[] members;
     public final Automaton automaton;
     public final CharacterRunAutomaton cra;
@@ -69,8 +82,14 @@ public enum POSClass implements Predicate<String> {
         return cra.run( t );
     }
     
+    public static POSClass getPOSClass( BytesRef tag ) {
+        return map.get( tag );
+    }
+    
     public static Automaton make( POSClass... classes ) {
         List<Automaton> collect = Arrays.stream( classes ).map( au -> au.automaton ).collect( Collectors.toList() );
         return Operations.union( collect );
     }
+    
+    
 }
