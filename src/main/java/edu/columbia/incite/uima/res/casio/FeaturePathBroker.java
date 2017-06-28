@@ -45,6 +45,11 @@ public class FeaturePathBroker extends Resource_ImplBase implements FeatureBroke
     )
     private String[] featurePaths;
     
+    public static final String PARAM_USE_FEAT_DOMAIN = "useDomain";
+    @ConfigurationParameter( name = PARAM_USE_FEAT_DOMAIN, mandatory = false,
+        description = "Use feature domain instead of annotation type for field names" )
+    private Boolean useDomain;
+    
     public static final String PARAM_USE_PARENT_TYPES = "useParents";
     @ConfigurationParameter( name = PARAM_USE_PARENT_TYPES, mandatory = false,
         description = "Consider parent types when retrieveing data requests."
@@ -87,17 +92,17 @@ public class FeaturePathBroker extends Resource_ImplBase implements FeatureBroke
     }
     
     @Override
-    public Datum values( AnnotationFS ann, boolean merge ) throws CASException {
+    public Datum values( AnnotationFS ann ) throws CASException {
         Datum d = new Datum();
-        values( ann, d, merge );
+        values( ann, d );
         return d;
     }
 
     @Override
-    public void values( AnnotationFS ann, Datum tgt, boolean merge ) throws CASException {
+    public void values( AnnotationFS ann, Datum tgt ) throws CASException {
         Type key = resolveTypeKey( ann );
         List<FeaturePath> fps = collectFeaturePaths( key, ann );
-        for( FeaturePath fp : fps ) getDataFromPaths( fp, ann, tgt, merge );
+        for( FeaturePath fp : fps ) getDataFromPaths( fp, ann, tgt );
     }
     
     public static void main( String[] args ) {
@@ -205,10 +210,10 @@ public class FeaturePathBroker extends Resource_ImplBase implements FeatureBroke
     }
 
     
-    protected void getDataFromPaths( FeaturePath fp, AnnotationFS ann, Datum tgt, boolean merge ) 
+    protected void getDataFromPaths( FeaturePath fp, AnnotationFS ann, Datum tgt ) 
     throws CASException {
         Feature last = fp.getFeature( fp.size() - 1 );
-        String name = merge ?
+        String name = useDomain ?
             last.getDomain().getShortName() + SEP + last.getShortName() :
             ann.getType().getShortName() + SEP + last.getShortName();
 

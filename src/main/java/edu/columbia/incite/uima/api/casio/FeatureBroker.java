@@ -41,10 +41,7 @@ public interface FeatureBroker<D> extends ConfigurableResource<CAS> {
      *
      * @throws CASException If annotation data can not be accessed.
      */
-    default D values( AnnotationFS ann ) throws CASException {
-        return values( ann, true );
-    }
-    D values( AnnotationFS ann, boolean merge ) throws CASException;
+    D values( AnnotationFS ann ) throws CASException;
 
     /**
      * Add feature values from the given annotation to the given instance of D.
@@ -55,9 +52,6 @@ public interface FeatureBroker<D> extends ConfigurableResource<CAS> {
      *
      * @throws CASException If annotation data can not be accessed.
      */
-    default void values( AnnotationFS ann, D tgt ) throws CASException {
-        values( ann, tgt, true );
-    }
-    void values( AnnotationFS ann, D tgt, boolean merge ) throws CASException;
+    void values( AnnotationFS ann, D tgt ) throws CASException;
 
 }

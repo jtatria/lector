@@ -151,19 +151,24 @@ public class Tokens {
      * about lexicality determination.
      */
     public enum LexAction implements Function<AnnotationFS,String> {
-        /** Keep original text **/
+        /** Keep original text: covered text **/
         KEEP_AS_IS(  ( AnnotationFS token ) -> parse( token )[RAW] ),
-        /** Keep lemmatized form **/
+        /** Keep lemmatized form: replace by lemma/stem value **/
         LEMMATIZE( ( AnnotationFS token ) -> parse( token )[LMI] ),
-        /** Keep POS tag group and lemmatized form **/
+        /** Keep POS tag group and lemmatized form: replaced by [POSG]_[lemma/stem] **/
         ADD_POS_GRP(  ( AnnotationFS token ) -> {
             String[] parse = parse( token );
             return String.join( SEP, parse[PGI], parse[LMI] );
         } ),
-        /** Keep POS tag group, POS tag, and lemmatized form **/
+        /** Keep POS tag group, POS tag, and lemmatized form: replaced by [POSG]_[POST]_[lemma/stem] **/
         ADD_POS_TAG(  ( AnnotationFS token ) -> build( token ) ),
-        /** Keep POS tag group, POS tag, lemma, and raw text **/
+        /** Keep POS tag group, POS tag, lemma, and raw text: replaced by [POSG]_[POST]_[lemma]_[covered text] **/
         BUILD_FULL(  ( AnnotationFS token ) -> build( token, true ) ),
+        /** Drop lemmas, keepm POS group and tag: replace by [POSG]_[POST] **/
+        POS_ONLY( ( AnnotationFS token ) -> {
+            String[] parse = parse( token );
+            return String.join( SEP, parse[PGI], parse[PTI] );
+        })
         ;
 
         private final Function<AnnotationFS,String> func;

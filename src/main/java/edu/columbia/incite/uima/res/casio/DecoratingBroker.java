@@ -42,14 +42,14 @@ public class DecoratingBroker extends Resource_ImplBase implements FeatureBroker
     }
 
     @Override
-    public Datum values( AnnotationFS ann, boolean merge ) throws CASException {
-        Datum d = delegate.values( ann, merge );
+    public Datum values( AnnotationFS ann ) throws CASException {
+        Datum d = delegate.values( ann );
         return decorate( d, ann );
     }
 
     @Override
-    public void values( AnnotationFS ann, Datum tgt, boolean merge ) throws CASException {
-        delegate.values( ann, tgt, merge );
+    public void values( AnnotationFS ann, Datum tgt ) throws CASException {
+        delegate.values( ann, tgt );
         decorate( tgt, ann );
     }
 

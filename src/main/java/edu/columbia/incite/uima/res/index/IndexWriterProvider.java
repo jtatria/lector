@@ -11,8 +11,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexWriter;
@@ -158,14 +160,33 @@ public class IndexWriterProvider extends Resource_ImplBase implements SessionRes
 
     public void close() throws IOException {
         if( optimize ) {
+            
             getLogger().log( Level.INFO,
-                "Index optimization requested. Merging index into {0} segments. This may take a while...",
-                new Object[]{ segments }
+                "Index optimization requested. Merging index into {0} segments. This may take a while..."
+                , new Object[]{ segments }
             );
+            
+            Stopwatch sw = Stopwatch.createStarted();
             writer.forceMerge( segments );
-            getLogger().log( Level.INFO, "Index optimization done.");
+            sw.stop();
+            
+            getLogger().log(
+                Level.INFO, "Index optimization completed in {0} seconds."
+                , sw.elapsed( TimeUnit.SECONDS )
+            );
         }
+        
+        getLogger().log( Level.INFO, "Indexing complete. Committing changes to disk." );
+        
+        Stopwatch sw = Stopwatch.createStarted();
         writer.commit();
+        sw.stop();
+        
+        getLogger().log( 
+            Level.INFO, "Commit finished in {0} seconds."
+            , sw.elapsed( TimeUnit.SECONDS )
+        );
+        
         writer.close();
     }
 }

@@ -43,8 +43,13 @@ import edu.columbia.incite.corpus.LemmaSet;
 import edu.columbia.incite.corpus.POSClass;
 import edu.columbia.incite.uima.api.types.Tokens;
 import edu.columbia.incite.corpus.TermNormal;
+import edu.columbia.incite.uima.api.casio.FeatureBroker;
+import edu.columbia.incite.uima.res.casio.InciteLuceneFB;
 import edu.columbia.incite.uima.res.index.InciteFieldFactory;
 import edu.columbia.incite.uima.res.index.IndexWriterProvider;
+
+import org.apache.uima.cas.CASException;
+import org.apache.uima.fit.descriptor.ConfigurationParameter;
 
 /**
  *
@@ -52,8 +57,20 @@ import edu.columbia.incite.uima.res.index.IndexWriterProvider;
  */
 public class CorpusIndexer extends SegmentedEngine {
     
+    public static final String PARAM_DRY_RUN = "dryRun";
+    @ConfigurationParameter( name = PARAM_DRY_RUN, mandatory = false, defaultValue = "false" )
+    protected Boolean dryRun;
+    
+    public static final String PARAM_ADD_DOC_FIELDS = "addDocFields";
+    @ConfigurationParameter( name = PARAM_ADD_DOC_FIELDS, mandatory = false, defaultValue = "true" )
+    protected Boolean addDocFields;
+    
+    public static final String PARAM_ADD_TOKENSTREAMS = "addTokens";
+    @ConfigurationParameter( name = PARAM_ADD_TOKENSTREAMS, mandatory = false, defaultValue = "true" )
+    protected Boolean addTokens;
+    
     public static final String RES_INDEX_WRITER = "indexWriter";
-    @ExternalResource( key = RES_INDEX_WRITER, mandatory = true )
+    @ExternalResource( key = RES_INDEX_WRITER, mandatory = false )
     private IndexWriterProvider indexWriter;
     
     public static final String RES_FIELD_NORMALS = "fieldNormals";
@@ -64,15 +81,19 @@ public class CorpusIndexer extends SegmentedEngine {
     @ExternalResource( key = RES_FIELD_TYPES, mandatory = false )
     protected FieldTypes fieldTypes;
     
-    private FieldFactory fieldFactory = iniDocFieldFactory();
+    public static final String RES_LUCENEFB = "fieldBroker";
+    @ExternalResource( key = RES_LUCENEFB, mandatory = false )
+    private FeatureBroker<Document> fieldBroker;
     
     private final Map<IndexableField,UIMATokenStream> tokenFields = new HashMap<>();
     private Document docInstance;
     private Long wrtrSssn;
-    
+        
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
+        
+        if( fieldBroker == null ) fieldBroker = new InciteLuceneFB();
         
         if( !fieldNormals.normals.keySet().equals( fieldTypes.types.keySet() ) ) {
             throw new ResourceInitializationException( new IllegalArgumentException(
@@ -88,25 +109,53 @@ public class CorpusIndexer extends SegmentedEngine {
             UIMATokenStream uts = new UIMATokenStream( tn );
             IndexableField field = new Field( key, uts, ft );
             tokenFields.put( field, uts );
-            docInstance.add( field );
         }
                 
         getLogger().log( Level.CONFIG, fieldTypes.toString() );
+        getLogger().log( Level.CONFIG, fieldNormals.toString() );
                 
-        this.wrtrSssn = indexWriter.openSession();
+        if( !dryRun ) {
+            if( indexWriter == null ) {
+                throw new ResourceInitializationException( 
+                    ResourceInitializationException.NO_RESOURCE_FOR_PARAMETERS,
+                    new Object[]{ CorpusIndexer.RES_INDEX_WRITER }
+                );  
+            }
+            this.wrtrSssn = indexWriter.openSession();
+        }
     }
     
     @Override
     protected void processSegment( 
-        AnnotationFS seg, List<AnnotationFS> covers, List<AnnotationFS> t 
+        AnnotationFS seg, List<AnnotationFS> covers, List<AnnotationFS> tokens 
     ) throws AnalysisEngineProcessException {
-        // update segment metadata
-        fieldFactory.updateFields( docInstance, getMetadata() );
-        // update tokenstreams
-        tokenFields.values().forEach( ( uts ) -> uts.setInput( t, seg.getBegin() ) );
         try {
-            this.indexWriter.index( docInstance );
-        } catch ( IOException ex ) {
+            // clear old values
+            docInstance.getFields().clear();
+            
+            // update segment metadata
+            if( addDocFields ) {
+                fieldBroker.values( seg, docInstance );
+                for( AnnotationFS ann : covers ) {
+                    fieldBroker.values( ann, docInstance );
+                }
+            }
+            
+            // update tokenstreams
+            if( addTokens ) {
+                tokenFields.keySet().forEach( ( f ) -> {
+                    tokenFields.get( f ).setInput( tokens, seg.getBegin() );
+                    docInstance.add( f );
+                } );
+            }
+            int i = 0;
+            
+            // write to index
+            if( !dryRun ) {
+                this.indexWriter.index( docInstance );
+            }
+            
+        } catch ( IOException | CASException ex ) {
             throw new AnalysisEngineProcessException( ex );
         }
     }
@@ -114,7 +163,9 @@ public class CorpusIndexer extends SegmentedEngine {
     @Override
     public void collectionProcessComplete() throws AnalysisEngineProcessException {
         super.collectionProcessComplete();
-        indexWriter.closeSession( wrtrSssn );
+        if( !dryRun ) {
+            indexWriter.closeSession( wrtrSssn );
+        }
     }
 
     protected FieldFactory iniDocFieldFactory() {
@@ -215,6 +266,7 @@ public class CorpusIndexer extends SegmentedEngine {
     public static class FieldNormals extends Resource_ImplBase {
 
         final Map<String,TermNormal> normals = new HashMap<>();
+        final Map<String,TermNormal.Conf> confs = new HashMap<>();
         
         @Override
         public boolean initialize( ResourceSpecifier spec, Map<String, Object> params )
@@ -230,12 +282,18 @@ public class CorpusIndexer extends SegmentedEngine {
             List<String> keys = new ArrayList<>( normals.keySet() );
             Collections.sort( keys );
             for( String key : keys ) {
-                sb.append( String.format( "========== %s ==========\n", key ) );
+                sb.append( String.format( "\n========== %s ==========\n", key ) );
                 sb.append( normals.get( key ).toString() );
             }
+            sb.append( "\n" );
             return sb.toString();
         }
     
+        public void add( String field, TermNormal.Conf c, boolean save ) {
+            if( save ) confs.put( field, c.clone() );
+            this.normals.put( field, new TermNormal( c.commit() ) );
+        }
+        
         public void add( 
             String field, boolean incPunc, boolean excNlex, boolean lemmatize, boolean addPos, 
             LemmaSet[] replace, LemmaSet[] delete 
@@ -263,8 +321,12 @@ public class CorpusIndexer extends SegmentedEngine {
             if( replace != null && replace.length > 0 ) {
                 c.setLemmaSubstitutions( replace );
             }
-
-            this.normals.put( field, new TermNormal( c.commit() ) );
+            
+            this.add( field, c, true );
+        }
+        
+        public TermNormal.Conf getConf( String field ) {
+            return confs.get( field );
         }
         
     }
@@ -298,16 +360,16 @@ public class CorpusIndexer extends SegmentedEngine {
         
         @Override
         public String toString() {
-            
             StringBuilder sb = new StringBuilder();
             
             List<String> keys = new ArrayList<>( types.keySet() );
             Collections.sort( keys );
             
             for( String key : keys ) {
-                sb.append( String.format( "========== %s ==========\n", key ) );
+                sb.append( String.format( "\n========== %s ==========\n", key ) );
                 sb.append( types.get( key ).toString() );
             }
+            sb.append( "\n" );
             return sb.toString();
         }
     }

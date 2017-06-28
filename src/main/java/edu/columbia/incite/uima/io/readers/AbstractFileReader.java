@@ -23,9 +23,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
+import com.google.common.collect.Iterators;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.uima.UimaContext;
 import org.apache.uima.collection.CollectionException;
@@ -39,6 +40,7 @@ import org.apache.uima.util.Progress;
 import org.apache.uima.util.ProgressImpl;
 
 import edu.columbia.incite.uima.io.util.SerializationData;
+import edu.columbia.incite.util.collection.CollectionTools;
 import edu.columbia.incite.util.io.FileUtils;
 
 /**
@@ -48,11 +50,19 @@ import edu.columbia.incite.util.io.FileUtils;
  */
 public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase { // TODO: refactor as multiplier
 
+    public static final String PARAM_STOP_AFTER_FIRST = "stopAfter";
+    @ConfigurationParameter( name = PARAM_STOP_AFTER_FIRST, mandatory = false, defaultValue = "-1" )
+    protected Integer stopAfter;
+    
+    public static final String PARAM_RUN_ON_SAMPLE = "runOnSample";
+    @ConfigurationParameter( name = PARAM_RUN_ON_SAMPLE, mandatory = false, defaultValue = "-1" )
+    protected Integer runOnSample;
+    
     /**
      * Location of a file system directory containing collection files.
      */
     public final static String PARAM_INPUT_DIR = "inputDir";
-    @ConfigurationParameter( name = PARAM_INPUT_DIR, mandatory = false, defaultValue = "data/input"
+    @ConfigurationParameter( name = PARAM_INPUT_DIR, mandatory = false, defaultValue = "data/cas_input"
         , description = "Directory containing input files." )
     protected String inputDir;
 
@@ -100,16 +110,19 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
 
     protected Path inputDirPath;
     protected List<Path> paths;
-    protected ListIterator<Path> pathsIt;
+    protected Iterator<Path> pathsIt;
     protected Path curPath;
     protected SerializationData serData;
+    
+    protected int totalFiles;
+    protected int readFiles;
 
     @Override
     public void initialize( UimaContext ctx ) throws ResourceInitializationException {
         super.initialize( ctx );
 
         inputDirPath = Paths.get( inputDir );
-
+        
         if( !Files.isDirectory( inputDirPath ) ) {
             throw new ResourceInitializationException(
                 ResourceConfigurationException.DIRECTORY_NOT_FOUND,
@@ -126,11 +139,18 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
 
         try {
             paths = FileUtils.listPaths( inputDirPath, fileGlob, recursive );
+            if( runOnSample > 0 ) {
+                paths = CollectionTools.sample( paths, runOnSample );
+            }
         } catch( IOException ex ) {
             throw new ResourceInitializationException( ex );
         }
 
-        pathsIt = paths.listIterator();
+        totalFiles = paths.size();
+        pathsIt = paths.iterator();
+        if( stopAfter > 0 ) {
+            pathsIt = Iterators.limit( pathsIt, stopAfter );
+        }
 
         serData = SerializationData.getInstance();
 
@@ -171,6 +191,7 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
         }
 
         serData.saveMarker( jcas, jcas.getCas().createMarker() );
+        readFiles++;
     }
 
     @Override
@@ -181,7 +202,7 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
     @Override
     public Progress[] getProgress() {
         return new Progress[] {
-            new ProgressImpl( pathsIt.nextIndex(), paths.size(), Progress.ENTITIES )
+            new ProgressImpl( readFiles, totalFiles, Progress.ENTITIES )
         };
     }
 

@@ -229,7 +229,7 @@ public class XmlReader extends AbstractFileReader {
                         new Object[] { elts.size(), xpathExpr }
                     );
                 }
-                message += String.format( " %d files left.", paths.size() - pathsIt.nextIndex() );
+                message += String.format( " %d files left.", totalFiles - readFiles );
                 getLogger().log( Level.FINE, message );
 
                 // Copy new elements iterator over old iterator.

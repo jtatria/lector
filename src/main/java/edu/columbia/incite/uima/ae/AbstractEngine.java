@@ -35,7 +35,7 @@ import org.apache.uima.util.Level;
 import edu.columbia.incite.uima.api.casio.FeatureBroker;
 import edu.columbia.incite.uima.api.types.InciteTypes;
 import edu.columbia.incite.uima.res.casio.FeaturePathBroker;
-import edu.columbia.incite.uima.res.casio.InciteFeatureBroker;
+import edu.columbia.incite.uima.res.casio.InciteDatumFB;
 import edu.columbia.incite.uima.util.Types;
 import edu.columbia.incite.util.data.Datum;
 import edu.columbia.incite.util.reflex.Resources;
@@ -49,7 +49,7 @@ public abstract class AbstractEngine extends JCasAnnotator_ImplBase {
 
     public static final String DEFAULT_DOC_MD_TYPE_NAME = InciteTypes.DOCUMENT_TYPE;
     public static final String DEFAULT_DOC_ID_FEAT_NAME = InciteTypes.DOC_ID_FEATURE;
-    public static final Supplier<FeatureBroker> DEFAULT_FEAT_BROKER = InciteFeatureBroker::new;
+    public static final Supplier<FeatureBroker> DEFAULT_FEAT_BROKER = InciteDatumFB::new;
     
     // CAS metadata parameters
     public static final String PARAM_CUSTOM_DOC_TYPE = "documentMetadataTypeName";
