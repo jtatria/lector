@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ import org.apache.uima.resource.Resource;
 /**
  * A SessionResource provides means to control access to shared resources and maintain per-component
  * processing data.
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  * @param <S> Type for an object that provides a component with access to its session data.
  */
 public interface SessionResource<S> extends Resource {

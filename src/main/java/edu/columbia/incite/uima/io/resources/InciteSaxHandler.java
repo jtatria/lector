@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+/* 
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ import edu.columbia.incite.util.reflex.annotations.Resource;
  * Annotation and feature extraction require the instantiation and configuration of a
  * {@link MappingProvider}.
  *
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     

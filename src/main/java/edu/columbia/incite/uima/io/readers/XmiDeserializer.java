@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.xml.sax.SAXException;
 /**
  * Collection reader that de-serializes CASes from a set of XMI files.
  * 
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public class XmiDeserializer extends AbstractFileReader {
     /**

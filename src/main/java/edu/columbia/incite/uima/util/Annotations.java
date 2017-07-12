@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 José Tomás Atria <ja2612@columbia.edu>
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 /**
  *
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public abstract class Annotations {
 

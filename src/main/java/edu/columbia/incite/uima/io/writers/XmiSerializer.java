@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ import static edu.columbia.incite.util.io.FileUtils.getOutputStream;
 //import edu.columbia.incite.uima.api.SerializationData;
 /**
  * CAS annotator that writes CASes to disk in XMI format.
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public class XmiSerializer extends AbstractFileWriter {
     

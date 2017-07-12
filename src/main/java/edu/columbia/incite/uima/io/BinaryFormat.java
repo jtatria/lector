@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+/* 
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import java.util.Arrays;
  * This class also includes some utility methods for obtaining an instance of BinaryFormat from a
  * binary header or a string key.
  *
- * @author Jose Tomas Atria <jtatria@gmail.com>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public enum BinaryFormat {
 

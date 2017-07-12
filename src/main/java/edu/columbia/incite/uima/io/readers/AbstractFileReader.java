@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+/* 
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ import edu.columbia.incite.util.io.FileUtils;
 /**
  * Base class for CollectionReaders that acquire collection data from files on disk.
  *
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase { // TODO: refactor as multiplier
 

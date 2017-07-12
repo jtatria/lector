@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+/* 
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import edu.columbia.incite.uima.api.ConfigurableResource;
  * A {@link edu.columbia.incite.uima.api.ConfigurableResource} that provides abstracted access to
  * feature values in a {@link org.apache.uima.cas.TypeSystem}
  *
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  * @param <D> Type of object that will hold extracted feature values; typically a
  *            {@link java.util.Map} of some sort.
  */

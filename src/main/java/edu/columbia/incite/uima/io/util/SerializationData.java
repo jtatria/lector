@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import edu.columbia.incite.uima.api.types.Document;
  * 
  * WARNING: Not clearing saved data will eventually cause OutOfMemory errors.
  *
- * @author Jose Tomas Atria <jtatria@gmail.com>
+ * @author José Tomás Atria <jtatria@gmail.com>
  */
 public class SerializationData {
 

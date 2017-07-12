@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2015 Jose Tomas Atria <jtatria@gmail.com>
+ * Copyright (C) 2017 José Tomás Atria <jtatria at gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import org.apache.uima.resource.ResourceConfigurationException;
  * This resource can be used to e.g. configure access to a CAS's type system, 
  * set up pathnames for data output, etc.
  *
- * @author José Tomás Atria <ja2612@columbia.edu>
+ * @author José Tomás Atria <jtatria@gmail.com>
  * @param <C> Type for configuration data.
  */
 public interface ConfigurableResource<C> extends Resource {
