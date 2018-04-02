@@ -43,7 +43,7 @@ import edu.columbia.incite.types.InciteTypes;
 import edu.columbia.incite.resources.casio.FeaturePathBroker;
 import edu.columbia.incite.util.JCasTools;
 import edu.columbia.incite.util.Types;
-import edu.columbia.incite.util.data.Datum;
+import edu.columbia.incite.util.Datum;
 
 /**
  * A SegmentedProcessor carries out its analysis logic by splitting the contents of a CAS into

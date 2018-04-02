@@ -39,8 +39,6 @@ import org.apache.uima.resource.ExternalResourceDescription;
 import org.apache.uima.resource.Resource;
 import org.apache.uima.resource.ResourceInitializationException;
 
-import static edu.columbia.incite.util.reflex.ReflectionUtils.getFields;
-
 /**
  * Utility methods to facilitate UIMA-FIT component configuration and instantiation.
  * @author José Tomás Atria <jtatria@gmail.com>
@@ -68,7 +66,7 @@ public abstract class ComponentFactory {
     public static Properties makeDefaultProperties( Class clz, Properties props ) {
         props = props != null ? props : new Properties();
         
-        List<Field> fs = getFields( clz );
+        List<Field> fs = Reflection.getFields( clz );
         for( Field f : fs ) {
             if( isConfigurationParameter( f ) ) {
                 String key = f.getAnnotation( ConfigurationParameter.class ).name();

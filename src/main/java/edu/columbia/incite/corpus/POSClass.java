@@ -16,10 +16,8 @@
  */
 package edu.columbia.incite.corpus;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +88,7 @@ public enum POSClass implements Predicate<String> {
                 tmp.put( new BytesRef( tag ), pc );
             }
         }
-        map = ImmutableMap.copyOf( tmp );
+        map = Collections.unmodifiableMap( tmp );
     }
     
     /**

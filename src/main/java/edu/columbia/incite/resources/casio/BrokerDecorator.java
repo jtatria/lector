@@ -27,8 +27,9 @@ import org.apache.uima.fit.component.Resource_ImplBase;
 import org.apache.uima.fit.descriptor.ExternalResource;
 import org.apache.uima.resource.ResourceConfigurationException;
 
-import edu.columbia.incite.util.data.Datum;
-import edu.columbia.incite.util.data.DataField;
+import edu.columbia.incite.util.Datum;
+import edu.columbia.incite.util.Datum.DataField;
+
 
 /**
  *

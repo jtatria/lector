@@ -71,10 +71,11 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
         </dependency>
+        <!--TODO: remove guava-->
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>incite-util</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>22.0</version>
         </dependency>
     </dependencies>
     <properties>

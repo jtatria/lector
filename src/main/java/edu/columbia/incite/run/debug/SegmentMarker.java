@@ -17,14 +17,15 @@
 package edu.columbia.incite.run.debug;
 
 import edu.columbia.incite.analysis.SegmentedProcessor;
-import edu.columbia.incite.util.data.DataField;
-import edu.columbia.incite.util.data.Datum;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.text.AnnotationFS;
+
+import edu.columbia.incite.util.Datum;
+import edu.columbia.incite.util.Datum.DataField;
 
 /**
  *

@@ -16,13 +16,13 @@
  */
 package edu.columbia.incite.resources.casio;
 
-import edu.columbia.incite.util.data.DataField;
-import edu.columbia.incite.util.data.Datum;
-import edu.columbia.incite.util.data.DataFieldType;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+
+import edu.columbia.incite.util.Datum;
+import edu.columbia.incite.util.Datum.DataField;
+import edu.columbia.incite.util.Datum.DataFieldType;
 
 /**
  * An InciteBroker that creates and populates instances of @link{Datum} multi-type maps.

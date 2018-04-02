@@ -30,7 +30,7 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.Level;
 
 import edu.columbia.incite.analysis.AbstractProcessor;
-import edu.columbia.incite.util.io.FileUtils;
+import edu.columbia.incite.util.FileUtils;
 
 /**
  * Base class for a CAS Annotator that writes CASes to disk.

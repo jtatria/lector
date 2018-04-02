@@ -22,8 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 
 import org.apache.uima.cas.CASRuntimeException;
@@ -121,10 +119,10 @@ public abstract class Types {
         return hierarchy;
     }
     
-    public static String getShortName( String typeName ) {
-        // WTF this is insane.
-        return Iterables.getLast( Splitter.on( TypeSystem.NAMESPACE_SEPARATOR ).split( typeName ) );
-    }
+//    public static String getShortName( String typeName ) {
+//        // WTF this is insane.
+//        return Iterables.getLast( Splitter.on( TypeSystem.NAMESPACE_SEPARATOR ).split( typeName ) );
+//    }
     
     public static Collection<AnnotationFS> filterTypes( Collection<AnnotationFS> input, Set<Type> types ) {
         if( types.isEmpty() ) return input;

@@ -43,9 +43,7 @@ import org.xml.sax.SAXException;
 import edu.columbia.incite.uima.api.types.Document;
 import edu.columbia.incite.uima.api.types.Paragraph;
 import edu.columbia.incite.uima.api.types.Mark;
-import edu.columbia.incite.util.reflex.Resources;
-import edu.columbia.incite.util.xml.XPathNode;
-import edu.columbia.incite.util.reflex.annotations.Resource;
+import edu.columbia.incite.util.XPathNode;
 
 /**
  * Default implementation of Incite's SAX handler for reading CAS data from XML data.\
@@ -111,16 +109,15 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     @ExternalResource( key = RES_CHAR_PROCESSOR, api = CharStreamProcessor.class, mandatory = false )
     protected CharStreamProcessor charProcessor;
     
-    // TODO: get rid of this childish witiness.
-    // Created internally
-    @Resource private Stack<Annotation> annStack;
-    @Resource private XPathNode curNode;
-    @Resource private Paragraph paraAnn;
+    // State values, null on reset
+    private Stack<Annotation> annStack;
+    private XPathNode curNode;
+    private Paragraph paraAnn;
     private int curPara = 0;
 
-    // Set on configure
-    @Resource private String docId;
-    @Resource private JCas jcas;
+    // Configured values, set on configure( Jcas )
+    private String docId;
+    private JCas jcas;
     
     @Override
     public void afterResourcesInitialized() throws ResourceInitializationException {
@@ -144,6 +141,7 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
     @Override
     public void startDocument() throws SAXException {
         // If we are making annotations, init annotation stack.
+        // TODO: reuse stack
         if( annotate ) {
             annStack = new Stack<>();
         }
@@ -225,9 +223,17 @@ public class InciteSaxHandler extends Resource_ImplBase implements SaxHandler {
 
     @Override
     public void reset() {
-        Resources.destroyFor( this );
-        this.charProcessor.reset();
+        // Configured values
+        this.jcas     = null;
+        this.docId    = null;
+        
+        // State values
+        this.annStack = null;
+        this.curNode  = null;
         this.curPara = 0;
+        
+        // Charprocessor
+        this.charProcessor.reset();
     }
 
     //========================================================================//

@@ -32,7 +32,7 @@ import edu.columbia.incite.analysis.AbstractProcessor;
 
 import java.util.regex.Pattern;
 
-import edu.columbia.incite.util.reflex.annotations.Resource;
+import edu.columbia.incite.util.Reflection.CasData;
 
 /**
  *
@@ -55,7 +55,7 @@ public class TokenFilter extends AbstractProcessor {
     private Pattern period;
     private Pattern abbrev;
     
-    @Resource
+    @CasData
     private List<Token> tokens;
     
     @Override

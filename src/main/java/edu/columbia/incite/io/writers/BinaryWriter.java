@@ -39,7 +39,7 @@ import org.apache.uima.util.Level;
 
 import edu.columbia.incite.io.BinaryFormat;
 import edu.columbia.incite.io.SerializationData;
-import edu.columbia.incite.util.io.FileUtils;
+import edu.columbia.incite.util.FileUtils;
 
 import static org.apache.uima.cas.impl.Serialization.serializeCASMgr;
 

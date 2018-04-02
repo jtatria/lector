@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
 
 import edu.columbia.incite.io.SerializationData;
 
-import static edu.columbia.incite.util.io.FileUtils.getOutputStream;
+import static edu.columbia.incite.util.FileUtils.getOutputStream;
 
 /**
  * An analysis component that serializes CASes to XMI files.

@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.Iterators;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.uima.UimaContext;
 import org.apache.uima.collection.CollectionException;
@@ -40,8 +39,8 @@ import org.apache.uima.util.Progress;
 import org.apache.uima.util.ProgressImpl;
 
 import edu.columbia.incite.io.SerializationData;
-import edu.columbia.incite.util.collection.CollectionTools;
-import edu.columbia.incite.util.io.FileUtils;
+import edu.columbia.incite.util.FileUtils;
+import edu.columbia.incite.util.CollectionTools;
 
 /**
  * Base class for CollectionReaders that acquire collection data from files on disk.
@@ -149,7 +148,7 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
         totalFiles = paths.size();
         pathsIt = paths.iterator();
         if( stopAfter > 0 ) {
-            pathsIt = Iterators.limit( pathsIt, stopAfter );
+            pathsIt = paths.subList( 0, stopAfter ).iterator();
         }
 
         serData = SerializationData.getInstance();

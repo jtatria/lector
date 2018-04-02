@@ -36,10 +36,10 @@ import edu.columbia.incite.resources.casio.FeatureBroker;
 import edu.columbia.incite.types.InciteTypes;
 import edu.columbia.incite.resources.casio.FeaturePathBroker;
 import edu.columbia.incite.resources.casio.InciteDatumBroker;
+import edu.columbia.incite.util.Datum;
+import edu.columbia.incite.util.Reflection.CasData;
 import edu.columbia.incite.util.Types;
-import edu.columbia.incite.util.data.Datum;
-import edu.columbia.incite.util.reflex.Resources;
-import edu.columbia.incite.util.reflex.annotations.Resource;
+import edu.columbia.incite.util.Reflection;
 
 /**
  * Base class for all UIMA CAS processors in this package.
@@ -78,7 +78,7 @@ public abstract class AbstractProcessor extends JCasAnnotator_ImplBase {
     protected Feature dmdIdF;
 //    protected boolean customDmd = false;
 
-    @Resource
+    @CasData
     private Annotation curCasData;
 
     private int curCasIndex = 0;
@@ -214,6 +214,8 @@ public abstract class AbstractProcessor extends JCasAnnotator_ImplBase {
      * @throws AnalysisEngineProcessException 
      */
     protected void postProcess( JCas jcas ) throws AnalysisEngineProcessException {
-        Resources.destroyFor( this );
+        Reflection.destroyFor( this );
     }
+    
+    
 }

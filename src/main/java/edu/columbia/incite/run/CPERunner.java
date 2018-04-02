@@ -42,8 +42,8 @@ import org.apache.uima.util.InvalidXMLException;
 import org.xml.sax.SAXException;
 
 import edu.columbia.incite.util.ComponentFactory;
-import edu.columbia.incite.util.collection.CollectionTools;
-import edu.columbia.incite.util.io.FileUtils;
+import edu.columbia.incite.util.CollectionTools;
+import edu.columbia.incite.util.FileUtils;
 
 /**
  *

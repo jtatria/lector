@@ -27,13 +27,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.columbia.incite.io.readers.BinaryReader;
-import edu.columbia.incite.util.io.FileUtils;
+import edu.columbia.incite.util.FileUtils;
 
 /**
  *
  * @author José Tomás Atria <jtatria@gmail.com>
  */
-public class CPEConf extends edu.columbia.incite.util.run.Conf {
+public class CPEConf extends edu.columbia.incite.util.Conf {
 
     public static final String META_DIR        = "metaDir";
     public static final String ACTION_ON_ERROR = "actionOnError";

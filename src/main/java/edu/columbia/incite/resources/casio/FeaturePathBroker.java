@@ -37,9 +37,10 @@ import org.apache.uima.resource.ResourceConfigurationException;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.ResourceSpecifier;
 
-import edu.columbia.incite.util.data.DataField;
-import edu.columbia.incite.util.data.DataFieldType;
-import edu.columbia.incite.util.data.Datum;
+import edu.columbia.incite.util.Datum;
+import edu.columbia.incite.util.Datum.DataField;
+import edu.columbia.incite.util.Datum.DataFieldType;
+
 
 /**
  * A FeatureBoker that will extract information from all the features reachable from a given 
