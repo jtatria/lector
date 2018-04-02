@@ -2,7 +2,6 @@ module namespace ui="http://incite.columbia.edu/uima/TypeSystem";
 
 declare default element namespace "http://uima.apache.org/resourceSpecifier";
 
-
 declare variable $ui:AnnotationBase := "uima.cas.AnnotationBase";
 declare variable $ui:Annotation := "uima.tcas.Annotation";
 
@@ -38,7 +37,7 @@ declare function ui:getFilePath( $root as xs:string, $classPath as xs:string ) a
   return fn:string-join( ( $root, $tokens ), file:dir-separator() )
 };
 
-declare function ui:typeSystem( 
+declare function ui:typeSystem(
   $name as xs:string, $desc as xs:string, $version as xs:string, $vendor as xs:string
   , $types as element()+
 )
@@ -46,7 +45,7 @@ as element() {
   ui:typeSystem( $name, $desc, $version, $vendor, $types, () )
 };
 
-declare function ui:typeSystem( 
+declare function ui:typeSystem(
   $name as xs:string, $desc as xs:string, $version as xs:string, $vendor as xs:string
   , $types as element()+, $imports as element()*
 )
@@ -103,10 +102,10 @@ as element() {
   ui:feature( $name, $desc, $range, $elementType, false() )
 };
 
-declare function ui:feature( 
+declare function ui:feature(
   $name as xs:string, $desc as xs:string, $range as xs:string, $elementType as xs:string
   , $multRef as xs:boolean
-) 
+)
 as element() {
   element featureDescription {
     ui:nameAndDesc( $name, $desc ),

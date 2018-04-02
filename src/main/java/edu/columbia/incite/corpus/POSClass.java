@@ -17,6 +17,7 @@
 package edu.columbia.incite.corpus;
 
 import com.google.common.collect.ImmutableMap;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,14 +26,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.automaton.Automata;
 import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.CharacterRunAutomaton;
 import org.apache.lucene.util.automaton.Operations;
 
+import edu.columbia.incite.analysis.index.Tokenizer;
+
 /**
- *
+ * Enumeration of POS classes that encapsulates the tags used in a specific tag set.
+ * 
+ * Currently wraps the Penn Treebank POS tag set from DKPro's implementation.
+ * 
+ * Instances of this enumeration can be used as @link{Predicate}s for strings in lambda expressions.
+ * 
+ * TODO: add support for different tag sets by refactoring this enumeration into a generic interface.
+ * TODO: uses Lucene's automata
+ * 
  * @author José Tomás Atria <jtatria@gmail.com>
  */
 public enum POSClass implements Predicate<String> {
@@ -62,6 +74,14 @@ public enum POSClass implements Predicate<String> {
     PUNC( new String[ ]{ ",", ".", ":", "SYM" } ),
     ;
     
+    public static final POSClass[] WORDS = new POSClass[]{
+        ADJ, ADV, ART, CARD, CONJ, NN, NP, O, PP, PR, V
+    };
+    
+    public static final POSClass[] LEXICALS = new POSClass[]{
+        ADJ, ADV, NN, NP, V
+    };
+        
     private final static Map<BytesRef,POSClass> map;
     static {
         Map<BytesRef,POSClass> tmp = new HashMap<>();
@@ -73,17 +93,27 @@ public enum POSClass implements Predicate<String> {
         map = ImmutableMap.copyOf( tmp );
     }
     
+    /**
+     * This class's member tags.
+     */
     public final String[] members;
+    
+    /**
+     * Automaton accepting all of this class's meber tags.
+     * Use this to compile new run time automata.
+     */
     public final Automaton automaton;
+    
+    /**
+     * Pre-compiled @link{CharacterRunAutomaton} from this class's member tags.
+    */
     public final CharacterRunAutomaton cra;
     
     private POSClass( String[] members ) {
         this.members = members;
-        
         Set<BytesRef> bytes = Arrays.stream( members ).map(
-            ( String s ) -> new BytesRef( s.getBytes( StandardCharsets.UTF_8 ) ) 
+            ( String s ) -> new BytesRef( s.getBytes( Tokenizer.CS ) ) 
         ).collect( Collectors.toSet() );
-        
         this.automaton = Automata.makeStringUnion( bytes );
         this.cra = new CharacterRunAutomaton( this.automaton );
     }
@@ -93,14 +123,34 @@ public enum POSClass implements Predicate<String> {
         return cra.run( t );
     }
     
+    /**
+     * Obtain the POSClass corresponding to the given POS tag's UTF8 string.
+     * @param tag A POS tag, in UTF8 string format.
+     * @return 
+     */
+    public static POSClass getPOSClass( String tag ) {
+        return map.get( new BytesRef( tag.getBytes( Tokenizer.CS ) ) );
+    }
+    
+    /**
+     * Obtain the POSClass correspinding to the given bytes.
+     * Bytes should correspond to a POS tag's string in UT8.
+     * @param tag A POS tag, as a bytearray containing the tag's UTF8 string bytes.
+     * @return 
+     */
     public static POSClass getPOSClass( BytesRef tag ) {
         return map.get( tag );
     }
     
-    public static Automaton make( POSClass... classes ) {
-        List<Automaton> collect = Arrays.stream( classes ).map( au -> au.automaton ).collect( Collectors.toList() );
+    /**
+     * Create an @link{Automaton} from the union of the given POSClasses.
+     * @param classes
+     * @return 
+     */
+    public static Automaton union( POSClass... classes ) {
+        List<Automaton> collect = Arrays.stream( classes ).map(
+            pos -> pos.automaton 
+        ).collect( Collectors.toList() );
         return Operations.union( collect );
     }
-    
-    
 }
