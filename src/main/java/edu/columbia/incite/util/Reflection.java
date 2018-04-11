@@ -57,9 +57,9 @@ public class Reflection {
         return tgt;
     }
     
-        /**
+    /**
      * Delete all references contained in fields annotated with 
-     * {@link edu.columbia.incite.util.reflex.annotations.Resource} held by the given object.
+     * {@link Reflection.CasData} held by the given object.
      * 
      * @param self  The object for which resources will be released.
      */
@@ -80,7 +80,7 @@ public class Reflection {
     
     /**
      * Clear collections in fields annotated with 
-     * {@link edu.columbia.incite.util.reflex.annotations.Resource} held by the given object.
+     * {@link Reflection.CasData} held by the given object.
      * 
      * @param self The object whose resource collections will be cleared.
      */

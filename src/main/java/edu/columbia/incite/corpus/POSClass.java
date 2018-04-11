@@ -31,12 +31,12 @@ import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.CharacterRunAutomaton;
 import org.apache.lucene.util.automaton.Operations;
 
-import edu.columbia.incite.analysis.index.Tokenizer;
+import edu.columbia.incite.uima.index.Tokenizer;
 
 /**
- * Enumeration of POS classes that encapsulates the tags used in a specific tag set.
+ * Enumeration of POS classes that encapsulates the tags used in any specific tag set.
  * 
- * Currently wraps the Penn Treebank POS tag set from DKPro's implementation.
+ * Currently wraps the Penn Treebank POS tag set, taken from DKPro's implementation.
  * 
  * Instances of this enumeration can be used as @link{Predicate}s for strings in lambda expressions.
  * 
@@ -72,10 +72,12 @@ public enum POSClass implements Predicate<String> {
     PUNC( new String[ ]{ ",", ".", ":", "SYM" } ),
     ;
     
+    /** Reasonable definition of "word" POS classes **/
     public static final POSClass[] WORDS = new POSClass[]{
         ADJ, ADV, ART, CARD, CONJ, NN, NP, O, PP, PR, V
     };
     
+    /** Lexical POS classes: nouns, adjectives, adverbs, verbs **/
     public static final POSClass[] LEXICALS = new POSClass[]{
         ADJ, ADV, NN, NP, V
     };
@@ -124,7 +126,7 @@ public enum POSClass implements Predicate<String> {
     /**
      * Obtain the POSClass corresponding to the given POS tag's UTF8 string.
      * @param tag A POS tag, in UTF8 string format.
-     * @return 
+     * @return POSClass enum value for the given tag.
      */
     public static POSClass getPOSClass( String tag ) {
         return map.get( new BytesRef( tag.getBytes( Tokenizer.CS ) ) );
@@ -134,7 +136,7 @@ public enum POSClass implements Predicate<String> {
      * Obtain the POSClass correspinding to the given bytes.
      * Bytes should correspond to a POS tag's string in UT8.
      * @param tag A POS tag, as a bytearray containing the tag's UTF8 string bytes.
-     * @return 
+     * @return POSClass enum value for the given tag.
      */
     public static POSClass getPOSClass( BytesRef tag ) {
         return map.get( tag );
@@ -143,7 +145,7 @@ public enum POSClass implements Predicate<String> {
     /**
      * Create an @link{Automaton} from the union of the given POSClasses.
      * @param classes
-     * @return 
+     * @return An Automaton that will accept terms beggining with the given POSClass's tags.
      */
     public static Automaton union( POSClass... classes ) {
         List<Automaton> collect = Arrays.stream( classes ).map(

@@ -18,6 +18,8 @@ package edu.columbia.incite.run;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +43,8 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.InvalidXMLException;
 import org.xml.sax.SAXException;
 
-import edu.columbia.incite.util.ComponentFactory;
+import edu.columbia.incite.Conf;
+import edu.columbia.incite.uima.util.ComponentFactory;
 import edu.columbia.incite.util.CollectionTools;
 import edu.columbia.incite.util.FileUtils;
 
@@ -51,19 +54,19 @@ import edu.columbia.incite.util.FileUtils;
  */
 public class CPERunner implements Callable<Integer> {
     
-    public static final String TSD_FILENAME = "TypeSystem.xml";
-    public static final String CPS_FILENAME = "settings.properties";
+    public static final Path TSD_FILENAME = Paths.get( "TypeSystem.xml" );
+    public static final Path CPS_FILENAME = Paths.get( "settings.properties" );
 
     private final CollectionReaderDescription crd;
     private final List<AnalysisEngineDescription> aes;
     private final AnalysisEngineDescription cons;
     private final AnalysisEngineDescription full;
     
-    private final CPEConf conf;
+    private final Conf conf;
     
     private CollectionProcessingEngine cpe;
     
-    public CPERunner( CPEConf conf ) {
+    public CPERunner( Conf conf ) {
         try {
             this.crd  = makeReader( conf );
             this.aes  = makeAes( conf );
@@ -79,13 +82,13 @@ public class CPERunner implements Callable<Integer> {
     throws IOException, SAXException, CpeDescriptorException, InvalidXMLException, 
            ResourceInitializationException {
 
-        if( conf.dumpMetaData() ) {
+        if( conf.dumpConf() ) {
             dumpSettings();
             dumpTypeSystem();
         }
 
         CpeBuilder bldr = new CpeBuilder();
-        bldr.setMaxProcessingUnitThreadCount( conf.maxThreads() );
+        bldr.setMaxProcessingUnitThreadCount( conf.threads() );
         bldr.setReader( crd );
         bldr.setAnalysisEngine( full );
         applyErrorActions( bldr );
@@ -117,16 +120,16 @@ public class CPERunner implements Callable<Integer> {
         return 0;
     }
 
-    private CollectionReaderDescription makeReader( CPEConf conf ) 
+    private CollectionReaderDescription makeReader( Conf conf ) 
     throws ResourceInitializationException {
-        Class readerClass = conf.readerClass();
+        Class readerClass = conf.uimaReader();
         return ComponentFactory.makeReaderDescription( readerClass, conf.getProps() );
     }
 
-    private List<AnalysisEngineDescription> makeAes( CPEConf conf ) 
+    private List<AnalysisEngineDescription> makeAes( Conf conf ) 
     throws ResourceInitializationException {
         List<AnalysisEngineDescription> aesL = new ArrayList<>();
-        for( Class aeClass : conf.aeClasses() ) {
+        for( Class aeClass : conf.uimaAes() ) {
             aesL.add(
                 ComponentFactory.makeEngineDescription( aeClass, conf.getProps() )
             );
@@ -134,10 +137,10 @@ public class CPERunner implements Callable<Integer> {
         return aesL;
     }
 
-    private AnalysisEngineDescription makeCons( CPEConf conf )
+    private AnalysisEngineDescription makeCons( Conf conf )
     throws ResourceInitializationException {
-        return conf.consumer() != null ?
-            ComponentFactory.makeEngineDescription( conf.consumer(), conf.getProps() ) :
+        return conf.uimaConsumer() != null ?
+            ComponentFactory.makeEngineDescription( conf.uimaConsumer(), conf.getProps() ) :
             null;
     }
 
@@ -154,7 +157,7 @@ public class CPERunner implements Callable<Integer> {
         CpeCasProcessors ccp = bldr.getCpeDescription().getCpeCasProcessors();
         if( ccp == null ) return;
         for( CpeCasProcessor proc : ccp.getAllCpeCasProcessors() ) {
-            proc.setActionOnMaxError( conf.actionOnError() );
+            proc.setActionOnMaxError( conf.uimaOnerr() );
         }
     }
 
@@ -164,11 +167,11 @@ public class CPERunner implements Callable<Integer> {
         aes.stream().forEach( ( ae ) -> rmds.add( ae.getMetaData() ) );
         if( cons != null ) rmds.add( cons.getMetaData() );
 
-        try( Writer w = FileUtils.getWriter( conf.metaDir(), CPS_FILENAME, true, true ) ) {
+        try( Writer w = FileUtils.getWriter( conf.homeDir().resolve( CPS_FILENAME ), true, true ) ) {
             for( ResourceMetaData rmd : rmds ) {
                 String rName = rmd.getName();
                 try( 
-                    Writer xmlW = FileUtils.getWriter( conf.metaDir(), rName + ".xml", true, true ) 
+                    Writer xmlW = FileUtils.getWriter( conf.homeDir().resolve( rName + ".xml" ), true, true ) 
                 ) {
                     rmd.toXML( w );
                 } catch ( SAXException ex ) {
@@ -194,7 +197,7 @@ public class CPERunner implements Callable<Integer> {
     }
 
     private void dumpTypeSystem() {
-        try( Writer w = FileUtils.getWriter( conf.metaDir(), TSD_FILENAME, true, true ) ) {
+        try( Writer w = FileUtils.getWriter( conf.homeDir().resolve( TSD_FILENAME ), true, true ) ) {
             TypeSystemDescription tsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
             tsd.toXML( w );
         } catch ( SAXException | IOException ex ) {

@@ -5,9 +5,9 @@
   <vendor>Incite - Columbia University</vendor>
   <types>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Document</name>
+      <name>edu.columbia.incite.uima.types.Document</name>
       <description>Document metadata annotation</description>
-      <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>
+      <supertypeName>edu.columbia.incite.uima.types.Span</supertypeName>
       <features>
         <featureDescription>
           <name>id</name>
@@ -47,7 +47,7 @@
       </features>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Span</name>
+      <name>edu.columbia.incite.uima.types.Span</name>
       <description>Base type for span annotations</description>
       <supertypeName>uima.tcas.Annotation</supertypeName>
       <features>
@@ -55,14 +55,14 @@
           <name>attributes</name>
           <description>Annotation attributes</description>
           <rangeTypeName>uima.cas.FSArray</rangeTypeName>
-          <elementType>edu.columbia.incite.uima.api.types.Attribute</elementType>
+          <elementType>edu.columbia.incite.uima.types.Attribute</elementType>
           <multipleReferencesAllowed>true</multipleReferencesAllowed>
         </featureDescription>
         <featureDescription>
           <name>tuples</name>
           <description>Tuples that refer to this entity</description>
           <rangeTypeName>uima.cas.FSArray</rangeTypeName>
-          <elementType>edu.columbia.incite.uima.api.types.Tuple</elementType>
+          <elementType>edu.columbia.incite.uima.types.Tuple</elementType>
           <multipleReferencesAllowed>true</multipleReferencesAllowed>
         </featureDescription>
         <featureDescription>
@@ -73,7 +73,7 @@
       </features>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Attribute</name>
+      <name>edu.columbia.incite.uima.types.Attribute</name>
       <description>A key-value pair for arbitrary annotation attributes</description>
       <supertypeName>uima.cas.AnnotationBase</supertypeName>
       <features>
@@ -90,14 +90,14 @@
       </features>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Tuple</name>
+      <name>edu.columbia.incite.uima.types.Tuple</name>
       <description>Predicate tuples of the form (subject-predicate-object)</description>
       <supertypeName>uima.cas.AnnotationBase</supertypeName>
       <features>
         <featureDescription>
           <name>subject</name>
           <description>Subject of this predicate</description>
-          <rangeTypeName>edu.columbia.incite.uima.api.types.Span</rangeTypeName>
+          <rangeTypeName>edu.columbia.incite.uima.types.Span</rangeTypeName>
         </featureDescription>
         <featureDescription>
           <name>predicate</name>
@@ -107,12 +107,12 @@
         <featureDescription>
           <name>object</name>
           <description>Object of this predicate</description>
-          <rangeTypeName>edu.columbia.incite.uima.api.types.Span</rangeTypeName>
+          <rangeTypeName>edu.columbia.incite.uima.types.Span</rangeTypeName>
         </featureDescription>
       </features>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Mark</name>
+      <name>edu.columbia.incite.uima.types.Mark</name>
       <description>Inline mark for arbitrary annotations</description>
       <supertypeName>uima.tcas.Annotation</supertypeName>
       <features>
@@ -124,14 +124,14 @@
       </features>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Entity</name>
+      <name>edu.columbia.incite.uima.types.Entity</name>
       <description>Base type for arbitrary span annotations</description>
-      <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>
+      <supertypeName>edu.columbia.incite.uima.types.Span</supertypeName>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Segment</name>
+      <name>edu.columbia.incite.uima.types.Segment</name>
       <description>Base type for segment annotations</description>
-      <supertypeName>edu.columbia.incite.uima.api.types.Span</supertypeName>
+      <supertypeName>edu.columbia.incite.uima.types.Span</supertypeName>
       <features>
         <featureDescription>
           <name>level</name>
@@ -141,9 +141,9 @@
       </features>
     </typeDescription>
     <typeDescription>
-      <name>edu.columbia.incite.uima.api.types.Paragraph</name>
+      <name>edu.columbia.incite.uima.types.Paragraph</name>
       <description>Paragraph annotations</description>
-      <supertypeName>edu.columbia.incite.uima.api.types.Segment</supertypeName>
+      <supertypeName>edu.columbia.incite.uima.types.Segment</supertypeName>
     </typeDescription>
   </types>
 </typeSystemDescription>

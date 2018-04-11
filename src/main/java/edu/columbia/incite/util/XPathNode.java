@@ -33,7 +33,7 @@ import java.util.Map;
  * <br>
  * The normal use of this class is to construct one root node and then add subsequent nodes to this
  * root or its descendants. See the source for
- * {@link edu.columbia.incite.util.xml.AbstractSaxHandler} for an example.
+ * {@link edu.columbia.incite.uima.io.InciteSaxHandler} for an example.
  *
  * @author José Tomás Atria <jtatria@gmail.com>
  */
