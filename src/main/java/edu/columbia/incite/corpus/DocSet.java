@@ -35,6 +35,11 @@ import org.apache.lucene.util.SparseFixedBitSet;
  * BitSet based implementation of a document set, designed to work seamlessly with Lucene's search 
  * results and postings iterators.
  * 
+ * This class allows using document iterators as if they were sets, providing methods for 
+ * intersecting, filtering, and membership testing.
+ * 
+ * Its primary use in this package is to implement corpus sampling.
+ * 
  * @author José Tomás Atria <jtatria@gmail.com>
  */
 public class DocSet implements Predicate<Integer>, Iterable<Integer> {
@@ -70,6 +75,7 @@ public class DocSet implements Predicate<Integer>, Iterable<Integer> {
     
     /** Create an empty DocSet of the given total capacity.
      * @param maxDoc The maximum capacity of this DocSet. Typically the total number of docs in a 
+     * corpus
      * @param sparse If {@code true}, force this DocSet to use a sparse bitset.
      */
     public DocSet( int maxDoc, boolean sparse ) {
@@ -97,7 +103,7 @@ public class DocSet implements Predicate<Integer>, Iterable<Integer> {
     /**
      * Add all documents from the given {@link DocIdSetIterator} instance.
      * 
-     * The state of the iterator after this is method is undefined.
+     * The state of the iterator after this method returns is undefined.
      * 
      * @param docs A {@link DocIdSetIterator} instance.
      * @throws IOException
@@ -144,7 +150,8 @@ public class DocSet implements Predicate<Integer>, Iterable<Integer> {
      * Create an integer array containing the document numbers of documents contained in this 
      * DocSet.
      * 
-     * This will create a new array and copy all document numbers.
+     * This will create a new array of length equal to {@link #size() } and then copy all doc 
+     * numbers corresponding to entries in this DocSet to the created array, in order.
      * 
      * @return An integer array with all entries in this DocSet.
      */
@@ -183,14 +190,38 @@ public class DocSet implements Predicate<Integer>, Iterable<Integer> {
     }
 
     // TODO: remove pending api
+    /**
+     * Produce a DocSet containing only the intersection between this DocSet and the given DocSet.
+     * 
+     * There is no guarantee that the returned DocSet instance <em>is or it not</em> equal to this 
+     * instance. See 
+     * {@link #intersect(edu.columbia.incite.corpus.DocSet, edu.columbia.incite.corpus.DocSet) } 
+     * for details.
+     * 
+     * @param oth A DocSet
+     * @return A DocSet containing only documents that are both in this DocSet and the given oth 
+     *         DocSet.
+     */
     public DocSet intersect( DocSet oth ) {
         return intersect( this, oth );
     }
-    
+
+    /**    
+     * Produce a DocSet instance that contains all documents <em>not</em> contained in this DocSet.
+     * @return A DocSet equal to this DocSet's complement.
+     */
     public DocSet complement() {
         return complement( this );
     }
     
+    /**
+     * Produce a DocSet instance equal to the complement of the given DocSet instance. I.e. The 
+     * returned DocSet will contain only documents that are <em>not</em> contained in the given 
+     * {@code src} DocSet.
+     * 
+     * @param src A DocSet.
+     * @return A DocSet equal to the complement of the {@code src} DocSet.
+     */
     public static DocSet complement( DocSet src ) {
         DocSet tgt = new DocSet( src.bs.length() );
         for( int d : src ) {
@@ -200,6 +231,23 @@ public class DocSet implements Predicate<Integer>, Iterable<Integer> {
     }
     
     // TODO: add copy constructor for non-destructive set operations.
+    /**
+     * Produce a DocSet that is equal to the intersection between the two given {@code ds1} and 
+     * {@code ds2} DocSet.
+     * 
+     * This method must be assumed to operate destructively over the given DocSet references, as 
+     * it does not create a new DocSet, but instead recycles the larger of the given DocSets to 
+     * hold the resulting value, which is then returned. The smaller DocSet should not be modified, 
+     * but callers should not rely on this.
+     * 
+     * This behavior may change in the future, pending an efficient copy-constructor and/or an 
+     * optional parameter. 
+     * 
+     * @param ds1 A DocSet.
+     * @param ds2 A DocSet.
+     * @return The larger of the two given DocSets, but with only documents that were in both 
+     *         DocSets when they were passed to this method.
+     */
     public static DocSet intersect( DocSet ds1, DocSet ds2 ) {
         DocSet tgt = ds1.size() > ds2.size() ? ds2 : ds1;
         DocSet src = tgt == ds1 ? ds2 : ds1;
@@ -209,6 +257,12 @@ public class DocSet implements Predicate<Integer>, Iterable<Integer> {
         return tgt;
     }
     
+    /**
+     * PostingsEnum implementation that allows filtering a source enumeration using a BitSet.
+     * 
+     * Lucene's BitSet filtering facilities only apply to DocIdSetIterators. This class implements 
+     * all of PostingsEnum methods to allow access to position and payload data.
+     */
     public class FilteredPostingsEnum extends PostingsEnum {
 
         private final BitSet bs;

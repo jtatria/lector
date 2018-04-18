@@ -40,8 +40,15 @@ import edu.columbia.incite.uima.index.Tokenizer;
  * 
  * Instances of this enumeration can be used as @link{Predicate}s for strings in lambda expressions.
  * 
- * TODO: add support for different tag sets by refactoring this enumeration into a generic interface.
- * TODO: uses Lucene's automata
+ * TODO: Currently only support's DKPro's PTB tagset; support for different tag sets must be 
+ * provided by refactoring this enumeration into a generic interface and providing some form to 
+ * define a tag->class mapping.
+ * 
+ * The main feature of this POS classes implementation is the prominent distinction between lexical 
+ * and non-lexical tokens and the reasonable definition of "words", used pervasively in the rest of 
+ * the package.
+ * 
+ * NOTE: uses Lucene's automata
  * 
  * @author José Tomás Atria <jtatria@gmail.com>
  */
@@ -99,13 +106,14 @@ public enum POSClass implements Predicate<String> {
     public final String[] members;
     
     /**
-     * Automaton accepting all of this class's meber tags.
-     * Use this to compile new run time automata.
+     * Automaton accepting all of this class's member tags.
+     * This can be used to compile new Runtime Automata for this POS Class.
      */
     public final Automaton automaton;
     
     /**
      * Pre-compiled @link{CharacterRunAutomaton} from this class's member tags.
+     * Used internally for all tests.
     */
     public final CharacterRunAutomaton cra;
     

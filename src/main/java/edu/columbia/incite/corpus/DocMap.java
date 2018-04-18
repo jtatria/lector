@@ -33,14 +33,41 @@ import org.apache.lucene.util.fst.PositiveIntOutputs;
 import org.apache.lucene.util.fst.Util;
 
 /**
- * Convenience class to construct document maps, using Lucene's Finite State Transducers.
+ * Convenience class to construct document maps using Lucene's Finite State Transducers.
  * 
  * Typical corpus sizes make runtime document indexing prohibitive using Java's standard maps. 
- * This class offers a memory-cheap alternative to create runtime indexes that perform orders of 
- * magnitude faster than trying to access document values repeatedly.
+ * This class offers a memory-cheap alternative to create caches for document's field values that 
+ * are several orders of magnitude faster than trying to access these values from the index, for 
+ * any field (not only doc-values fields, i.e. without requiring a prior decision at index-time).
  * 
- * This class allows for associating arbitrary output data to documents in the map. Bidirectional 
- * retrieval is possible, if the output values are added in sorted order.
+ * This class is much more general than this use-case, though, as it allows associating arbitrary 
+ * output data to integers, mapping each discrete output value to a unique long, internally. It 
+ * performs reasonably well when the number of integers is large (millions) but the number of 
+ * discrete output values is small (thousands), since a regular map is still required internally 
+ * between output values of arbitrary type and the long keys used in the internal FST.
+ * 
+ * Integer keys (input values) must be added in sorted order according to the natural ordering of 
+ * integers values. Adding a smaller input value after a larger input value has already been added 
+ * will result in an {@link OutOfOrderException}.
+ * 
+ * Bidirectional retrieval is possible, if the output values are added sequentially, i.e. all 
+ * bindings for one output value must be added before adding a binding for any other output value. 
+ * If this condition is not satisfied (i.e. bindings for different values are added in an 
+ * interspersed manner), then the long keys used in the underlying FST will not be sorted and 
+ * bidirectional retrieval will be disabled.
+ * 
+ * An alternative to sequential construction for cases in which all values are known in advance is 
+ * to use the {@link #DocMap(java.util.SortedSet) } constructor, which ensures sorted construction,
+ * ensuring bidirectional retrieval.
+ * 
+ * Note that the map must be populated in full using the {@link #add(int, java.lang.Object) } 
+ * method and then finished via the {@link #finish() } method before it can be queried with the 
+ * {@link #get(int) } method. 
+ * 
+ * Querying a DocMap before finishing it will result in undefined behavior, but this may change in 
+ * future releases to add proper error handling.
+ * 
+ * Instances of this class can also be used as {@link IntFunction} in lambda expressions.
  *
  * @author José Tomás Atria <jtatria@gmail.com>
  * @param <T> Type for associated values, i.e. entries.
@@ -69,6 +96,9 @@ public class DocMap<T> implements IntFunction<T> {
     
     /** 
      * Create a new DocMap with the given sorted set of T values for output.
+     * 
+     * Adding values in advance will preserve bidirectional retrieval in the resulting map.
+     * 
      * @param ts A sorted set of known T output values.
      */
     public DocMap( SortedSet<T> ts ) {
@@ -79,7 +109,7 @@ public class DocMap<T> implements IntFunction<T> {
     /**
      * Add a new association between the given document number and the given T output value.
      * 
-     * Adding output values in non-sorted order will break bidirectional retrieval.
+     * Adding output values in an interspersed manner will disable bidirectional retrieval.
      * 
      * New associations can not be added once the {@link #finish()} method has been called.
      * 
@@ -207,7 +237,7 @@ public class DocMap<T> implements IntFunction<T> {
      * @throws IOException 
      */
     public T get( int doc ) throws IOException {
-        // TODO: check for finish or force finish?
+        if( this.fst == null ) throw new IllegalStateException( "Querying unfinished DocMap" );
         long v = Util.get( fst, makeK( doc ) );
         return outputs.get( v );
     }
@@ -222,6 +252,9 @@ public class DocMap<T> implements IntFunction<T> {
         }
     }
 
+    /**
+     * Thrown when input values for a DocMap are added out of order.
+     */
     public static class OutOfOrderException extends IllegalArgumentException {
         public OutOfOrderException( int cur, int last ) {
             super( String.format( 

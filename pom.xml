@@ -55,11 +55,6 @@
             <version>2.2.0</version>
         </dependency>
         <dependency>
-            <groupId>maven</groupId>
-            <artifactId>dom4j</artifactId>
-            <version>1.7-20060614</version>
-        </dependency>
-        <dependency>
             <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
             <artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
         </dependency>
@@ -71,7 +66,13 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
         </dependency>
-        <!--TODO: remove guava?-->
+        <!-- TODO: remove this hellspawn -->
+        <dependency>
+            <groupId>maven</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>1.7-20060614</version>
+        </dependency>
+        <!-- TODO: remove guava? -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

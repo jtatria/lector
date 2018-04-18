@@ -53,6 +53,24 @@ import edu.columbia.incite.util.DSVWriter.Accesor;
 /**
  * Canonical lexical set for a corpus.
  * 
+ * Lexical sets define the term population for a corpus. This implementation assumes that 
+ * term-level transformations have been carried out at index time (via different {@link Tokenizer} 
+ * implementations).
+ * 
+ * Lexicon instances are thus constructed over a given field that is assumed to contain a 
+ * normalized token stream, using a single parameter for minimum term frequency.
+ * 
+ * Instances of this class retain corpus-wide statistics for terms (mainly term and document 
+ * frequency), and associate each term's internal string representation to their canonical 
+ * representation as UTF8 byte sequences.
+ * 
+ * Terms in the Lexicon are sorted in descending term frequency and <em>not</em> lexicographically. 
+ * 
+ * THIS CANONICAL ORDER IS USED THROUGHOUT ALL CORPUS DATASETS IN THIS PACKAGE. Most notably, a 
+ * term's index number in this canonical ordering determines its index in all 
+ * cooccurrence matrices; these are generally sparse, so inconsistencies in order/indexes will make 
+ * it impossible to read them.
+ * 
  * @author José Tomás Atria <jtatria@gmail.com>
  */
 public class Lexicon implements Iterable<Word> {
@@ -60,21 +78,21 @@ public class Lexicon implements Iterable<Word> {
     /** Default field name for term id in all datasets **/
     public static final String TERM_ID = "_term_";
     
-    private final LeafReader ir;
-
     /** Index field over which this lexicon is constructed **/
     public final String field;    
     /** Minimum term frequency **/
     public final int minFreq;
     
-    /** Total field term frequency **/
+    /** Total field term frequency (total number of tokens in the underlying field) **/
     public final long   uFreq;
-    /** Total lexicon term frequency **/
+    /** Total lexicon term frequency (the number of tokens pointing to terms in the lexicon) **/
     public final long   nFreq;
-    /** Lexicon coverage **/
+    /** Lexicon coverage (nFreq / uFreq) **/
     public final double cover;    
     /** Lexicon cardinality **/
     public final int    size;
+
+    private final LeafReader ir;
     
     private final BiMap<Integer,BytesRef>  ind2trms;
     private final SortedMap<Integer,Word>  ind2wrds;
@@ -99,6 +117,7 @@ public class Lexicon implements Iterable<Word> {
         Terms terms = ir.terms( field );
         this.uFreq = terms.getSumTotalTermFreq();
         
+        // Collect terms with frequency above threshold.
         TermsEnum tEnum = terms.iterator();
         SortedSet<Word> tmp = new TreeSet<>();
         long ttf = 0;
@@ -109,12 +128,14 @@ public class Lexicon implements Iterable<Word> {
                 ttf += tf;
                 tmp.add( new Word( tEnum.term(), tf, df ) );
             } else {
-//                ool( tEnum.term(), tf, df, tEnum.postings( null, PostingsEnum.PAYLOADS ) );
+                // TODO: do something with OOL terms?
             }
         }
+        // Save coverage statistics
         this.nFreq = ttf;
         this.cover = (double) nFreq / (double) uFreq;
         
+        // Build internal maps
         BiMap<Integer,BytesRef>  ind_tmp = HashBiMap.create();
         SortedMap<Integer,Word>  iwd_tmp = new TreeMap<>();
         SortedMap<BytesRef,Word> kwd_tmp = new TreeMap<>();
@@ -132,6 +153,7 @@ public class Lexicon implements Iterable<Word> {
         this.ind2wrds = ImmutableSortedMap.copyOf( iwd_tmp );
         this.trm2wrds = ImmutableSortedMap.copyOf( kwd_tmp );
         
+        // Compile membership lexicon
         Automaton au = Automata.makeStringUnion( this.trm2wrds.keySet() );
         this.cau = new CompiledAutomaton( au );
     }
@@ -169,6 +191,9 @@ public class Lexicon implements Iterable<Word> {
     
     /**
      * All terms in the lexicon.
+     * 
+     * The canonical array.
+     * 
      * @return An array of term strings, sorted in descending term frequency order.
      */
     public String[] terms() {
@@ -180,7 +205,7 @@ public class Lexicon implements Iterable<Word> {
     }
     
     /**
-     * Lexicon contains the given term
+     * {@code true} if this Lexicon contains the given term
      * @param term A term's {@link BytesRef} representation.
      * @return {@code true} iff the given term is contained in this lexicon.
      */
@@ -216,7 +241,7 @@ public class Lexicon implements Iterable<Word> {
     }
     
     /**
-     * Filter terms enumeration.
+     * Filter term enumeration.
      * Filter the given {@link Terms} instance to exclude terms not contained in this lexicon.
      * @param src A field's {@link Terms}.
      * @return A {@link TermsEnum} instance containing only terms in the given terms object that 
@@ -230,19 +255,20 @@ public class Lexicon implements Iterable<Word> {
     /**
      * Generalized positional weights
      * This function produces a suitable weighting factor between two token positions taking into 
-     * account both the the distance between the tokens and the weights associated to the term's 
+     * account both the distance between the tokens and the weights associated to the term's 
      * at both positions.
      * 
      * TODO: implement. The idea is to remove positional weighting from the cooccurrence worker to 
      * further encapsulate parameters.
      * 
-     * NB: NOT IMPLEMENTE YET.
+     * NB: NOT IMPLEMENTED YET.
      * 
      * @param pre_i Term index for the leading token.
      * @param pre_p Position for the leading token.
      * @param pos_i Term index for the trailing token.
      * @param pos_p Position of the trailing token.
      * @return A weighting factor between the two token positions.
+     * @throws UnsupportedOperationException, always
      */
     public double weight( int pre_i, int pre_p, int pos_i, int pos_p ) {
         throw new UnsupportedOperationException( "Generalized weights not supported yet." );
@@ -250,7 +276,12 @@ public class Lexicon implements Iterable<Word> {
         
     /**
      * Obtain a copy of this lexicon as a set of three same-length arrays.
-     * See {@link LxcnArrays} for details.
+     * 
+     * This is mostly a convenience method for passing data to external libraries consistently 
+     * without disk serialization.
+     * 
+     * See {@link LxcnArrays} for details of the returned type.
+     * 
      * @return A copy of this lexicon as a {@link LxcnArrays} instance.
      */
     public LxcnArrays arrays() {
@@ -286,10 +317,14 @@ public class Lexicon implements Iterable<Word> {
     }
     
     /**
-     * Write a lexicon to disk.
-     * Lexicon format consists of three columsn, the first one containing the utf8-encoded term 
-     * string, the second the total term frequency for each term and the third one the total 
+     * Write a lexicon to disk in DSV format.
+     * 
+     * Lexicon instances are serialized in three columns, the first one containing the utf8-encoded 
+     * term string, the second the total term frequency for each term and the third one the total 
      * document frequency for each term.
+     * 
+     * See {@link DSVWriter} for file format details.
+     * 
      * @param lxcn  A lexicon
      * @param file  A file path.
      * @throws IOException 
@@ -302,11 +337,14 @@ public class Lexicon implements Iterable<Word> {
     }
     
     /**
-     * Word objects associate a term with its frequency statistics as compiled in a given lexicon.
+     * Word objects associate each term with their corpus-wide statistics as compiled in a given 
+     * lexicon at construction time.
      */
     public class Word implements Comparable<Word> {
         private final BytesRef term;
+        /** This word's term frequency **/
         public final long tf;
+        /** This word's document frequncy **/
         public final long df;
 
         Word( BytesRef term, long tf, long df ) {
@@ -356,19 +394,23 @@ public class Lexicon implements Iterable<Word> {
     }
     
     /**
-     * Representation of a lexicon a set of three same-length arrays.
+     * Simple struct to hold the representation of a lexicon as a set of three same-length arrays.
+     * 
      * Consider this to be a naive form of serialization of this lexicon's data.
+     * 
+     * Instances of this class can be used to pass lexicon data to external libraries and services 
+     * consistently.
      */
     public static class LxcnArrays {
-        /** Terms **/
+        /** Term array **/
         public final String[] terms;
-        /** Total term frequencies **/
+        /** Term frequency array **/
         public final long[] tf;
-        /** Total document frequencies **/
+        /** Document frequency array **/
         public final long[] df;
         
-        // TODO: this is moronic.
-        /** Create a new LxcnArrays instance from the given arrays
+        /**
+         * Create a new LxcnArrays instance from the given arrays
          * @param terms A lexicon's terms
          * @param tf A lexicon's tf array
          * @param df A lexicon's df array
