@@ -5,7 +5,7 @@ declare variable $desc := "Types for Incite's UIMA API";
 declare variable $version := "1.0";
 declare variable $vendor := "Incite - Columbia University";
 
-declare variable $ns := "edu.columbia.incite.uima.types";
+declare variable $ns := "edu.columbia.incite.uima.api.types";
 declare variable $root := "/home/gorgonzola/src/local";
 declare variable $outFile :=  $root 
   || "/incite/incite-uima/src/main/resources/desc/type/" || $name || ".xml";
