@@ -8,7 +8,7 @@ package edu.columbia.incite.uima.index;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import edu.columbia.incite.uima.types.Span;
+import edu.columbia.incite.uima.api.types.Span;
 
 /**
  * Scaffolding for a Tokenizer decorator that wraps other tokenizers to be selected at runtime.

@@ -7,7 +7,7 @@ package edu.columbia.incite.uima.index;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
-import edu.columbia.incite.uima.types.Span;
+import edu.columbia.incite.uima.api.types.Span;
 
 /**
  * Thread safe implementation of a @link{Tokenizer} for Incite's @link{Span}s.

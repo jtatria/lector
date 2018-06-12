@@ -16,11 +16,11 @@
  */
 package edu.columbia.incite.uima.tools;
 
-import edu.columbia.incite.uima.types.Document;
-import edu.columbia.incite.uima.types.Paragraph;
-import edu.columbia.incite.uima.types.Segment;
-import edu.columbia.incite.uima.types.Span;
-import edu.columbia.incite.uima.types.Tuple;
+import edu.columbia.incite.uima.api.types.Document;
+import edu.columbia.incite.uima.api.types.Paragraph;
+import edu.columbia.incite.uima.api.types.Segment;
+import edu.columbia.incite.uima.api.types.Span;
+import edu.columbia.incite.uima.api.types.Tuple;
 
 import java.util.function.Supplier;
 

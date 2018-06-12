@@ -24,7 +24,7 @@ import org.apache.uima.cas.impl.BinaryCasSerDes6.ReuseInfo;
 import org.apache.uima.cas.impl.XmiSerializationSharedData;
 import org.apache.uima.jcas.JCas;
 
-import edu.columbia.incite.uima.types.Document;
+import edu.columbia.incite.uima.api.types.Document;
 
 /**
  * Simple container for serialization data.
@@ -131,6 +131,7 @@ public class SerializationData {
         casMarkers.remove( getCasId( jcas ) );
     }
 
+    // TODO: this needs to be refactored.
     private String getCasId( JCas jcas ) {
         Document dmd = jcas.getAnnotationIndex( Document.class ).iterator().next();
         if( dmd != null ) {

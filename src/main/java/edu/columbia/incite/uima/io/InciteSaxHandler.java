@@ -39,9 +39,9 @@ import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 
-import edu.columbia.incite.uima.types.Document;
-import edu.columbia.incite.uima.types.Paragraph;
-import edu.columbia.incite.uima.types.Mark;
+import edu.columbia.incite.uima.api.types.Document;
+import edu.columbia.incite.uima.api.types.Paragraph;
+import edu.columbia.incite.uima.api.types.Mark;
 import edu.columbia.incite.util.XPathNode;
 import edu.columbia.incite.uima.tools.TextFilter;
 

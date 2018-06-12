@@ -48,7 +48,7 @@ import org.jaxen.dom4j.Dom4jXPath;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import edu.columbia.incite.uima.types.Document;
+import edu.columbia.incite.uima.api.types.Document;
 
 
 /**

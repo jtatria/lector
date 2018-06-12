@@ -23,6 +23,12 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.jcas.JCas;
 
+import edu.columbia.incite.uima.api.types.Document;
+import edu.columbia.incite.uima.api.types.Entity;
+import edu.columbia.incite.uima.api.types.Paragraph;
+import edu.columbia.incite.uima.api.types.Segment;
+import edu.columbia.incite.uima.api.types.Span;
+
 /**
  *
  * @author José Tomás Atria <jtatria@gmail.com>
