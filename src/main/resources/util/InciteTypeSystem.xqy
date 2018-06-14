@@ -1,3 +1,14 @@
+(:
+
+Incite's UIMA API type specifier
+
+This file generates the XML type descriptor contained in the desc/type resource 
+directory when ran under an XQuery processor, using the convenience functions
+provided in the XQuery module packaged with Lector under the 'xqy' source
+folder.
+
+:)
+
 import module namespace uima="http://incite.columbia.edu/uima/TypeSystem";
 
 declare variable $name := "InciteTypes";
