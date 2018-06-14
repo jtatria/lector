@@ -62,7 +62,7 @@ public class DSVWriter<D> {
 
     /** COlumn separator. Defaults to '@'. **/
     public static final String COL_SEP = "@";
-    /** Row separator. Defaults to {@link System.lineSeparator() }. **/
+    /** Row separator. Defaults to {@link System#lineSeparator() }. **/
     public static final String ROW_SEP = System.lineSeparator();
     /** String for missing values. Defaults to the empty string. **/
     public static final String MISSING = "";

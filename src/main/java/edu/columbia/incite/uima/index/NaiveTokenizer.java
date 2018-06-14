@@ -8,7 +8,7 @@ package edu.columbia.incite.uima.index;
 import org.apache.uima.cas.text.AnnotationFS;
 
 /**
- * @link{Tokenizer} implementation for Annotations of unknown type.
+ * {@link Tokenizer} implementation for Annotations of unknown type.
  * Returns covered text as charterm, and short type name as payload and type.
  * @author José Tomás Atria <jtatria at gmail.com>
  */

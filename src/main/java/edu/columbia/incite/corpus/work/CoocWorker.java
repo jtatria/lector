@@ -156,7 +156,7 @@ public class CoocWorker {
     }
 
     private void addDelta( int pre_i, int pre_p, int pos_i, int pos_p ) {
-        //            double delta = lxcn.weight( pre_i, pre_p, pos_i, pos_p ); // TODO
+        // double delta = lxcn.weight( pre_i, pre_p, pos_i, pos_p ); // TODO
         double delta = 1d / Math.abs( pre_p - pos_p );
         update( pre_i, pos_i, delta );
     }

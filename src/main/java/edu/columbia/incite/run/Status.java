@@ -33,9 +33,7 @@ import edu.columbia.incite.run.Progress.Stream;
  * progress bars to report on said status.
  * 
  * This class only implements progress counters and status keeping, output and printing is handled 
- * through {@link Progress} implementations. This class provides two implementations: 
- * {@link TerminalReport} that prints status to a {@link PrintStream} and {@link LogOutput}, that 
- * prints status to a {@link Logger}.
+ * through {@link Progress} implementations.
  * 
  * @author José Tomás Atria <jtatria@gmail.com>
  */
@@ -100,7 +98,7 @@ public class Status {
 
     /**
      * Make a new empty progress object with the given name, default settings and 
-     * a {@link LogOutput} over the given {@link Logger}.
+     * open a {@link Progress} instance over the given {@link Logger}.
      * 
      * @param name A name for this progress object, e.g. "Frobbing", "Munging", etc.
      * @param log A Logger object for output.
@@ -112,7 +110,7 @@ public class Status {
     
         /**
      * Make a new empty progress object with the given name, default settings and 
-     * a {@link PrtStrOutput} over the given {@link PrintStream}.
+     * open a {@link Progress} instance over the given {@link PrintStream}.
      * 
      * @param name A name for this progress object, e.g. "Frobbing", "Munging", etc.
      * @param out A PrintStream for output, e.g. System.out, System.err, etc.
@@ -124,8 +122,7 @@ public class Status {
 
     /**
      * Make a new empty progress object with the given name, default settings,
-     * a {@link LogOutput} over the given {@link Logger} and a {@link PrtStOutput} over the given 
-     * {@link PrintStream}.
+     * open {@link Progress} instances over the given {@link Logger} and {@link PrintStream}.
      * 
      * @param name A name for this progress object, e.g. "Frobbing", "Munging", etc.
      * @param log A logger object for output.
@@ -137,13 +134,13 @@ public class Status {
     }
     
     /**
-     * Make a new progress object with the given name and number of tasks, a {@link LogOutput} over 
-     * the given {@link Logger} with the given {@link Logger.Level} for log messages and a 
-     * {@link PrtStOutput} over the given {@link PrintStream}.
+     * Make a new progress object with the given name and number of tasks, open a {@link Progress} 
+     * instance over the given {@link Logger} with the given {@link Level} for log messages
+     * and an instance over the given {@link PrintStream}.
      * 
      * @param name A name for this progress object, e.g. "Frobbing", "Munging", etc.
      * @param log A logger object for output.
-     * @param lvl A Logger.Level for status messages.
+     * @param lvl A Level for status messages.
      * @param ps A PrintStream for output, e.g. System.out, System.err, etc.
      * @return An empty progress.
      */
@@ -210,7 +207,7 @@ public class Status {
 
     /**
      * Print a message with the current status of this progress.
-     * @param debug if {@true}, add debug information.
+     * @param debug if {@code true}, add debug information.
      */
     public void report( boolean debug ) {
         this.report( taskDone.get(), debug );
@@ -221,7 +218,8 @@ public class Status {
      * be obtained by indexing into this array using the {@link Status#STATUS_DONE}, 
      * {@link Status#STATUS_TOTAL} and {@link Status#STATUS_TIME} constants.
      * 
-     * This is the object that is used by outputs for reporting status. See {@link Progress.Report}.
+     * This is the object that is used by outputs for reporting status.
+     * See {@link Progress#report(java.lang.String, long[], boolean) }.
      * 
      * @return A {@code long[]} status array.
      */

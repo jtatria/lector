@@ -54,8 +54,8 @@ import edu.columbia.incite.util.DSVWriter.Accesor;
  * Canonical lexical set for a corpus.
  * 
  * Lexical sets define the term population for a corpus. This implementation assumes that 
- * term-level transformations have been carried out at index time (via different {@link Tokenizer} 
- * implementations).
+ * term-level transformations have been carried out at index time (via different 
+ * {@link edu.columbia.incite.uima.index.Tokenizer Tokenizer} implementations).
  * 
  * Lexicon instances are thus constructed over a given field that is assumed to contain a 
  * normalized token stream, using a single parameter for minimum term frequency.
