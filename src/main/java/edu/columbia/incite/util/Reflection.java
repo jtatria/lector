@@ -5,6 +5,7 @@
  */
 package edu.columbia.incite.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -34,15 +35,17 @@ public class Reflection {
      * @return The list, populated with fields annotated with the given annotation class for the
      *         given class and all of its super classes.
      */
-    public static final List<Field> getFields( Class clazz ) {
+    public static final <C> List<Field> getFields( Class<C> clazz ) {
         return Reflection.getFields( null, clazz, null );
     }
     
-    public static final List<Field> getFields( Class clazz, Class annotation ) {
+    public static final <C,A extends Annotation> List<Field> getFields( Class<C> clazz, Class<A> annotation ) {
         return Reflection.getFields( null, clazz, annotation );
     }
     
-    public static final List<Field> getFields( List<Field> tgt, Class clazz, Class annotation ) {
+    public static final <C,A extends Annotation> List<Field> getFields(
+        List<Field> tgt, Class<C> clazz, Class<A> annotation 
+    ) {
         tgt = tgt == null ? new ArrayList<>() : tgt;
         if( clazz.getSuperclass() != null ) {
             Reflection.getFields( tgt, clazz.getSuperclass(), annotation );

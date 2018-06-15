@@ -50,7 +50,7 @@ public abstract class AbstractProcessor extends JCasAnnotator_ImplBase {
 
     public static final String DEFAULT_DOC_MD_TYPE_NAME = InciteTypes.DOCUMENT_TYPE;
     public static final String DEFAULT_DOC_ID_FEAT_NAME = InciteTypes.DOC_ID_FEATURE;
-    public static final Supplier<FeatureBroker> DEFAULT_FEAT_BROKER = InciteDatumBroker::new;
+    public static final Supplier<FeatureBroker<Datum>> DEFAULT_FEAT_BROKER = InciteDatumBroker::new;
     
     // CAS metadata parameters
     public static final String PARAM_CUSTOM_DOC_TYPE = "documentMetadataTypeName";
