@@ -79,6 +79,7 @@ public class Conf extends ConfBase {
     public static final String PARAM_COOCUR_W_PRE = "cooc_w_pre";
     public static final String PARAM_COOCUR_W_POS = "cooc_w_pos";
     public static final String PARAM_MIN_TERM_FRQ = "min_term_freq";
+    
     public static final String PARAM_THREADS      = "threads";
     public static final String PARAM_QUIET        = "quiet";
     public static final String PARAM_DUMP_CONF    = "dump_conf";
@@ -116,8 +117,10 @@ public class Conf extends ConfBase {
     public static final String DESC_COOCUR_W_PRE = "Cooccurrence window trailing width";
     public static final String DESC_COOCUR_W_POS = "Cooccurrence window leading width";
     public static final String DESC_MIN_TERM_FRQ = "Minimum lexicon term frequency";
+    
     public static final String DESC_THREADS      = "Number of threads to run workers on";
     public static final String DESC_QUIET        = "Silence worker progress reports";
+    public static final String DESC_DUMP_CONF    = "Dump effective configuration to disk";
 
     // Default parameter values
     public static final String DFLT_HOME_DIR      = System.getProperty( "user.dir" );
@@ -152,6 +155,7 @@ public class Conf extends ConfBase {
     public static final int    DFLT_COOCUR_W_PRE  = 10;
     public static final int    DFLT_COOCUR_W_POS  = 10;
     public static final int    DFLT_MIN_TERM_FRQ  = 5;
+    
     public static final int    DFLT_THREADS       = Runtime.getRuntime().availableProcessors();
     public static final boolean DFLT_QUIET        = false;
     public static final boolean DFLT_DUMP_CONF    = false;
@@ -162,34 +166,6 @@ public class Conf extends ConfBase {
 //    public static final String DFLT_FILTER_FIELD  = POBDocFields.OBO_TYPE_FIELD;
 
     public static final String DFLT_NS            = "edu.columbia.incite";
-    
-    public static final Map<String,String> PARAMS = new HashMap<>();
-    static {
-        PARAMS.put( PARAM_HOME_DIR    , DESC_HOME_DIR     );
-        PARAMS.put( PARAM_CONF_DIR    , DESC_CONF_DIR     );
-        PARAMS.put( PARAM_BASE_PROPS  , DESC_BASE_PROPS   );
-        PARAMS.put( PARAM_LOG_PROPS   , DESC_LOG_PROPS    );
-
-        PARAMS.put( PARAM_DATA_DIR    , DESC_DATA_DIR     );
-        PARAMS.put( PARAM_INDEX_DIR   , DESC_INDEX_DIR    );
-        PARAMS.put( PARAM_INPUT_DIR   , DESC_INPUT_DIR    );
-        PARAMS.put( PARAM_OUTPUT_DIR  , DESC_OUTPUT_DIR   );
-
-        PARAMS.put( PARAM_COOC_FILE   , DESC_COOC_FILE    );
-        PARAMS.put( PARAM_POSC_FILE   , DESC_POSC_FILE    );
-        PARAMS.put( PARAM_FREQ_FILE   , DESC_FREQ_FILE    );
-        PARAMS.put( PARAM_LXCN_FILE   , DESC_LXCN_FILE    );
-        PARAMS.put( PARAM_TERM_ID     , DESC_TERM_ID      );
-
-        PARAMS.put( PARAM_TXT_FIELD   , DESC_TXT_FIELD    );
-        PARAMS.put( PARAM_SPLIT_FIELD , DESC_SPLIT_FIELD  );
-        PARAMS.put( PARAM_FILTER_FIELD, DESC_FILTER_FIELD );
-        PARAMS.put( PARAM_FILTER_TERM , DESC_FILTER_TERM  );
-        PARAMS.put( PARAM_COOCUR_W_PRE, DESC_COOCUR_W_PRE );
-        PARAMS.put( PARAM_COOCUR_W_POS, DESC_COOCUR_W_POS );
-        PARAMS.put( PARAM_MIN_TERM_FRQ, DESC_MIN_TERM_FRQ );
-        PARAMS.put( PARAM_THREADS     , DESC_THREADS      );
-    }
 
     public static final Options CLI_OPTS;
     static {
@@ -238,46 +214,79 @@ public class Conf extends ConfBase {
         String format = "%18s\t%s\n";
         System.out.printf( format, PARAM_HOME_DIR    , DESC_HOME_DIR     );
         System.out.printf( format, PARAM_CONF_DIR    , DESC_CONF_DIR     );
+        System.out.printf( format, PARAM_BASE_PROPS  , DESC_BASE_PROPS   );
+        System.out.printf( format, PARAM_LOG_PROPS   , DESC_LOG_PROPS    );
+
         System.out.printf( format, PARAM_DATA_DIR    , DESC_DATA_DIR     );
         System.out.printf( format, PARAM_INDEX_DIR   , DESC_INDEX_DIR    );
         System.out.printf( format, PARAM_INPUT_DIR   , DESC_INPUT_DIR    );
         System.out.printf( format, PARAM_OUTPUT_DIR  , DESC_OUTPUT_DIR   );
+        System.out.printf( format, PARAM_TABLES_DIR  , DESC_TABLES_DIR   );
+
         System.out.printf( format, PARAM_COOC_FILE   , DESC_COOC_FILE    );
         System.out.printf( format, PARAM_POSC_FILE   , DESC_POSC_FILE    );
         System.out.printf( format, PARAM_FREQ_FILE   , DESC_FREQ_FILE    );
         System.out.printf( format, PARAM_LXCN_FILE   , DESC_LXCN_FILE    );
         System.out.printf( format, PARAM_TERM_ID     , DESC_TERM_ID      );
+
+        System.out.printf( format, PARAM_UIMA_READER , DESC_UIMA_READER  );
+        System.out.printf( format, PARAM_UIMA_WRITER , DESC_UIMA_WRITER  );
+        System.out.printf( format, PARAM_UIMA_AES    , DESC_UIMA_AES     );
+        System.out.printf( format, PARAM_UIMA_CONS   , DESC_UIMA_CONS    );
+        System.out.printf( format, PARAM_UIMA_ONERR  , DESC_UIMA_ONERR   );
+
+        System.out.printf( format, PARAM_DOCID_FIELD , DESC_DOCID_FIELD  );
         System.out.printf( format, PARAM_TXT_FIELD   , DESC_TXT_FIELD    );
         System.out.printf( format, PARAM_SPLIT_FIELD , DESC_SPLIT_FIELD  );
         System.out.printf( format, PARAM_FILTER_FIELD, DESC_FILTER_FIELD );
         System.out.printf( format, PARAM_FILTER_TERM , DESC_FILTER_TERM  );
+
         System.out.printf( format, PARAM_COOCUR_W_PRE, DESC_COOCUR_W_PRE );
         System.out.printf( format, PARAM_COOCUR_W_POS, DESC_COOCUR_W_POS );
         System.out.printf( format, PARAM_MIN_TERM_FRQ, DESC_MIN_TERM_FRQ );
+        System.out.printf( format, PARAM_THREADS     , DESC_THREADS      );
+        System.out.printf( format, PARAM_THREADS     , DESC_THREADS      );
         System.out.printf( format, PARAM_THREADS     , DESC_THREADS      );
     }
 
     public void printSettings() {
         String format = "%18s\t%s\n";
-        System.out.printf( format, PARAM_HOME_DIR    , this.homeDir().toString()   );
-        System.out.printf( format, PARAM_CONF_DIR    , this.confDir().toString()   );
-        System.out.printf( format, PARAM_DATA_DIR    , this.dataDir().toString()   );
-        System.out.printf( format, PARAM_INDEX_DIR   , this.indexDir().toString()  );
-        System.out.printf( format, PARAM_INPUT_DIR   , this.inputDir().toString()  );
-        System.out.printf( format, PARAM_OUTPUT_DIR  , this.outputDir().toString() );
-        System.out.printf( format, PARAM_COOC_FILE   , this.coocFile().toString()  );
-        System.out.printf( format, PARAM_POSC_FILE   , this.poscFile().toString()  );
-        System.out.printf( format, PARAM_FREQ_FILE   , this.freqFile().toString()  );
-        System.out.printf( format, PARAM_LXCN_FILE   , this.lxcnFile().toString()  );
-        System.out.printf( format, PARAM_TERM_ID     , this.termId()               );
-        System.out.printf( format, PARAM_TXT_FIELD   , this.fieldTxt()             );
-        System.out.printf( format, PARAM_SPLIT_FIELD , this.fieldSplit()           );
-        System.out.printf( format, PARAM_FILTER_FIELD, this.fieldFilter()          );
-        System.out.printf( format, PARAM_FILTER_TERM , this.filterTerm()           );
-        System.out.printf( format, PARAM_COOCUR_W_PRE, this.wPre()                 );
-        System.out.printf( format, PARAM_COOCUR_W_POS, this.wPos()                 );
-        System.out.printf( format, PARAM_MIN_TERM_FRQ, this.minTermFreq()          );
-        System.out.printf( format, PARAM_THREADS     , this.threads()              );
+        System.out.printf( format, PARAM_HOME_DIR    , this.homeDir().toString()     );
+        System.out.printf( format, PARAM_CONF_DIR    , this.confDir().toString()     );
+        System.out.printf( format, PARAM_CONF_DIR    , this.baseProps().toString()   );
+        System.out.printf( format, PARAM_CONF_DIR    , this.logProps().toString()    );
+  
+        System.out.printf( format, PARAM_DATA_DIR    , this.dataDir().toString()     );
+        System.out.printf( format, PARAM_INDEX_DIR   , this.indexDir().toString()    );
+        System.out.printf( format, PARAM_INPUT_DIR   , this.inputDir().toString()    );
+        System.out.printf( format, PARAM_OUTPUT_DIR  , this.outputDir().toString()   );
+        System.out.printf( format, PARAM_TABLES_DIR  , this.tablesDir().toString()   );
+  
+        System.out.printf( format, PARAM_COOC_FILE   , this.coocFile().toString()    );
+        System.out.printf( format, PARAM_POSC_FILE   , this.poscFile().toString()    );
+        System.out.printf( format, PARAM_FREQ_FILE   , this.freqFile().toString()    );
+        System.out.printf( format, PARAM_LXCN_FILE   , this.lxcnFile().toString()    );
+        System.out.printf( format, PARAM_TERM_ID     , this.termId()                 );
+  
+        System.out.printf( format, PARAM_UIMA_READER , this.uimaReader().getName()   );
+        System.out.printf( format, PARAM_UIMA_WRITER , this.uimaWriter().getName()   );
+        System.out.printf( format, PARAM_UIMA_AES    , this.uimaAes().toString()     );
+        System.out.printf( format, PARAM_UIMA_CONS   , this.uimaConsumer().getName() );
+        System.out.printf( format, PARAM_UIMA_ONERR  , this.uimaOnerr()              );
+  
+        System.out.printf( format, PARAM_DOCID_FIELD , this.fieldDocId()             );
+        System.out.printf( format, PARAM_TXT_FIELD   , this.fieldTxt()               );
+        System.out.printf( format, PARAM_SPLIT_FIELD , this.fieldSplit()             );
+        System.out.printf( format, PARAM_FILTER_FIELD, this.fieldFilter()            );
+        System.out.printf( format, PARAM_FILTER_TERM , this.filterTerm()             );
+  
+        System.out.printf( format, PARAM_COOCUR_W_PRE, this.wPre()                   );
+        System.out.printf( format, PARAM_COOCUR_W_POS, this.wPos()                   );
+        System.out.printf( format, PARAM_MIN_TERM_FRQ, this.minTermFreq()            );
+  
+        System.out.printf( format, PARAM_THREADS     , this.threads()                );
+        System.out.printf( format, PARAM_QUIET       , this.quiet()                  );
+        System.out.printf( format, PARAM_DUMP_CONF   , this.dumpConf()               );
     }
 
     public Conf() {
