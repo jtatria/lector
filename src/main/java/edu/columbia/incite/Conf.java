@@ -35,6 +35,7 @@ import org.apache.commons.cli.ParseException;
 
 import edu.columbia.incite.corpus.Lexicon;
 import edu.columbia.incite.run.ConfBase;
+import edu.columbia.incite.uima.index.CorpusIndexer;
 import edu.columbia.incite.uima.index.Tokenizer;
 import edu.columbia.incite.uima.io.BinaryReader;
 import edu.columbia.incite.uima.io.BinaryWriter;
@@ -143,7 +144,7 @@ public class Conf extends ConfBase {
     public static final Class  DFLT_UIMA_READER   = BinaryReader.class;
     public static final Class  DFLT_UIMA_WRITER   = BinaryWriter.class;
     public static final List<Class> DFLT_UIMA_AES = new ArrayList<>();
-    public static final Class  DFLT_UIMA_CONS     = null;
+    public static final Class  DFLT_UIMA_CONS     = CorpusIndexer.class;
     public static final String DFLT_UIMA_ONERR    = "continue";
 
     public static final String DFLT_DOCID_FIELD   = InciteBroker.DOCID_FIELD_NAME;
