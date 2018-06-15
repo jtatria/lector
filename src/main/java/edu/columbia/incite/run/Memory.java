@@ -14,7 +14,6 @@ import java.text.DecimalFormat;
 public abstract class Memory {
     
     public static <T> T release( T data ) {
-        // TODO: move info to conf for messages
         String clz = data.getClass().getSimpleName();
         String adr = ( (Object) data ).toString();
         adr = adr.substring( adr.lastIndexOf( "@" ), adr.length() - 1 );
