@@ -133,7 +133,7 @@ public class Conf extends ConfBase {
     public static final String DFLT_INDEX_DIR     = "index";
     public static final String DFLT_INPUT_DIR     = "input";
     public static final String DFLT_OUTPUT_DIR    = "output";
-    public static final String DFLT_TABLES_DIR    = "tables/csv";
+    public static final String DFLT_TABLES_DIR    = "tables";
 
     public static final String DFLT_COOC_FILE     = "cooc.bin";
     public static final String DFLT_POSC_FILE     = "posc.dsv";
