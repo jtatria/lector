@@ -271,7 +271,7 @@ public class Conf extends ConfBase {
   
         System.out.printf( format, PARAM_UIMA_READER , this.uimaReader().getName()   );
         System.out.printf( format, PARAM_UIMA_WRITER , this.uimaWriter().getName()   );
-        System.out.printf( format, PARAM_UIMA_AES    , "");//this.uimaAes().toString() );
+        System.out.printf( format, PARAM_UIMA_AES    , this.uimaAes().toString()     );
         System.out.printf( format, PARAM_UIMA_CONS   , this.uimaConsumer().getName() );
         System.out.printf( format, PARAM_UIMA_ONERR  , this.uimaOnerr()              );
   
