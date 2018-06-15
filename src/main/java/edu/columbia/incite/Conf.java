@@ -245,8 +245,8 @@ public class Conf extends ConfBase {
         System.out.printf( format, PARAM_COOCUR_W_POS, DESC_COOCUR_W_POS );
         System.out.printf( format, PARAM_MIN_TERM_FRQ, DESC_MIN_TERM_FRQ );
         System.out.printf( format, PARAM_THREADS     , DESC_THREADS      );
-        System.out.printf( format, PARAM_THREADS     , DESC_THREADS      );
-        System.out.printf( format, PARAM_THREADS     , DESC_THREADS      );
+        System.out.printf( format, PARAM_QUIET       , DESC_QUIET        );
+        System.out.printf( format, PARAM_DUMP_CONF   , DESC_DUMP_CONF    );
     }
 
     public void printSettings() {
@@ -270,7 +270,7 @@ public class Conf extends ConfBase {
   
         System.out.printf( format, PARAM_UIMA_READER , this.uimaReader().getName()   );
         System.out.printf( format, PARAM_UIMA_WRITER , this.uimaWriter().getName()   );
-        System.out.printf( format, PARAM_UIMA_AES    , this.uimaAes().toString()     );
+        System.out.printf( format, PARAM_UIMA_AES    , "");//this.uimaAes().toString() );
         System.out.printf( format, PARAM_UIMA_CONS   , this.uimaConsumer().getName() );
         System.out.printf( format, PARAM_UIMA_ONERR  , this.uimaOnerr()              );
   
