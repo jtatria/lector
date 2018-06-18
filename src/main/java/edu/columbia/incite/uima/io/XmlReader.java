@@ -62,6 +62,15 @@ import edu.columbia.incite.uima.api.types.Document;
 public class XmlReader extends AbstractFileReader {
 
     /**
+     * Collection name. This value will be written to each document's metadata annotation if the
+     * type system supports it.
+     */
+    public final static String PARAM_COLLECTION_NAME = "collection";
+    @ConfigurationParameter( name = PARAM_COLLECTION_NAME, mandatory = false, defaultValue = ""
+        , description = "Collection name." )
+    protected String collectionName;
+    
+    /**
      * Optional XPath expression for XML nodes that will be CASed. Each document's root node will 
      * be used if none is given.
      */

@@ -72,15 +72,6 @@ public abstract class AbstractFileReader extends JCasCollectionReader_ImplBase {
     protected String inputDir;
 
     /**
-     * Collection name. This value will be written to each document's metadata annotation if the
-     * type system supports it.
-     */
-    public final static String PARAM_COLLECTION_NAME = "collection";
-    @ConfigurationParameter( name = PARAM_COLLECTION_NAME, mandatory = false, defaultValue = ""
-        , description = "Collection name." )
-    protected String collectionName;
-
-    /**
      * Read files from the input directory recursively.
      */
     public final static String PARAM_RECURSIVE = "recursive";
