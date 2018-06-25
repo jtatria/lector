@@ -55,8 +55,8 @@ public class Conf extends ConfBase {
 
     public static final String PARAM_DATA_DIR     = "data_dir";
     public static final String PARAM_INDEX_DIR    = "index_dir";
-    public static final String PARAM_INPUT_DIR    = "input_dir";
-    public static final String PARAM_OUTPUT_DIR   = "output_dir";
+    public static final String PARAM_INPUT_DIR    = "uima_indir";
+    public static final String PARAM_OUTPUT_DIR   = "uima_outdir";
     public static final String PARAM_TABLES_DIR   = "tables_dir";
 
     public static final String PARAM_COOC_FILE    = "cooc_file";
