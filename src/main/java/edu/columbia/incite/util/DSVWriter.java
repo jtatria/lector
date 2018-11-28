@@ -155,7 +155,8 @@ public class DSVWriter<D> {
      *      maps.
      * @throws IOException 
      */
-    public static void write( Writer ps, TIntObjectMap<?> data ) throws IOException {
+    @SuppressWarnings("unchecked") // JAVA SUCKS
+    public static void write( Writer ps, TIntObjectMap data ) throws IOException {
         Object probe = null;
         int[] keys = data.keys();
         int i = 0;
@@ -176,7 +177,7 @@ public class DSVWriter<D> {
             throw new IllegalArgumentException( "Unknown data type!" );
         }
     }
-    
+
     /**
      * Convenience method: dump the given Map<R,Map<C,V>> to the given Writer using suitable 
      * defaults.

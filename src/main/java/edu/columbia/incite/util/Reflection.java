@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resources;
 import org.apache.uima.resource.Resource;
 
 /**
@@ -73,9 +72,11 @@ public class Reflection {
                 try {
                     field.set( self, null );
                 } catch( IllegalArgumentException | IllegalAccessException ex ) {
-                    Logger.getLogger( Resources.class.getName() ).log(
-                    Level.SEVERE, "Resource reflection exception: {0}", ex.toString()
-                );
+                    Logger.getLogger( Reflection.class.getName() ).log(
+                        Level.SEVERE, 
+                        "Reflection error when tying to clear resources for {0} instance: {1}",
+                        new Object[]{ self. getClass().getName(), ex.toString() }
+                    );
                 }
             }
         }

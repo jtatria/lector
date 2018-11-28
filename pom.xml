@@ -102,17 +102,19 @@
     </properties>
     <build>
         <plugins>
-<!--            <plugin>
+           <!--
+           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-compiler-plugin</artifactId>
               <version>3.7.0</version>
               <configuration>
                 <compilerArgs>
                   <arg>-verbose</arg>
-                  <arg>-Xlint:unchecked,-options,-path</arg>
+                  <arg>-Xlint:unchecked</arg>
                 </compilerArgs>
               </configuration>
-            </plugin>-->
+            </plugin>
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
