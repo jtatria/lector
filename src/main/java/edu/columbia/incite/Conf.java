@@ -291,7 +291,11 @@ public class Conf extends ConfBase {
     }
 
     public Conf() {
-        super( new HashMap<>() );
+        this( new HashMap<>() );
+    }
+    
+    public Conf( Properties props ) {
+        this( DFLT_NS, props );
     }
 
     protected Conf( Map<String,String> values ) {
