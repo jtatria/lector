@@ -61,7 +61,7 @@ public class SparseMatrix {
      */
     public void update( int i, int j, double d ) {
         maxRow = i > maxRow ? i : maxRow;
-        maxCol = j > maxRow ? j : maxRow;
+        maxCol = j > maxCol ? j : maxCol;
         data.putIfAbsent( i, new TIntDoubleHashMap() );
         data.get( i ).adjustOrPutValue( j, d, d );
     }
